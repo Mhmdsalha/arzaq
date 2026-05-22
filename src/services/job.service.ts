@@ -1,6 +1,8 @@
 import type { JobStatus, Prisma, Region, WorkMode } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { categories as mockCategories } from "@/mock/categories";
+import { jobs as mockJobs } from "@/mock/jobs";
 import type {
   JobCategoryOption,
   JobDetailsData,
@@ -36,6 +38,10 @@ export type CreateJobInput = {
 };
 
 export async function getJobFilterOptions(): Promise<JobCategoryOption[]> {
+  if (!hasDatabaseUrl()) {
+    return getMockJobFilterOptions();
+  }
+
   return prisma.category.findMany({
     orderBy: {
       name: "asc",
@@ -54,6 +60,10 @@ export async function getJobsWithFilters(
   filters: JobFiltersInput,
   userId?: string,
 ): Promise<PaginatedJobs<JobListItem>> {
+  if (!hasDatabaseUrl()) {
+    return getMockJobsWithFilters(filters);
+  }
+
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
   const where = buildJobsWhere(filters);
@@ -79,6 +89,10 @@ export async function getJobsWithFilters(
 }
 
 export async function getJobById(id: string, userId?: string): Promise<JobDetailsData | null> {
+  if (!hasDatabaseUrl()) {
+    return getMockJobById(id);
+  }
+
   const job = await prisma.jobPost.findFirst({
     where: {
       id,
@@ -141,6 +155,10 @@ export async function getSimilarJobs(
   excludeId: string,
   userId?: string,
 ): Promise<JobListItem[]> {
+  if (!hasDatabaseUrl()) {
+    return getMockSimilarJobs(categoryId, excludeId);
+  }
+
   const jobs = await prisma.jobPost.findMany({
     where: {
       categoryId,
@@ -374,6 +392,10 @@ export async function softDeleteJob(id: string, userId: string) {
 }
 
 export async function incrementJobViews(id: string, viewerId?: string) {
+  if (!hasDatabaseUrl()) {
+    return;
+  }
+
   await prisma.jobPost.updateMany({
     where: {
       id,
@@ -386,6 +408,126 @@ export async function incrementJobViews(id: string, viewerId?: string) {
       },
     },
   });
+}
+
+function hasDatabaseUrl() {
+  return Boolean(process.env.DATABASE_URL?.trim());
+}
+
+function getMockJobFilterOptions(): JobCategoryOption[] {
+  return mockCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    color: category.color,
+    icon: category.icon,
+  }));
+}
+
+function getMockJobsWithFilters(filters: JobFiltersInput): PaginatedJobs<JobListItem> {
+  const page = Math.max(filters.page ?? 1, 1);
+  const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
+  const query = filters.q?.trim().toLowerCase();
+  const items = mockJobs
+    .filter((job) => {
+      const matchesQuery =
+        !query ||
+        `${job.title} ${job.description} ${job.categoryName} ${job.skills.join(" ")}`
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus = !filters.status || job.status === filters.status;
+      const matchesCategory = !filters.category || job.categorySlug === filters.category;
+      const matchesRegion = !filters.region || job.region === filters.region;
+      const matchesWorkMode = !filters.workMode || job.workMode === filters.workMode;
+      const matchesUrgent = !filters.urgent || job.isUrgent;
+
+      return (
+        matchesQuery &&
+        matchesStatus &&
+        matchesCategory &&
+        matchesRegion &&
+        matchesWorkMode &&
+        matchesUrgent
+      );
+    })
+    .map(mapMockJobListItem);
+
+  const paginatedItems = items.slice((page - 1) * pageSize, page * pageSize);
+
+  return {
+    items: paginatedItems,
+    total: items.length,
+    page,
+    pageSize,
+    totalPages: Math.max(Math.ceil(items.length / pageSize), 1),
+  };
+}
+
+function getMockJobById(id: string): JobDetailsData | null {
+  const job = mockJobs.find((item) => item.id === id);
+
+  if (!job) {
+    return null;
+  }
+
+  return {
+    ...mapMockJobListItem(job),
+    author: {
+      id: `mock-author-${job.id}`,
+      name: job.authorName,
+      avatarUrl: null,
+      isTrusted: false,
+      whatsapp: job.whatsapp,
+      avgRating: 0,
+      totalReviews: 0,
+      region: job.region,
+    },
+    alreadyApplied: false,
+    isOwner: false,
+  };
+}
+
+function getMockSimilarJobs(categoryId: string, excludeId: string): JobListItem[] {
+  return mockJobs
+    .filter(
+      (job) => job.categorySlug === categoryId && job.id !== excludeId && job.status === "OPEN",
+    )
+    .slice(0, 4)
+    .map(mapMockJobListItem);
+}
+
+function mapMockJobListItem(job: (typeof mockJobs)[number]): JobListItem {
+  const category = mockCategories.find((item) => item.slug === job.categorySlug);
+
+  return {
+    id: job.id,
+    title: job.title,
+    description: job.description,
+    budget: job.budget,
+    duration: "حسب الاتفاق",
+    isUrgent: job.isUrgent,
+    views: 0,
+    region: job.region,
+    workMode: job.workMode,
+    status: job.status,
+    createdAt: new Date(`${job.postedAt}T00:00:00`),
+    expiresAt: job.expiresAt ? new Date(`${job.expiresAt}T00:00:00`) : null,
+    category: {
+      id: category?.id ?? job.categorySlug,
+      name: category?.name ?? job.categoryName,
+      slug: category?.slug ?? job.categorySlug,
+      color: category?.color ?? null,
+      icon: category?.icon ?? null,
+    },
+    author: {
+      id: `mock-author-${job.id}`,
+      name: job.authorName,
+      avatarUrl: null,
+      isTrusted: false,
+    },
+    offersCount: 0,
+    isSaved: false,
+  };
 }
 
 export async function toggleSavedJob(id: string, userId: string) {
