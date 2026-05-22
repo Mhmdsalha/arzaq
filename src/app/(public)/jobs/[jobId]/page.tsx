@@ -2,15 +2,14 @@ import { notFound } from "next/navigation";
 
 import { JobDetails } from "@/components/jobs/job-details";
 import { PageHeader } from "@/components/shared/page-header";
-import { jobs } from "@/mock/jobs";
+import { auth } from "@/lib/auth";
+import { getJobById, getSimilarJobs, incrementJobViews } from "@/services/job.service";
 
-export function generateStaticParams() {
-  return jobs.map((job) => ({ jobId: job.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await params;
-  const job = jobs.find((item) => item.id === jobId);
+  const job = await getJobById(jobId);
 
   return {
     title: job ? job.title : "تفاصيل الطلب",
@@ -19,15 +18,16 @@ export async function generateMetadata({ params }: { params: Promise<{ jobId: st
 
 export default async function JobDetailsPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await params;
-  const job = jobs.find((item) => item.id === jobId);
+  const session = await auth();
+  const job = await getJobById(jobId, session?.user?.id);
 
   if (!job) {
     notFound();
   }
 
-  const similarJobs = jobs.filter(
-    (item) => item.categorySlug === job.categorySlug && item.id !== job.id,
-  );
+  await incrementJobViews(job.id, session?.user?.id);
+
+  const similarJobs = await getSimilarJobs(job.category.id, job.id, session?.user?.id);
 
   return (
     <main>
@@ -37,7 +37,11 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ job
         breadcrumbs={[{ label: "الطلبات", href: "/jobs" }, { label: job.title }]}
       />
       <section className="container py-8">
-        <JobDetails job={job} similarJobs={similarJobs} />
+        <JobDetails
+          job={job}
+          similarJobs={similarJobs}
+          isAuthenticated={Boolean(session?.user?.id)}
+        />
       </section>
     </main>
   );

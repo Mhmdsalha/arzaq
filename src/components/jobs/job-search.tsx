@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 
 import { SearchInput } from "@/components/shared/search-input";
 
-export function JobSearch({ onSearch }: { onSearch: (value: string) => void }) {
-  const [value, setValue] = useState("");
+export function JobSearch({
+  value: initialValue = "",
+  onSearch,
+}: {
+  value?: string;
+  onSearch: (value: string) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => onSearch(value), 250);
+    const timeout = window.setTimeout(() => onSearch(value), 300);
     return () => window.clearTimeout(timeout);
   }, [onSearch, value]);
 

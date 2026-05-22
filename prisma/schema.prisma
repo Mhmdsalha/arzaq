@@ -140,7 +140,9 @@ model JobPost {
   title       String
   description String
   budget      String?
+  duration    String?
   isUrgent    Boolean   @default(false)
+  views       Int       @default(0)
   region      Region
   workMode    WorkMode
   status      JobStatus @default(OPEN)

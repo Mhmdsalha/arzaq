@@ -1,14 +1,24 @@
-import { DashboardComingSoon } from "@/components/dashboard/dashboard-coming-soon";
+import { JobForm } from "@/components/jobs/job-form";
+import { getJobFilterOptions } from "@/services/job.service";
 
 export const metadata = {
   title: "نشر طلب",
 };
 
-export default function NewDashboardJobPage() {
+export default async function NewDashboardJobPage() {
+  const categories = await getJobFilterOptions();
+
   return (
-    <DashboardComingSoon
-      title="نشر طلب جديد"
-      description="نموذج نشر الطلبات سيُبنى في Phase 5 مع التصنيفات، المنطقة، طريقة العمل، الميزانية، والحالة العاجلة."
-    />
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm font-medium text-primary-dark">طلب جديد</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-950">نشر طلب</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          اكتب طلبك بوضوح حتى تصل للعروض المناسبة بسرعة.
+        </p>
+      </div>
+
+      <JobForm categories={categories} mode="create" />
+    </div>
   );
 }

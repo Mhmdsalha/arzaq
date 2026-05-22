@@ -1,11 +1,14 @@
 "use client";
 
-import type { Category } from "@/types/marketplace";
+import type { JobStatus, Region, WorkMode } from "@prisma/client";
+
+import type { JobCategoryOption } from "@/types/job";
 
 export type JobFilterState = {
-  region: string;
+  region: Region | "all";
   category: string;
-  workMode: string;
+  workMode: WorkMode | "all";
+  status: JobStatus;
   urgentOnly: boolean;
 };
 
@@ -15,7 +18,7 @@ export function JobFilters({
   value,
   onChange,
 }: {
-  categories: Category[];
+  categories: JobCategoryOption[];
   regions: Array<{ value: string; label: string }>;
   value: JobFilterState;
   onChange: (value: JobFilterState) => void;
@@ -28,7 +31,13 @@ export function JobFilters({
           type="button"
           className="text-sm font-medium text-primary-dark"
           onClick={() =>
-            onChange({ region: "all", category: "all", workMode: "all", urgentOnly: false })
+            onChange({
+              region: "all",
+              category: "all",
+              workMode: "all",
+              status: "OPEN",
+              urgentOnly: false,
+            })
           }
         >
           مسح
@@ -39,7 +48,7 @@ export function JobFilters({
         <FilterSelect
           label="المنطقة"
           value={value.region}
-          onChange={(region) => onChange({ ...value, region })}
+          onChange={(region) => onChange({ ...value, region: region as Region | "all" })}
           options={[{ value: "all", label: "كل المناطق" }, ...regions]}
         />
         <FilterSelect
@@ -57,12 +66,23 @@ export function JobFilters({
         <FilterSelect
           label="نمط العمل"
           value={value.workMode}
-          onChange={(workMode) => onChange({ ...value, workMode })}
+          onChange={(workMode) => onChange({ ...value, workMode: workMode as WorkMode | "all" })}
           options={[
             { value: "all", label: "كل الأنماط" },
             { value: "ONLINE", label: "أونلاين" },
             { value: "FIELD", label: "ميداني" },
             { value: "BOTH", label: "مرن" },
+          ]}
+        />
+        <FilterSelect
+          label="الحالة"
+          value={value.status}
+          onChange={(status) => onChange({ ...value, status: status as JobStatus })}
+          options={[
+            { value: "OPEN", label: "مفتوح" },
+            { value: "IN_PROGRESS", label: "قيد التنفيذ" },
+            { value: "COMPLETED", label: "مكتمل" },
+            { value: "CANCELLED", label: "ملغي" },
           ]}
         />
         <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-800">
