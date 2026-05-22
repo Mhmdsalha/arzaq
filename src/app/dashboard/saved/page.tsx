@@ -29,7 +29,7 @@ export default async function DashboardSavedPage() {
       {jobs.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} compact isAuthenticated />
+            <JobCard key={job.id} job={job} isAuthenticated />
           ))}
         </div>
       ) : (

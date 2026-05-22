@@ -1,15 +1,13 @@
 "use client";
 
-import { LayoutGrid, List } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
 import { JobCard } from "@/components/jobs/job-card";
 import { JobFilters, type JobFilterState } from "@/components/jobs/job-filters";
 import { JobSearch } from "@/components/jobs/job-search";
 import { JobPagination } from "@/components/jobs/job-pagination";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
 import type { JobCategoryOption, JobListItem } from "@/types/job";
 
 export function JobList({
@@ -31,7 +29,6 @@ export function JobList({
   };
   isAuthenticated: boolean;
 }) {
-  const [view, setView] = useState<"grid" | "list">("grid");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -74,43 +71,16 @@ export function JobList({
 
       <section className="space-y-5">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="grid gap-3 md:items-center">
             <JobSearch value={filters.q} onSearch={(q) => updateParam({ q })} />
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant={view === "grid" ? "default" : "secondary"}
-                size="icon"
-                onClick={() => setView("grid")}
-                aria-label="عرض شبكي"
-              >
-                <LayoutGrid className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant={view === "list" ? "default" : "secondary"}
-                size="icon"
-                onClick={() => setView("list")}
-                aria-label="عرض قائمة"
-              >
-                <List className="size-4" />
-              </Button>
-            </div>
           </div>
           <p className="mt-3 text-sm text-slate-500">تم العثور على {pagination.total} طلب مناسب.</p>
         </div>
 
         {jobs.length > 0 ? (
-          <div
-            className={view === "grid" ? "grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "grid gap-4"}
-          >
+          <div className="grid gap-4">
             {jobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                compact={view === "grid"}
-                isAuthenticated={isAuthenticated}
-              />
+              <JobCard key={job.id} job={job} isAuthenticated={isAuthenticated} />
             ))}
           </div>
         ) : (
