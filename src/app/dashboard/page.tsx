@@ -1,8 +1,28 @@
-export default function DashboardPage() {
-  return (
-    <section className="container py-10">
-      <h1 className="text-2xl font-bold text-slate-950">لوحة المستخدم</h1>
-      <p className="mt-2 text-slate-600">سيتم بناء لوحة التحكم في المراحل القادمة.</p>
-    </section>
-  );
+import { redirect } from "next/navigation";
+
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { auth } from "@/lib/auth";
+import { getDashboardOverviewData, getDashboardShellUser } from "@/services/dashboard.service";
+
+export const metadata = {
+  title: "لوحة التحكم",
+};
+
+export default async function DashboardPage() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/auth/login");
+  }
+
+  const [user, overviewData] = await Promise.all([
+    getDashboardShellUser(session.user.id),
+    getDashboardOverviewData(session.user.id),
+  ]);
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  return <DashboardOverview user={user} data={overviewData} />;
 }
