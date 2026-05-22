@@ -15,6 +15,7 @@ import Link from "next/link";
 
 import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { SimilarJobs } from "@/components/jobs/similar-jobs";
+import { OfferForm } from "@/components/offers/offer-form";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,10 @@ export function JobDetails({
             </div>
 
             <ApplyState job={job} isAuthenticated={isAuthenticated} />
+
+            {isAuthenticated && !job.isOwner && !job.alreadyApplied && job.status === "OPEN" ? (
+              <OfferForm jobPostId={job.id} />
+            ) : null}
 
             {job.author.whatsapp ? (
               <WhatsAppButton phone={job.author.whatsapp} className="w-full" label="تواصل واتساب" />
