@@ -1,7 +1,16 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
+import { authConfig } from "@/lib/auth.config";
+import { loginSchema } from "@/schemas/auth.schema";
+import { findUserByIdentifier, validatePassword } from "@/services/auth.service";
+
 declare module "next-auth" {
+  interface User {
+    role: "USER" | "ADMIN";
+    isVerified: boolean;
+  }
+
   interface Session {
     user: {
       id: string;
@@ -12,42 +21,40 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
-  },
-  pages: {
-    signIn: "/auth/login",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
         identifier: { label: "البريد أو الجوال", type: "text" },
         password: { label: "كلمة المرور", type: "password" },
       },
-      async authorize() {
-        // Phase 3 wires this to auth.service.ts with bcrypt password validation.
-        return null;
+      async authorize(credentials) {
+        const parsed = loginSchema.safeParse(credentials);
+
+        if (!parsed.success) {
+          return null;
+        }
+
+        const user = await findUserByIdentifier(parsed.data.identifier);
+
+        if (!user || user.isBanned) {
+          return null;
+        }
+
+        const isValidPassword = await validatePassword(parsed.data.password, user.passwordHash);
+
+        if (!isValidPassword) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isVerified: user.isVerified,
+        };
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.role = "USER";
-        token.isVerified = false;
-      }
-
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub ?? "";
-        session.user.role = token.role === "ADMIN" ? "ADMIN" : "USER";
-        session.user.isVerified = token.isVerified === true;
-      }
-
-      return session;
-    },
-  },
 });

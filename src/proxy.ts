@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-import { auth } from "@/lib/auth";
+type SessionToken = {
+  role?: "USER" | "ADMIN";
+};
 
 const authRoutes = [
   "/auth/login",
@@ -9,10 +13,11 @@ const authRoutes = [
   "/auth/reset-password",
 ];
 
-export default auth((request) => {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = Boolean(request.auth?.user);
-  const isAdmin = request.auth?.user?.role === "ADMIN";
+  const token = await getSessionToken(request);
+  const isAuthenticated = Boolean(token);
+  const isAdmin = token?.role === "ADMIN";
 
   if (authRoutes.some((route) => pathname.startsWith(route)) && isAuthenticated) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -33,7 +38,18 @@ export default auth((request) => {
   }
 
   return NextResponse.next();
-});
+}
+
+async function getSessionToken(request: NextRequest) {
+  try {
+    return (await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    })) as SessionToken | null;
+  } catch {
+    return null;
+  }
+}
 
 export const config = {
   matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
