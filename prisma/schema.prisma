@@ -6,3 +6,249 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum WorkMode {
+  ONLINE
+  FIELD
+  BOTH
+}
+
+enum Region {
+  NORTH_GAZA
+  GAZA_CITY
+  CENTRAL
+  KHAN_YOUNIS
+  RAFAH
+  ONLINE
+}
+
+enum NotificationType {
+  NEW_OFFER
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+  NEW_REVIEW
+  REPORT_UPDATE
+  SYSTEM
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportTargetType {
+  USER
+  JOB_POST
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String?   @unique
+  phone        String?   @unique
+  passwordHash String
+  role         UserRole  @default(USER)
+  isVerified   Boolean   @default(false)
+  isBanned     Boolean   @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile         Profile?
+  jobPosts        JobPost[]
+  offers          Offer[]
+  reviewsGiven    Review[]       @relation("ReviewsGiven")
+  reviewsReceived Review[]       @relation("ReviewsReceived")
+  reports         Report[]
+  savedJobs       SavedJob[]
+  notifications   Notification[]
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  bio          String?
+  region       Region
+  avatarUrl    String?
+  whatsapp     String?
+  avgRating    Float    @default(0)
+  totalReviews Int      @default(0)
+  isTrusted    Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills         ProfileSkill[]
+  portfolioItems PortfolioItem[]
+}
+
+model Category {
+  id    String  @id @default(cuid())
+  name  String  @unique
+  slug  String  @unique
+  icon  String?
+  color String?
+
+  jobPosts JobPost[]
+}
+
+model Skill {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  profiles ProfileSkill[]
+}
+
+model ProfileSkill {
+  profileId String
+  skillId   String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, skillId])
+  @@index([skillId])
+}
+
+model JobPost {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  budget      String?
+  isUrgent    Boolean   @default(false)
+  region      Region
+  workMode    WorkMode
+  status      JobStatus @default(OPEN)
+  expiresAt   DateTime?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  authorId    String
+  categoryId  String
+
+  author   User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  offers   Offer[]
+  savedBy  SavedJob[]
+  reports  Report[]   @relation("JobPostReports")
+  reviews  Review[]
+
+  @@index([status, region, categoryId, isUrgent, createdAt])
+  @@index([authorId])
+  @@index([categoryId])
+}
+
+model Offer {
+  id         String      @id @default(cuid())
+  message    String
+  price      String?
+  duration   String?
+  status     OfferStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  jobPostId  String
+  providerId String
+
+  jobPost  JobPost @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  provider User    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobPostId, providerId])
+  @@index([jobPostId, providerId, status])
+  @@index([providerId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  giverId    String
+  receiverId String
+  jobPostId  String?
+
+  giver    User     @relation("ReviewsGiven", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver User     @relation("ReviewsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  jobPost  JobPost? @relation(fields: [jobPostId], references: [id], onDelete: SetNull)
+
+  @@index([giverId])
+  @@index([receiverId])
+  @@index([jobPostId])
+}
+
+model SavedJob {
+  userId    String
+  jobPostId String
+  savedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPost JobPost @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+
+  @@id([userId, jobPostId])
+  @@index([jobPostId])
+}
+
+model Report {
+  id           String           @id @default(cuid())
+  reason       String
+  targetType   ReportTargetType
+  targetId     String
+  status       ReportStatus     @default(PENDING)
+  resolvedNote String?
+  createdAt    DateTime         @default(now())
+  reporterId   String
+  jobPostId    String?
+
+  reporter User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  jobPost  JobPost? @relation("JobPostReports", fields: [jobPostId], references: [id], onDelete: SetNull)
+
+  @@index([status, targetType])
+  @@index([reporterId])
+  @@index([targetType, targetId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String?
+  imageUrl    String
+  description String?
+  createdAt   DateTime @default(now())
+  profileId   String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
