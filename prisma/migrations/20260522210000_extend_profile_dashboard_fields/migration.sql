@@ -1,0 +1,3 @@
+ALTER TABLE "Profile" ADD COLUMN "title" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "workMode" "WorkMode" NOT NULL DEFAULT 'BOTH';
+ALTER TABLE "Profile" ADD COLUMN "portfolioUrls" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
