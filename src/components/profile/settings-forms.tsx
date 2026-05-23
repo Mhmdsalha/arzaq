@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Save } from "lucide-react";
-import { useTransition } from "react";
+import { AlertTriangle, Loader2, Save, X } from "lucide-react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -37,19 +37,16 @@ export function SettingsForms({ data }: { data: AccountSettingsData }) {
 }
 
 function AccountTypeSwitcher({ data }: { data: AccountSettingsData }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isProvider = data.accountType === "PROVIDER";
   const targetType = isProvider ? "CLIENT" : "PROVIDER";
+  const dialogMessage = isProvider
+    ? "ستتمكن من نشر الطلبات والحصول على عروض. لن تتمكن من تقديم عروض جديدة بعد التغيير."
+    : "ستتمكن من تقديم العروض وبناء بروفايل مهني. لن تتمكن من نشر طلبات جديدة بعد التغيير.";
+  const confirmLabel = isProvider ? "تحويل إلى صاحب طلب" : "تحويل إلى مقدم خدمة";
 
-  function handleSwitch() {
-    const message = isProvider
-      ? "ستتمكن من نشر الطلبات والحصول على عروض. لن تتمكن من تقديم عروض جديدة بعد التغيير."
-      : "ستتمكن من تقديم العروض وبناء بروفايل مهني. لن تتمكن من نشر طلبات جديدة بعد التغيير.";
-
-    if (!window.confirm(message)) {
-      return;
-    }
-
+  function confirmSwitch() {
     startTransition(async () => {
       const result = await switchAccountTypeAction(targetType);
 
@@ -77,10 +74,67 @@ function AccountTypeSwitcher({ data }: { data: AccountSettingsData }) {
             يمكنك تغيير نوع الحساب مع الحفاظ على تاريخك وبيانات بروفايلك.
           </p>
         </div>
-        <Button type="button" variant="secondary" onClick={handleSwitch} disabled={isPending}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setIsDialogOpen(true)}
+          disabled={isPending}
+        >
           {isPending ? "جاري التحويل..." : "تغيير نوع الحساب"}
         </Button>
       </CardContent>
+
+      {isDialogOpen ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="account-type-dialog-title"
+        >
+          <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 text-right shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-amber-50 text-amber-700">
+                <AlertTriangle className="size-6" />
+              </span>
+              <button
+                type="button"
+                className="grid size-10 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                onClick={() => setIsDialogOpen(false)}
+                aria-label="إغلاق النافذة"
+                disabled={isPending}
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <h2 id="account-type-dialog-title" className="mt-5 text-2xl font-bold text-slate-950">
+              تأكيد تغيير نوع الحساب
+            </h2>
+            <p className="mt-3 leading-7 text-slate-600">{dialogMessage}</p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <Button type="button" onClick={confirmSwitch} disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    جاري التحويل...
+                  </>
+                ) : (
+                  confirmLabel
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isPending}
+              >
+                إلغاء
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </Card>
   );
 }
