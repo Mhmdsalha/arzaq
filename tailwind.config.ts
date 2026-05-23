@@ -62,6 +62,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-cairo)", "var(--font-tajawal)", "system-ui", "sans-serif"],
+        cairo: ["var(--font-cairo)", "Cairo", "sans-serif"],
+        palestine: ["Palestine", "serif"],
       },
     },
   },

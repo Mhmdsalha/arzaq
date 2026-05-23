@@ -11,10 +11,10 @@ export function Logo({ className }: { className?: string }) {
         className,
       )}
     >
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
+      <span className="flex size-9 items-center justify-center rounded-xl bg-primary font-palestine text-white shadow-sm">
         أ
       </span>
-      <span>أرزاق</span>
+      <span className="font-palestine">أرزاق</span>
     </Link>
   );
 }
