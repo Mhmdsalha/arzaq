@@ -33,10 +33,10 @@ export function AccountTypeSelector({
   onContinue: () => void;
 }) {
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-8 text-center">
-      <div className="space-y-3">
-        <h1 className="text-3xl font-bold text-slate-950 md:text-4xl">كيف تريد استخدام أرزاق؟</h1>
-        <p className="text-sm leading-7 text-slate-600">
+    <div className="account-type-selector mx-auto w-full space-y-5 text-center">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold text-slate-950 sm:text-3xl">كيف تريد استخدام أرزاق؟</h1>
+        <p className="text-xs leading-6 text-slate-600 sm:text-sm">
           اختر نوع حسابك، يمكنك تغييره لاحقاً من الإعدادات
         </p>
       </div>
@@ -52,7 +52,7 @@ export function AccountTypeSelector({
               type="button"
               onClick={() => onSelect(option.value)}
               className={cn(
-                "min-h-72 rounded-3xl border-2 bg-white p-6 text-right shadow-sm transition-all hover:-translate-y-1 hover:shadow-md",
+                "rounded-3xl border-2 bg-white p-4 text-right shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5",
                 isSelected
                   ? "border-primary bg-primary/10 ring-4 ring-primary/10"
                   : "border-slate-200 hover:border-primary/40",
@@ -61,26 +61,26 @@ export function AccountTypeSelector({
               <div className="flex items-start justify-between gap-4">
                 <span
                   className={cn(
-                    "grid size-14 place-items-center rounded-2xl",
+                    "grid size-12 place-items-center rounded-2xl",
                     isSelected ? "bg-primary text-white" : "bg-slate-100 text-slate-700",
                   )}
                 >
-                  <Icon className="size-7" />
+                  <Icon className="size-6" />
                 </span>
                 {isSelected ? (
-                  <span className="grid size-8 place-items-center rounded-full bg-primary text-white">
+                  <span className="grid size-7 place-items-center rounded-full bg-primary text-white">
                     <Check className="size-4" />
                   </span>
                 ) : null}
               </div>
 
-              <h2 className="mt-5 text-2xl font-bold text-slate-950">{option.title}</h2>
-              <p className="mt-3 min-h-14 text-sm leading-7 text-slate-600">{option.description}</p>
+              <h2 className="mt-4 text-xl font-bold text-slate-950 sm:text-2xl">{option.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{option.description}</p>
 
-              <ul className="mt-5 space-y-3 text-sm font-medium text-slate-700">
+              <ul className="mt-4 space-y-2 text-sm font-medium text-slate-700">
                 {option.examples.map((example) => (
-                  <li key={example} className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" />
+                  <li key={example} className="flex items-start gap-2 leading-6">
+                    <Check className="mt-1 size-4 shrink-0 text-primary" />
                     <span>{example}</span>
                   </li>
                 ))}
@@ -92,7 +92,7 @@ export function AccountTypeSelector({
 
       <Button
         type="button"
-        className="min-h-12 w-full md:w-64"
+        className="min-h-12 w-full md:w-56"
         disabled={!selected}
         onClick={onContinue}
       >
