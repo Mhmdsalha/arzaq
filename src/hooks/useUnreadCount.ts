@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 
 type NavigationSummaryResponse = {
+  user: {
+    id: string;
+    name: string;
+    email: string | null;
+    role: "USER" | "ADMIN";
+    accountType: "CLIENT" | "PROVIDER";
+  };
   unreadCount: number;
   avatarUrl: string | null;
   profileCompletion: number;
@@ -14,7 +21,7 @@ type NavigationSummaryResponse = {
   };
 };
 
-export function useUnreadCount(enabled = true) {
+export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDER") {
   const [summary, setSummary] = useState<NavigationSummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -67,11 +74,13 @@ export function useUnreadCount(enabled = true) {
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [enabled]);
+  }, [enabled, accountType]);
+
+  const syncedSummary = accountType && summary?.user.accountType !== accountType ? null : summary;
 
   return {
-    unreadCount: enabled ? (summary?.unreadCount ?? 0) : 0,
-    summary: enabled ? summary : null,
+    unreadCount: enabled ? (syncedSummary?.unreadCount ?? 0) : 0,
+    summary: enabled ? syncedSummary : null,
     isLoading: enabled ? isLoading : false,
   };
 }

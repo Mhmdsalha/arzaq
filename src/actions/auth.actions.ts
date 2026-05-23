@@ -1,6 +1,7 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import type { AccountType } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { signIn, signOut } from "@/lib/auth";
@@ -21,6 +22,7 @@ export type ActionResult = {
   ok: boolean;
   message: string;
   resetUrl?: string;
+  accountType?: AccountType;
 };
 
 export async function loginAction(input: LoginInput, callbackUrl?: string): Promise<ActionResult> {

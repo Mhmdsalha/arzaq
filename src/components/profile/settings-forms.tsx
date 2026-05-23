@@ -1,7 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AccountType } from "@prisma/client";
 import { AlertTriangle, Loader2, Save, X } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -37,9 +40,12 @@ export function SettingsForms({ data }: { data: AccountSettingsData }) {
 }
 
 function AccountTypeSwitcher({ data }: { data: AccountSettingsData }) {
+  const router = useRouter();
+  const { update } = useSession();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentAccountType, setCurrentAccountType] = useState<AccountType>(data.accountType);
   const [isPending, startTransition] = useTransition();
-  const isProvider = data.accountType === "PROVIDER";
+  const isProvider = currentAccountType === "PROVIDER";
   const targetType = isProvider ? "CLIENT" : "PROVIDER";
   const dialogMessage = isProvider
     ? "ستتمكن من نشر الطلبات والحصول على عروض. لن تتمكن من تقديم عروض جديدة بعد التغيير."
@@ -51,8 +57,15 @@ function AccountTypeSwitcher({ data }: { data: AccountSettingsData }) {
       const result = await switchAccountTypeAction(targetType);
 
       if (result.ok) {
+        setCurrentAccountType(targetType);
+        setIsDialogOpen(false);
+        await update({
+          user: {
+            accountType: targetType,
+          },
+        });
+        router.refresh();
         toast.success(result.message);
-        window.location.reload();
         return;
       }
 

@@ -99,6 +99,7 @@ export async function switchAccountTypeAction(
         result.withdrawnOffers > 0
           ? "تم تحويل حسابك بنجاح، وتم سحب عروضك المعلقة تلقائياً"
           : "تم تحويل حسابك بنجاح",
+      accountType: targetAccountType,
     };
   } catch (error) {
     return {

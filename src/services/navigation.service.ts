@@ -1,6 +1,15 @@
+import type { AccountType, UserRole } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 export type NavigationSummary = {
+  user: {
+    id: string;
+    name: string;
+    email: string | null;
+    role: UserRole;
+    accountType: AccountType;
+  };
   avatarUrl: string | null;
   profileCompletion: number;
   unreadCount: number;
@@ -13,8 +22,21 @@ export type NavigationSummary = {
 };
 
 export async function getNavigationSummary(userId: string): Promise<NavigationSummary> {
-  const [profile, unreadCount, postedJobs, receivedOffers, sentOffers, acceptedOffers] =
+  const [user, profile, unreadCount, postedJobs, receivedOffers, sentOffers, acceptedOffers] =
     await prisma.$transaction([
+      prisma.user.findFirst({
+        where: {
+          id: userId,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          accountType: true,
+        },
+      }),
       prisma.profile.findUnique({
         where: {
           userId,
@@ -64,6 +86,10 @@ export async function getNavigationSummary(userId: string): Promise<NavigationSu
       }),
     ]);
 
+  if (!user) {
+    throw new Error("الحساب غير موجود");
+  }
+
   const checks = [
     Boolean(profile?.avatarUrl),
     Boolean(profile?.bio?.trim()),
@@ -73,6 +99,7 @@ export async function getNavigationSummary(userId: string): Promise<NavigationSu
   ];
 
   return {
+    user,
     avatarUrl: profile?.avatarUrl ?? null,
     profileCompletion: checks.filter(Boolean).length * 20,
     unreadCount,

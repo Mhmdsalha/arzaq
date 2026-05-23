@@ -41,7 +41,12 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuth, isLoading } = useCurrentUser();
-  const { unreadCount, summary, isLoading: isSummaryLoading } = useUnreadCount(isAuth);
+  const {
+    unreadCount,
+    summary,
+    isLoading: isSummaryLoading,
+  } = useUnreadCount(isAuth, user?.accountType);
+  const navUser = summary?.user ?? user;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const isAccountActive = pathname.startsWith("/dashboard") || pathname.startsWith("/auth");
 
@@ -106,7 +111,7 @@ export function MobileBottomNav() {
                 {summary?.avatarUrl ? (
                   <Image
                     src={summary.avatarUrl}
-                    alt={user?.name || "حسابي"}
+                    alt={navUser?.name || "حسابي"}
                     width={28}
                     height={28}
                     className="size-7 rounded-full border-2 border-primary object-cover"
@@ -123,7 +128,7 @@ export function MobileBottomNav() {
             ) : (
               <UserCircle className="size-6" />
             )}
-            <span>{isAuth ? shortName(user?.name) : "حسابي"}</span>
+            <span>{isAuth ? shortName(navUser?.name) : "حسابي"}</span>
           </button>
         </div>
       </nav>
@@ -131,7 +136,7 @@ export function MobileBottomNav() {
       <AccountSheet
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
-        user={user}
+        user={navUser}
         summary={summary}
         isLoading={isSummaryLoading}
         unreadCount={unreadCount}

@@ -53,7 +53,8 @@ function accountTypeLabel(accountType?: AccountType) {
 export function PublicNavbar() {
   const pathname = usePathname();
   const { user, isAuth, isLoading } = useCurrentUser();
-  const { unreadCount, summary } = useUnreadCount(isAuth);
+  const { unreadCount, summary } = useUnreadCount(isAuth, user?.accountType);
+  const navUser = summary?.user ?? user;
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -124,15 +125,15 @@ export function PublicNavbar() {
                     : "text-slate-700 hover:bg-slate-100",
                 )}
               >
-                <Avatar src={summary?.avatarUrl} name={user?.name} />
-                <span className="max-w-24 truncate">{firstName(user?.name)}</span>
+                <Avatar src={summary?.avatarUrl} name={navUser?.name} />
+                <span className="max-w-24 truncate">{firstName(navUser?.name)}</span>
                 <ChevronDown className="size-4" />
               </button>
 
               {isUserMenuOpen ? (
                 <UserMenu
-                  name={user?.name}
-                  accountType={user?.accountType}
+                  name={navUser?.name}
+                  accountType={navUser?.accountType}
                   avatarUrl={summary?.avatarUrl}
                   onLogout={() => setShowLogoutConfirm(true)}
                 />

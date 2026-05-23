@@ -9,11 +9,39 @@ export const authConfig = {
     signIn: "/auth/login",
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role;
         token.accountType = user.accountType;
         token.isVerified = user.isVerified;
+      }
+
+      if (trigger === "update" && session) {
+        const updatedSession = session as {
+          accountType?: "CLIENT" | "PROVIDER";
+          role?: "USER" | "ADMIN";
+          isVerified?: boolean;
+          user?: {
+            accountType?: "CLIENT" | "PROVIDER";
+            role?: "USER" | "ADMIN";
+            isVerified?: boolean;
+          };
+        };
+
+        if (updatedSession.user?.accountType ?? updatedSession.accountType) {
+          token.accountType = updatedSession.user?.accountType ?? updatedSession.accountType;
+        }
+
+        if (updatedSession.user?.role ?? updatedSession.role) {
+          token.role = updatedSession.user?.role ?? updatedSession.role;
+        }
+
+        if (
+          typeof updatedSession.user?.isVerified === "boolean" ||
+          typeof updatedSession.isVerified === "boolean"
+        ) {
+          token.isVerified = updatedSession.user?.isVerified ?? updatedSession.isVerified;
+        }
       }
 
       return token;
