@@ -4,6 +4,7 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
 import { signIn, signOut } from "@/lib/auth";
+import { getPostLoginRedirect } from "@/lib/redirects";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -22,7 +23,7 @@ export type ActionResult = {
   resetUrl?: string;
 };
 
-export async function loginAction(input: LoginInput): Promise<ActionResult> {
+export async function loginAction(input: LoginInput, callbackUrl?: string): Promise<ActionResult> {
   const parsed = loginSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -33,7 +34,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     await signIn("credentials", {
       identifier: parsed.data.identifier,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
+      redirectTo: getPostLoginRedirect("CLIENT", callbackUrl),
     });
   } catch (error) {
     if (error instanceof AuthError) {

@@ -13,7 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginSchema, type LoginInput } from "@/schemas/auth.schema";
 
-export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) {
+export function LoginForm({
+  resetSuccess = false,
+  callbackUrl,
+}: {
+  resetSuccess?: boolean;
+  callbackUrl?: string;
+}) {
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -35,7 +41,7 @@ export function LoginForm({ resetSuccess = false }: { resetSuccess?: boolean }) 
 
   function onSubmit(values: LoginInput) {
     startTransition(async () => {
-      const result = await loginAction(values);
+      const result = await loginAction(values, callbackUrl);
 
       if (!result.ok) {
         toast.error(result.message);
