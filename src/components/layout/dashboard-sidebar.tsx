@@ -66,7 +66,7 @@ export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
       </nav>
 
       <div className="mt-auto pt-6">
-        <UserDropdown user={user} compact={isCollapsed} />
+        <UserDropdown user={user} compact={isCollapsed} placement="top" />
       </div>
     </aside>
   );

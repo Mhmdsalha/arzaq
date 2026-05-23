@@ -23,9 +23,11 @@ const accountTypeLabels = {
 export function UserDropdown({
   user,
   compact = false,
+  placement = "bottom",
 }: {
   user: DashboardShellUser;
   compact?: boolean;
+  placement?: "top" | "bottom";
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -68,7 +70,12 @@ export function UserDropdown({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+        <div
+          className={cn(
+            "absolute left-0 z-50 max-h-[min(420px,70vh)] w-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl",
+            placement === "top" ? "bottom-full mb-2" : "top-full mt-2",
+          )}
+        >
           <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
             <Avatar name={user.name} avatarUrl={avatarUrl} />
             <div className="min-w-0">

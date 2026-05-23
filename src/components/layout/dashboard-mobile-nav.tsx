@@ -67,7 +67,7 @@ export function DashboardMobileNav({
         </nav>
 
         <div className="mt-5 border-t border-slate-100 pt-4">
-          <UserDropdown user={user} />
+          <UserDropdown user={user} placement="top" />
         </div>
       </section>
     </div>
