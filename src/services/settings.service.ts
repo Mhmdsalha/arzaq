@@ -1,4 +1,5 @@
 import { compare, hash } from "bcryptjs";
+import type { AccountType } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { normalizePhone } from "@/services/auth.service";
@@ -13,6 +14,7 @@ export async function getSettingsByUserId(userId: string): Promise<AccountSettin
     select: {
       phone: true,
       email: true,
+      accountType: true,
     },
   });
 
@@ -23,7 +25,71 @@ export async function getSettingsByUserId(userId: string): Promise<AccountSettin
   return {
     phone: user.phone ?? "",
     email: user.email ?? "",
+    accountType: user.accountType,
   };
+}
+
+export async function switchAccountType(userId: string, targetAccountType: AccountType) {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      deletedAt: null,
+    },
+    select: {
+      accountType: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("الحساب غير موجود");
+  }
+
+  if (user.accountType === targetAccountType) {
+    return { withdrawnOffers: 0 };
+  }
+
+  return prisma.$transaction(async (tx) => {
+    let withdrawnOffers = 0;
+
+    if (user.accountType === "PROVIDER" && targetAccountType === "CLIENT") {
+      const result = await tx.offer.updateMany({
+        where: {
+          providerId: userId,
+          status: "PENDING",
+        },
+        data: {
+          status: "WITHDRAWN",
+        },
+      });
+
+      withdrawnOffers = result.count;
+    }
+
+    await tx.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        accountType: targetAccountType,
+      },
+    });
+
+    await tx.profile.upsert({
+      where: {
+        userId,
+      },
+      update: {
+        isAvailable: targetAccountType === "PROVIDER",
+      },
+      create: {
+        userId,
+        region: "ONLINE",
+        isAvailable: targetAccountType === "PROVIDER",
+      },
+    });
+
+    return { withdrawnOffers };
+  });
 }
 
 export async function updateAccountSettings(

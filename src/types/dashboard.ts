@@ -1,10 +1,11 @@
-import type { NotificationType, Region, UserRole } from "@prisma/client";
+import type { AccountType, NotificationType, Region, UserRole } from "@prisma/client";
 
 export type DashboardShellUser = {
   id: string;
   name: string;
   email: string | null;
   role: UserRole;
+  accountType: AccountType;
   isVerified: boolean;
   profile: {
     avatarUrl: string | null;
@@ -16,9 +17,13 @@ export type DashboardShellUser = {
 
 export type DashboardStatsData = {
   postedJobs: number;
+  openJobs: number;
+  receivedOffers: number;
   sentOffers: number;
   acceptedOffers: number;
+  pendingOffers: number;
   savedJobs: number;
+  avgRating: number;
 };
 
 export type DashboardActivityItem = {

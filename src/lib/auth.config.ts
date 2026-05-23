@@ -12,6 +12,7 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.role = user.role;
+        token.accountType = user.accountType;
         token.isVerified = user.isVerified;
       }
 
@@ -21,6 +22,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = token.sub ?? "";
         session.user.role = token.role === "ADMIN" ? "ADMIN" : "USER";
+        session.user.accountType = token.accountType === "PROVIDER" ? "PROVIDER" : "CLIENT";
         session.user.isVerified = token.isVerified === true;
       }
 

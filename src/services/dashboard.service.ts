@@ -17,6 +17,7 @@ export async function getDashboardShellUser(userId: string): Promise<DashboardSh
       name: true,
       email: true,
       role: true,
+      accountType: true,
       isVerified: true,
       profile: {
         select: {
@@ -31,11 +32,34 @@ export async function getDashboardShellUser(userId: string): Promise<DashboardSh
 }
 
 export async function getDashboardOverviewData(userId: string): Promise<DashboardOverviewData> {
-  const [postedJobs, sentOffers, acceptedOffers, savedJobs] = await prisma.$transaction([
+  const [
+    postedJobs,
+    openJobs,
+    receivedOffers,
+    sentOffers,
+    acceptedOffers,
+    pendingOffers,
+    savedJobs,
+  ] = await prisma.$transaction([
     prisma.jobPost.count({
       where: {
         authorId: userId,
         deletedAt: null,
+      },
+    }),
+    prisma.jobPost.count({
+      where: {
+        authorId: userId,
+        status: "OPEN",
+        deletedAt: null,
+      },
+    }),
+    prisma.offer.count({
+      where: {
+        jobPost: {
+          authorId: userId,
+          deletedAt: null,
+        },
       },
     }),
     prisma.offer.count({
@@ -47,6 +71,12 @@ export async function getDashboardOverviewData(userId: string): Promise<Dashboar
       where: {
         providerId: userId,
         status: "ACCEPTED",
+      },
+    }),
+    prisma.offer.count({
+      where: {
+        providerId: userId,
+        status: "PENDING",
       },
     }),
     prisma.savedJob.count({
@@ -82,6 +112,7 @@ export async function getDashboardOverviewData(userId: string): Promise<Dashboar
           bio: true,
           whatsapp: true,
           region: true,
+          avgRating: true,
           skills: {
             select: {
               skillId: true,
@@ -147,9 +178,13 @@ export async function getDashboardOverviewData(userId: string): Promise<Dashboar
   return {
     stats: {
       postedJobs,
+      openJobs,
+      receivedOffers,
       sentOffers,
       acceptedOffers,
+      pendingOffers,
       savedJobs,
+      avgRating: profile?.avgRating ?? 0,
     },
     notifications,
     activities: buildRecentActivities({ recentJobs, recentOffers, recentReviews }),

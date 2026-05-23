@@ -1,4 +1,4 @@
-import type { Region, WorkMode } from "@prisma/client";
+import type { AccountType, Region, WorkMode } from "@prisma/client";
 
 export type SkillOption = {
   id: string;
@@ -11,6 +11,7 @@ export type EditableProfile = {
   name: string;
   email: string | null;
   phone: string | null;
+  accountType: AccountType;
   title: string;
   bio: string;
   region: Region;
@@ -19,6 +20,7 @@ export type EditableProfile = {
   whatsapp: string;
   portfolioUrls: string[];
   skillIds: string[];
+  isAvailable: boolean;
 };
 
 export type ProfileEditorData = {
@@ -29,4 +31,5 @@ export type ProfileEditorData = {
 export type AccountSettingsData = {
   phone: string;
   email: string;
+  accountType: AccountType;
 };

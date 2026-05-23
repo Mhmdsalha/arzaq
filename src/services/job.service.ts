@@ -1,5 +1,6 @@
 import type { JobStatus, Prisma, Region, WorkMode } from "@prisma/client";
 
+import { assertClient } from "@/lib/authGuards";
 import { prisma } from "@/lib/prisma";
 import { categories as mockCategories } from "@/mock/categories";
 import { jobs as mockJobs } from "@/mock/jobs";
@@ -287,6 +288,22 @@ export async function getSavedJobs(userId: string): Promise<JobListItem[]> {
 }
 
 export async function createJob(data: CreateJobInput, userId: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      deletedAt: null,
+    },
+    select: {
+      accountType: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("غير مصرح لك بهذا الإجراء");
+  }
+
+  assertClient(user.accountType);
+
   const job = await prisma.jobPost.create({
     data: {
       title: data.title,

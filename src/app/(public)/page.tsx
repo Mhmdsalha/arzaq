@@ -7,9 +7,13 @@ import { LatestJobsSection } from "@/components/home/latest-jobs-section";
 import { SearchSection } from "@/components/home/search-section";
 import { categories } from "@/mock/categories";
 import { jobs } from "@/mock/jobs";
-import { providers } from "@/mock/providers";
+import { getPublicProviders } from "@/services/profile.service";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const providers = await getPublicProviders();
+
   return (
     <main>
       <HeroSection />

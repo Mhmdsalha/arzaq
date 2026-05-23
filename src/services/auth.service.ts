@@ -1,12 +1,20 @@
 import { randomBytes } from "crypto";
-import type { Prisma, Region, User, UserRole } from "@prisma/client";
+import type { AccountType, Prisma, Region, User, UserRole } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
 
 export type AuthUser = Pick<
   User,
-  "id" | "name" | "email" | "phone" | "passwordHash" | "role" | "isVerified" | "isBanned"
+  | "id"
+  | "name"
+  | "email"
+  | "phone"
+  | "passwordHash"
+  | "role"
+  | "accountType"
+  | "isVerified"
+  | "isBanned"
 >;
 
 export type SafeAuthUser = {
@@ -15,6 +23,7 @@ export type SafeAuthUser = {
   email: string | null;
   phone: string | null;
   role: UserRole;
+  accountType: AccountType;
   isVerified: boolean;
 };
 
@@ -56,11 +65,13 @@ export async function validatePassword(password: string, passwordHash: string) {
 }
 
 export async function createUser(input: {
+  accountType: AccountType;
   name: string;
   email?: string;
   phone: string;
   password: string;
   region: Region;
+  skills: string[];
 }) {
   const email = input.email ? input.email.toLowerCase() : undefined;
   const phone = normalizePhone(input.phone);
@@ -89,6 +100,21 @@ export async function createUser(input: {
   }
 
   const passwordHash = await hash(input.password, 12);
+  const skillIds = input.accountType === "PROVIDER" ? [...new Set(input.skills)] : [];
+
+  if (skillIds.length > 0) {
+    const existingSkills = await prisma.skill.count({
+      where: {
+        id: {
+          in: skillIds,
+        },
+      },
+    });
+
+    if (existingSkills !== skillIds.length) {
+      throw new Error("بعض المهارات المختارة غير صحيحة");
+    }
+  }
 
   return prisma.user.create({
     data: {
@@ -96,12 +122,39 @@ export async function createUser(input: {
       email,
       phone,
       passwordHash,
+      accountType: input.accountType,
       profile: {
         create: {
           region: input.region,
           whatsapp: phoneToWhatsApp(phone),
+          isAvailable: input.accountType === "PROVIDER",
+          skills:
+            skillIds.length > 0
+              ? {
+                  create: skillIds.map((skillId) => ({
+                    skill: {
+                      connect: {
+                        id: skillId,
+                      },
+                    },
+                  })),
+                }
+              : undefined,
         },
       },
+    },
+  });
+}
+
+export async function getRegistrationSkills() {
+  return prisma.skill.findMany({
+    orderBy: {
+      name: "asc",
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
     },
   });
 }
@@ -176,6 +229,7 @@ export function toSafeAuthUser(user: AuthUser): SafeAuthUser {
     email: user.email,
     phone: user.phone,
     role: user.role,
+    accountType: user.accountType,
     isVerified: user.isVerified,
   };
 }

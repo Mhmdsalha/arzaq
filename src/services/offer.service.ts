@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
+import { assertProvider } from "@/lib/authGuards";
 import { prisma } from "@/lib/prisma";
 import type {
   JobOffersData,
@@ -17,6 +18,22 @@ export type OfferInput = {
 };
 
 export async function createOffer(data: OfferInput & { jobPostId: string }, userId: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      deletedAt: null,
+    },
+    select: {
+      accountType: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("غير مصرح لك بهذا الإجراء");
+  }
+
+  assertProvider(user.accountType);
+
   const job = await prisma.jobPost.findFirst({
     where: {
       id: data.jobPostId,

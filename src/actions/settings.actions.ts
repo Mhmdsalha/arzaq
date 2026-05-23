@@ -11,6 +11,8 @@ import {
   type ChangePasswordInput,
 } from "@/schemas/settings.schema";
 import { changeUserPassword, updateAccountSettings } from "@/services/settings.service";
+import { switchAccountType } from "@/services/settings.service";
+import type { AccountType } from "@prisma/client";
 
 export async function updateAccountSettingsAction(
   input: AccountSettingsInput,
@@ -73,4 +75,35 @@ export async function changePasswordAction(input: ChangePasswordInput): Promise<
   }
 
   return { ok: true, message: "تم تغيير كلمة المرور بنجاح" };
+}
+
+export async function switchAccountTypeAction(
+  targetAccountType: AccountType,
+): Promise<ActionResult> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { ok: false, message: "يجب تسجيل الدخول أولاً" };
+  }
+
+  try {
+    const result = await switchAccountType(session.user.id, targetAccountType);
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard/profile");
+
+    return {
+      ok: true,
+      message:
+        result.withdrawnOffers > 0
+          ? "تم تحويل حسابك بنجاح، وتم سحب عروضك المعلقة تلقائياً"
+          : "تم تحويل حسابك بنجاح",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ، حاول مرة أخرى",
+    };
+  }
 }

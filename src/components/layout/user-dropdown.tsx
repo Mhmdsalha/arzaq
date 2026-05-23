@@ -15,6 +15,11 @@ const roleLabels = {
   USER: "مستخدم",
 };
 
+const accountTypeLabels = {
+  CLIENT: "صاحب طلب",
+  PROVIDER: "مقدم خدمة",
+};
+
 export function UserDropdown({
   user,
   compact = false,
@@ -54,7 +59,7 @@ export function UserDropdown({
                 ) : null}
               </span>
               <span className="mt-1 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
-                {roleLabels[user.role]}
+                {roleLabels[user.role]} · {accountTypeLabels[user.accountType]}
               </span>
             </span>
             <ChevronDown className="size-4 text-slate-400" />
@@ -71,6 +76,9 @@ export function UserDropdown({
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary-dark">
                   {roleLabels[user.role]}
+                </span>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  {accountTypeLabels[user.accountType]}
                 </span>
                 {user.profile?.isTrusted ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">

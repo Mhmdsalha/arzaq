@@ -6,7 +6,11 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { changePasswordAction, updateAccountSettingsAction } from "@/actions/settings.actions";
+import {
+  changePasswordAction,
+  switchAccountTypeAction,
+  updateAccountSettingsAction,
+} from "@/actions/settings.actions";
 import { PasswordField } from "@/components/auth/password-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,10 +26,62 @@ import type { AccountSettingsData } from "@/types/profile";
 
 export function SettingsForms({ data }: { data: AccountSettingsData }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-      <AccountSettingsForm data={data} />
-      <ChangePasswordForm />
+    <div className="space-y-6">
+      <AccountTypeSwitcher data={data} />
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <AccountSettingsForm data={data} />
+        <ChangePasswordForm />
+      </div>
     </div>
+  );
+}
+
+function AccountTypeSwitcher({ data }: { data: AccountSettingsData }) {
+  const [isPending, startTransition] = useTransition();
+  const isProvider = data.accountType === "PROVIDER";
+  const targetType = isProvider ? "CLIENT" : "PROVIDER";
+
+  function handleSwitch() {
+    const message = isProvider
+      ? "ستتمكن من نشر الطلبات والحصول على عروض. لن تتمكن من تقديم عروض جديدة بعد التغيير."
+      : "ستتمكن من تقديم العروض وبناء بروفايل مهني. لن تتمكن من نشر طلبات جديدة بعد التغيير.";
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await switchAccountTypeAction(targetType);
+
+      if (result.ok) {
+        toast.success(result.message);
+        window.location.reload();
+        return;
+      }
+
+      toast.error(result.message);
+    });
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">نوع الحساب</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary-dark">
+            {isProvider ? "🛠️ مقدم خدمة" : "📋 صاحب طلب"}
+          </span>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            يمكنك تغيير نوع الحساب مع الحفاظ على تاريخك وبيانات بروفايلك.
+          </p>
+        </div>
+        <Button type="button" variant="secondary" onClick={handleSwitch} disabled={isPending}>
+          {isPending ? "جاري التحويل..." : "تغيير نوع الحساب"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

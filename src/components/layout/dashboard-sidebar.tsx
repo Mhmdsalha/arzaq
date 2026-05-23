@@ -8,13 +8,14 @@ import { useState } from "react";
 import { Logo } from "@/components/layout/logo";
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { Button } from "@/components/ui/button";
-import { dashboardNavLinks } from "@/constants/dashboard-nav";
+import { getDashboardNavLinks } from "@/constants/dashboard-nav";
 import { cn } from "@/lib/utils";
 import type { DashboardShellUser } from "@/types/dashboard";
 
 export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const navLinks = getDashboardNavLinks(user.accountType);
 
   return (
     <aside
@@ -41,7 +42,7 @@ export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
       </div>
 
       <nav className="mt-8 grid gap-2" aria-label="روابط لوحة التحكم">
-        {dashboardNavLinks.map((link) => {
+        {navLinks.map((link) => {
           const Icon = link.icon;
           const isActive = link.exact ? pathname === link.href : pathname.startsWith(link.href);
 
@@ -51,6 +52,7 @@ export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
               href={link.href}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded-xl border-r-4 border-r-transparent px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950",
+                link.featured && "bg-primary text-white hover:bg-primary-dark hover:text-white",
                 isActive && "border-r-primary bg-primary/10 text-primary-dark",
                 isCollapsed && "justify-center px-2",
               )}

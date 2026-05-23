@@ -8,7 +8,12 @@ export const metadata = {
   title: "لوحة التحكم",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
+  const params = await searchParams;
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -24,5 +29,5 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  return <DashboardOverview user={user} data={overviewData} />;
+  return <DashboardOverview user={user} data={overviewData} welcome={params.welcome} />;
 }

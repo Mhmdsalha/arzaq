@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { Button } from "@/components/ui/button";
-import { dashboardNavLinks } from "@/constants/dashboard-nav";
+import { getDashboardNavLinks } from "@/constants/dashboard-nav";
 import { cn } from "@/lib/utils";
 import type { DashboardShellUser } from "@/types/dashboard";
 
@@ -20,6 +20,7 @@ export function DashboardMobileNav({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const navLinks = getDashboardNavLinks(user.accountType);
 
   if (!isOpen) {
     return null;
@@ -43,7 +44,7 @@ export function DashboardMobileNav({
         </div>
 
         <nav className="mt-4 grid gap-2" aria-label="روابط لوحة التحكم للجوال">
-          {dashboardNavLinks.map((link) => {
+          {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = link.exact ? pathname === link.href : pathname.startsWith(link.href);
 
@@ -54,6 +55,7 @@ export function DashboardMobileNav({
                 onClick={onClose}
                 className={cn(
                   "flex min-h-11 items-center gap-3 rounded-xl border-r-4 border-r-transparent px-3 py-2 text-sm font-semibold text-slate-600",
+                  link.featured && "bg-primary text-white",
                   isActive && "border-r-primary bg-primary/10 text-primary-dark",
                 )}
               >

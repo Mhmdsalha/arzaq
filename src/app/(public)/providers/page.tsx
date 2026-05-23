@@ -1,14 +1,18 @@
 import { ProviderList } from "@/components/providers/provider-list";
 import { PageHeader } from "@/components/shared/page-header";
 import { categories } from "@/mock/categories";
-import { providers } from "@/mock/providers";
 import { regions } from "@/mock/regions";
+import { getPublicProviders } from "@/services/profile.service";
 
 export const metadata = {
   title: "مقدمو الخدمات",
 };
 
-export default function ProvidersPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProvidersPage() {
+  const providers = await getPublicProviders();
+
   return (
     <main>
       <PageHeader

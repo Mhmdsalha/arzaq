@@ -35,6 +35,7 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
       bio: data.profile.bio,
       region: data.profile.region,
       workMode: data.profile.workMode,
+      isAvailable: data.profile.isAvailable,
       skills: data.profile.skillIds,
       whatsapp: data.profile.whatsapp,
       avatarUrl: data.profile.avatarUrl,
@@ -60,6 +61,7 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
   const portfolioUrls = useWatch({ control, name: "portfolioUrls" }) ?? [""];
   const region = useWatch({ control, name: "region" });
   const workMode = useWatch({ control, name: "workMode" });
+  const isProvider = data.profile.accountType === "PROVIDER";
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -85,66 +87,79 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
               {...register("name")}
             />
             <TextField
-              id="title"
-              label="العنوان المهني"
-              placeholder="مثلاً: مصمم جرافيك"
-              error={errors.title?.message}
-              {...register("title")}
+              id="whatsapp"
+              label="رقم واتساب"
+              placeholder="+97059..."
+              inputMode="tel"
+              dir="ltr"
+              className="text-left"
+              error={errors.whatsapp?.message}
+              {...register("whatsapp")}
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <RegionSelector
-              value={region}
-              error={errors.region?.message}
-              onChange={(value) =>
-                setValue("region", value, { shouldDirty: true, shouldValidate: true })
-              }
-            />
-            <WorkModeSelector
-              value={workMode}
-              error={errors.workMode?.message}
-              onChange={(value) =>
-                setValue("workMode", value, { shouldDirty: true, shouldValidate: true })
-              }
-            />
-          </div>
-
-          <TextAreaField
-            id="bio"
-            label="نبذة تعريفية"
-            placeholder="اكتب نبذة قصيرة عن خبرتك والخدمات التي تقدمها"
-            error={errors.bio?.message}
-            {...register("bio")}
-          />
-
-          <TextField
-            id="whatsapp"
-            label="واتساب"
-            placeholder="+97059..."
-            inputMode="tel"
-            dir="ltr"
-            className="text-left"
-            error={errors.whatsapp?.message}
-            {...register("whatsapp")}
-          />
-
-          <SkillsSelector
-            skills={data.skills}
-            selectedSkillIds={selectedSkillIds}
-            error={errors.skills?.message}
-            onChange={(skillIds) =>
-              setValue("skills", skillIds, { shouldDirty: true, shouldValidate: true })
+          <RegionSelector
+            value={region}
+            error={errors.region?.message}
+            onChange={(value) =>
+              setValue("region", value, { shouldDirty: true, shouldValidate: true })
             }
           />
 
-          <PortfolioLinksEditor
-            values={portfolioUrls}
-            error={getPortfolioError(errors.portfolioUrls)}
-            onChange={(urls) =>
-              setValue("portfolioUrls", urls, { shouldDirty: true, shouldValidate: true })
-            }
-          />
+          {isProvider ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                <TextField
+                  id="title"
+                  label="العنوان المهني"
+                  placeholder="مثلاً: مصمم جرافيك"
+                  error={errors.title?.message}
+                  {...register("title")}
+                />
+                <WorkModeSelector
+                  value={workMode}
+                  error={errors.workMode?.message}
+                  onChange={(value) =>
+                    setValue("workMode", value, { shouldDirty: true, shouldValidate: true })
+                  }
+                />
+              </div>
+
+              <TextAreaField
+                id="bio"
+                label="نبذة تعريفية"
+                placeholder="اكتب نبذة قصيرة عن خبرتك والخدمات التي تقدمها"
+                error={errors.bio?.message}
+                {...register("bio")}
+              />
+
+              <label className="flex min-h-11 items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                <span>متاح للعمل</span>
+                <input
+                  type="checkbox"
+                  className="size-5 accent-primary"
+                  {...register("isAvailable")}
+                />
+              </label>
+
+              <SkillsSelector
+                skills={data.skills}
+                selectedSkillIds={selectedSkillIds}
+                error={errors.skills?.message}
+                onChange={(skillIds) =>
+                  setValue("skills", skillIds, { shouldDirty: true, shouldValidate: true })
+                }
+              />
+
+              <PortfolioLinksEditor
+                values={portfolioUrls}
+                error={getPortfolioError(errors.portfolioUrls)}
+                onChange={(urls) =>
+                  setValue("portfolioUrls", urls, { shouldDirty: true, shouldValidate: true })
+                }
+              />
+            </>
+          ) : null}
         </CardContent>
       </Card>
 

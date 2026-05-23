@@ -66,7 +66,10 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     await signIn("credentials", {
       identifier: parsed.data.email ?? parsed.data.phone,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
+      redirectTo:
+        parsed.data.accountType === "PROVIDER"
+          ? "/dashboard?welcome=provider"
+          : "/dashboard?welcome=client",
     });
   } catch (error) {
     if (error instanceof AuthError) {

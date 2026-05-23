@@ -1,24 +1,9 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 import { authConfig } from "@/lib/auth.config";
 import { loginSchema } from "@/schemas/auth.schema";
 import { findUserByIdentifier, validatePassword } from "@/services/auth.service";
-
-declare module "next-auth" {
-  interface User {
-    role: "USER" | "ADMIN";
-    isVerified: boolean;
-  }
-
-  interface Session {
-    user: {
-      id: string;
-      role: "USER" | "ADMIN";
-      isVerified: boolean;
-    } & DefaultSession["user"];
-  }
-}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -52,6 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          accountType: user.accountType,
           isVerified: user.isVerified,
         };
       },

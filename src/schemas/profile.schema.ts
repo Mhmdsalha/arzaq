@@ -20,6 +20,7 @@ export const profileSchema = z.object({
   bio: z.string().trim().max(500, "النبذة لا تتجاوز 500 حرف"),
   region: z.enum(regionValues, { error: "يجب اختيار منطقة" }),
   workMode: z.enum(workModeValues, { error: "يجب اختيار طريقة العمل" }),
+  isAvailable: z.boolean(),
   skills: z.array(z.string().cuid("مهارة غير صحيحة")).max(20, "عدد المهارات كبير جدًا"),
   whatsapp: z
     .string()

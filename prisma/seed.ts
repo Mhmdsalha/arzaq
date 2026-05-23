@@ -1,4 +1,4 @@
-import { JobStatus, OfferStatus, Region, UserRole, WorkMode } from "@prisma/client";
+import { AccountType, JobStatus, OfferStatus, Region, UserRole, WorkMode } from "@prisma/client";
 import { hash } from "bcryptjs";
 
 import { prisma } from "../src/lib/prisma";
@@ -34,17 +34,19 @@ const sampleUsers = [
     name: "سارة النجار",
     email: "sara@example.com",
     phone: "0599000101",
+    accountType: AccountType.CLIENT,
     region: Region.GAZA_CITY,
     whatsapp: "970599000101",
-    bio: "مصممة واجهات وهوية بصرية للمشاريع الصغيرة.",
-    isTrusted: true,
-    skillNames: ["تصميم جرافيك", "كتابة محتوى", "تصوير"],
+    bio: "صاحبة مشروع صغير تنشر طلبات خدمات رقمية وميدانية عند الحاجة.",
+    isTrusted: false,
+    skillNames: [],
   },
   {
     id: "seed-user-ahmad",
     name: "أحمد أبو سالم",
     email: "ahmad@example.com",
     phone: "0599000102",
+    accountType: AccountType.PROVIDER,
     region: Region.ONLINE,
     whatsapp: "970599000102",
     bio: "مطوّر ويب يبني صفحات عربية سريعة وخفيفة.",
@@ -56,11 +58,24 @@ const sampleUsers = [
     name: "لينا حماد",
     email: "lina@example.com",
     phone: "0599000103",
+    accountType: AccountType.PROVIDER,
     region: Region.CENTRAL,
     whatsapp: "970599000103",
     bio: "متخصصة إدخال بيانات وتنظيف ملفات Excel وKobo.",
     isTrusted: true,
     skillNames: ["إدخال بيانات", "Kobo Toolbox", "Excel"],
+  },
+  {
+    id: "seed-user-mona",
+    name: "منى الحداد",
+    email: "mona@example.com",
+    phone: "0599000104",
+    accountType: AccountType.CLIENT,
+    region: Region.RAFAH,
+    whatsapp: "970599000104",
+    bio: "صاحبة مبادرة مجتمعية تبحث عن مقدمي خدمات موثوقين.",
+    isTrusted: false,
+    skillNames: [],
   },
 ];
 
@@ -76,7 +91,7 @@ const jobPosts = [
     region: Region.GAZA_CITY,
     workMode: WorkMode.ONLINE,
     status: JobStatus.OPEN,
-    authorId: "seed-user-lina",
+    authorId: "seed-user-sara",
     categorySlug: "digital",
   },
   {
@@ -89,7 +104,7 @@ const jobPosts = [
     region: Region.CENTRAL,
     workMode: WorkMode.BOTH,
     status: JobStatus.IN_PROGRESS,
-    authorId: "seed-user-ahmad",
+    authorId: "seed-user-mona",
     categorySlug: "digital",
   },
   {
@@ -115,7 +130,7 @@ const jobPosts = [
     region: Region.RAFAH,
     workMode: WorkMode.FIELD,
     status: JobStatus.OPEN,
-    authorId: "seed-user-ahmad",
+    authorId: "seed-user-sara",
     categorySlug: "field",
   },
   {
@@ -128,7 +143,7 @@ const jobPosts = [
     region: Region.CENTRAL,
     workMode: WorkMode.FIELD,
     status: JobStatus.OPEN,
-    authorId: "seed-user-sara",
+    authorId: "seed-user-mona",
     categorySlug: "daily",
   },
   {
@@ -232,6 +247,7 @@ async function upsertUsers(passwordHash: string) {
       name: "مدير أرزاق",
       phone: "0599000000",
       role: UserRole.ADMIN,
+      accountType: AccountType.CLIENT,
       isVerified: true,
     },
     create: {
@@ -241,6 +257,7 @@ async function upsertUsers(passwordHash: string) {
       phone: "0599000000",
       passwordHash,
       role: UserRole.ADMIN,
+      accountType: AccountType.CLIENT,
       isVerified: true,
     },
   });
@@ -252,6 +269,7 @@ async function upsertUsers(passwordHash: string) {
       whatsapp: "970599000000",
       bio: "حساب إدارة المنصة للاختبار المحلي.",
       isTrusted: true,
+      isAvailable: false,
     },
     create: {
       userId: admin.id,
@@ -259,6 +277,7 @@ async function upsertUsers(passwordHash: string) {
       whatsapp: "970599000000",
       bio: "حساب إدارة المنصة للاختبار المحلي.",
       isTrusted: true,
+      isAvailable: false,
     },
   });
 
@@ -268,6 +287,7 @@ async function upsertUsers(passwordHash: string) {
       update: {
         name: user.name,
         phone: user.phone,
+        accountType: user.accountType,
         isVerified: true,
       },
       create: {
@@ -275,6 +295,7 @@ async function upsertUsers(passwordHash: string) {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        accountType: user.accountType,
         passwordHash,
         isVerified: true,
       },
@@ -287,6 +308,7 @@ async function upsertUsers(passwordHash: string) {
         region: user.region,
         whatsapp: user.whatsapp,
         isTrusted: user.isTrusted,
+        isAvailable: user.accountType === AccountType.PROVIDER,
         avgRating: user.isTrusted ? 4.8 : 4.4,
         totalReviews: user.isTrusted ? 8 : 3,
       },
@@ -296,6 +318,7 @@ async function upsertUsers(passwordHash: string) {
         region: user.region,
         whatsapp: user.whatsapp,
         isTrusted: user.isTrusted,
+        isAvailable: user.accountType === AccountType.PROVIDER,
         avgRating: user.isTrusted ? 4.8 : 4.4,
         totalReviews: user.isTrusted ? 8 : 3,
       },
@@ -318,10 +341,12 @@ async function upsertUsers(passwordHash: string) {
       }),
     );
 
-    await prisma.profileSkill.createMany({
-      data: profileSkills,
-      skipDuplicates: true,
-    });
+    if (profileSkills.length > 0) {
+      await prisma.profileSkill.createMany({
+        data: profileSkills,
+        skipDuplicates: true,
+      });
+    }
   }
 }
 

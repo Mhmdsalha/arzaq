@@ -1,16 +1,14 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { ProviderProfile } from "@/components/providers/provider-profile";
 import { PageHeader } from "@/components/shared/page-header";
-import { providers } from "@/mock/providers";
+import { getPublicProviderById } from "@/services/profile.service";
 
-export function generateStaticParams() {
-  return providers.map((provider) => ({ providerId: provider.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ providerId: string }> }) {
   const { providerId } = await params;
-  const provider = providers.find((item) => item.id === providerId);
+  const provider = await getPublicProviderById(providerId);
 
   return {
     title: provider ? provider.name : "ملف مقدم الخدمة",
@@ -23,10 +21,10 @@ export default async function ProviderPage({
   params: Promise<{ providerId: string }>;
 }) {
   const { providerId } = await params;
-  const provider = providers.find((item) => item.id === providerId);
+  const provider = await getPublicProviderById(providerId);
 
   if (!provider) {
-    notFound();
+    redirect("/providers");
   }
 
   return (
