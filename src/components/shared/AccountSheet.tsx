@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import type { ComponentType } from "react";
 import { useCallback, useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { LogoutConfirmDialog } from "@/components/shared/LogoutConfirmDialog";
 import type { useUnreadCount } from "@/hooks/useUnreadCount";
 import { cn } from "@/lib/utils";
 
@@ -243,24 +243,11 @@ export function AccountSheet({
         )}
       </div>
 
-      {showLogoutConfirm ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-950">تسجيل الخروج</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              هل أنت متأكد أنك تريد تسجيل الخروج؟
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <Button type="button" variant="secondary" onClick={() => setShowLogoutConfirm(false)}>
-                إلغاء
-              </Button>
-              <Button type="button" variant="destructive" onClick={confirmSignOut}>
-                تسجيل الخروج
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmSignOut}
+      />
     </div>
   );
 }
