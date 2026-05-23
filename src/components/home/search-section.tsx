@@ -7,7 +7,7 @@ import { regions } from "@/mock/regions";
 
 export function SearchSection() {
   return (
-    <section className="border-y border-slate-200 bg-slate-50 py-8">
+    <section className="bg-slate-50 py-8">
       <div className="container">
         <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_auto]">
           <div className="relative">
