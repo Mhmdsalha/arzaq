@@ -1,4 +1,7 @@
+import { Suspense } from "react";
+
 import { JobList } from "@/components/jobs/job-list";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { regionLabels } from "@/constants/regions";
 import { auth } from "@/lib/auth";
@@ -11,7 +14,26 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function JobsPage({
+export default function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  return (
+    <main>
+      <PageHeader
+        title="طلبات العمل والخدمات"
+        description="تصفح الطلبات المنشورة، فلتر حسب المنطقة أو المجال، واختر الفرصة المناسبة لمهارتك."
+        breadcrumbs={[{ label: "الطلبات" }]}
+      />
+      <Suspense fallback={<JobsContentSkeleton />}>
+        <JobsContent searchParams={searchParams} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function JobsContent({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -34,34 +56,40 @@ export default async function JobsPage({
   ]);
 
   return (
-    <main>
-      <PageHeader
-        title="طلبات العمل والخدمات"
-        description="تصفح الطلبات المنشورة، فلتر حسب المنطقة أو المجال، واختر الفرصة المناسبة لمهارتك."
-        breadcrumbs={[{ label: "الطلبات" }]}
+    <section className="container py-8">
+      <JobList
+        jobs={jobs.items}
+        categories={categories}
+        regions={Object.entries(regionLabels).map(([value, label]) => ({ value, label }))}
+        filters={{
+          q: filters.q ?? "",
+          category: filters.category ?? "all",
+          region: filters.region ?? "all",
+          workMode: filters.workMode ?? "all",
+          status: filters.status ?? "OPEN",
+          urgentOnly: filters.urgent ?? false,
+        }}
+        pagination={{
+          page: jobs.page,
+          total: jobs.total,
+          totalPages: jobs.totalPages,
+        }}
+        isAuthenticated={Boolean(session?.user?.id)}
       />
-      <section className="container py-8">
-        <JobList
-          jobs={jobs.items}
-          categories={categories}
-          regions={Object.entries(regionLabels).map(([value, label]) => ({ value, label }))}
-          filters={{
-            q: filters.q ?? "",
-            category: filters.category ?? "all",
-            region: filters.region ?? "all",
-            workMode: filters.workMode ?? "all",
-            status: filters.status ?? "OPEN",
-            urgentOnly: filters.urgent ?? false,
-          }}
-          pagination={{
-            page: jobs.page,
-            total: jobs.total,
-            totalPages: jobs.totalPages,
-          }}
-          isAuthenticated={Boolean(session?.user?.id)}
-        />
-      </section>
-    </main>
+    </section>
+  );
+}
+
+function JobsContentSkeleton() {
+  return (
+    <section className="container py-8">
+      <Skeleton className="mb-6 h-16 w-full rounded-2xl" />
+      <div className="space-y-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} className="h-40 rounded-2xl" />
+        ))}
+      </div>
+    </section>
   );
 }
 

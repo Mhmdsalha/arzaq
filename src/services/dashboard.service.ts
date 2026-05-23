@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { prisma } from "@/lib/prisma";
 import type {
   DashboardActivityItem,
@@ -6,30 +8,32 @@ import type {
   ProfileCompletionData,
 } from "@/types/dashboard";
 
-export async function getDashboardShellUser(userId: string): Promise<DashboardShellUser | null> {
-  return prisma.user.findFirst({
-    where: {
-      id: userId,
-      deletedAt: null,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      accountType: true,
-      isVerified: true,
-      profile: {
-        select: {
-          avatarUrl: true,
-          whatsapp: true,
-          isTrusted: true,
-          region: true,
+export const getDashboardShellUser = cache(
+  async (userId: string): Promise<DashboardShellUser | null> => {
+    return prisma.user.findFirst({
+      where: {
+        id: userId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        accountType: true,
+        isVerified: true,
+        profile: {
+          select: {
+            avatarUrl: true,
+            whatsapp: true,
+            isTrusted: true,
+            region: true,
+          },
         },
       },
-    },
-  });
-}
+    });
+  },
+);
 
 export async function getDashboardOverviewData(userId: string): Promise<DashboardOverviewData> {
   const [

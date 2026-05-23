@@ -7,7 +7,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
+  const datasourceUrl =
+    process.env.NODE_ENV === "development"
+      ? (process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL)
+      : process.env.DATABASE_URL;
+
   return new PrismaClient({
+    datasourceUrl,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   }).$extends({
     query: {

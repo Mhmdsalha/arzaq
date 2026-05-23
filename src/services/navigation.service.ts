@@ -1,4 +1,5 @@
 import type { AccountType, UserRole } from "@prisma/client";
+import { cache } from "react";
 
 import { prisma } from "@/lib/prisma";
 
@@ -21,7 +22,7 @@ export type NavigationSummary = {
   };
 };
 
-export async function getNavigationSummary(userId: string): Promise<NavigationSummary> {
+export const getNavigationSummary = cache(async (userId: string): Promise<NavigationSummary> => {
   const [user, profile, unreadCount, postedJobs, receivedOffers, sentOffers, acceptedOffers] =
     await prisma.$transaction([
       prisma.user.findFirst({
@@ -110,7 +111,7 @@ export async function getNavigationSummary(userId: string): Promise<NavigationSu
       acceptedOffers,
     },
   };
-}
+});
 
 export async function getUserNotifications(userId: string) {
   return prisma.notification.findMany({

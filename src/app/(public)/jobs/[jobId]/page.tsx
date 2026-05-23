@@ -25,9 +25,10 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ job
     notFound();
   }
 
-  await incrementJobViews(job.id, session?.user?.id);
-
-  const similarJobs = await getSimilarJobs(job.category.id, job.id, session?.user?.id);
+  const [similarJobs] = await Promise.all([
+    getSimilarJobs(job.category.id, job.id, session?.user?.id),
+    incrementJobViews(job.id, session?.user?.id),
+  ]);
 
   return (
     <main>

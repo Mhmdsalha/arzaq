@@ -21,6 +21,12 @@ type NavigationSummaryResponse = {
   };
 };
 
+const SUMMARY_TTL_MS = 30_000;
+
+let cachedSummary: NavigationSummaryResponse | null = null;
+let cachedAt = 0;
+let pendingSummary: Promise<NavigationSummaryResponse | null> | null = null;
+
 export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDER") {
   const [summary, setSummary] = useState<NavigationSummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,15 +44,7 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
       }
 
       try {
-        const response = await fetch("/api/navigation/summary", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as NavigationSummaryResponse;
+        const data = await getNavigationSummary();
 
         if (isMounted) {
           setSummary(data);
@@ -83,4 +81,33 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
     summary: enabled ? syncedSummary : null,
     isLoading: enabled ? isLoading : false,
   };
+}
+
+async function getNavigationSummary() {
+  const now = Date.now();
+
+  if (cachedSummary && now - cachedAt < SUMMARY_TTL_MS) {
+    return cachedSummary;
+  }
+
+  if (!pendingSummary) {
+    pendingSummary = fetch("/api/navigation/summary", {
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = (await response.json()) as NavigationSummaryResponse;
+        cachedSummary = data;
+        cachedAt = Date.now();
+        return data;
+      })
+      .finally(() => {
+        pendingSummary = null;
+      });
+  }
+
+  return pendingSummary;
 }

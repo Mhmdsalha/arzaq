@@ -169,6 +169,9 @@ model JobPost {
   reviews  Review[]
 
   @@index([status, region, categoryId, isUrgent, createdAt])
+  @@index([status, createdAt])
+  @@index([status, region, categoryId])
+  @@index([isUrgent, createdAt])
   @@index([authorId])
   @@index([categoryId])
 }
@@ -206,6 +209,7 @@ model Review {
 
   @@index([giverId])
   @@index([receiverId])
+  @@index([receiverId, createdAt])
   @@index([jobPostId])
 }
 

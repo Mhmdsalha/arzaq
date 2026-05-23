@@ -1,4 +1,5 @@
 import type { JobStatus, Prisma, Region, WorkMode } from "@prisma/client";
+import { cache } from "react";
 
 import { assertClient } from "@/lib/authGuards";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +39,7 @@ export type CreateJobInput = {
   expiresAt?: string;
 };
 
-export async function getJobFilterOptions(): Promise<JobCategoryOption[]> {
+export const getJobFilterOptions = cache(async (): Promise<JobCategoryOption[]> => {
   if (!hasDatabaseUrl()) {
     return getMockJobFilterOptions();
   }
@@ -55,7 +56,7 @@ export async function getJobFilterOptions(): Promise<JobCategoryOption[]> {
       icon: true,
     },
   });
-}
+});
 
 export async function getJobsWithFilters(
   filters: JobFiltersInput,
@@ -89,93 +90,93 @@ export async function getJobsWithFilters(
   };
 }
 
-export async function getJobById(id: string, userId?: string): Promise<JobDetailsData | null> {
-  if (!hasDatabaseUrl()) {
-    return getMockJobById(id);
-  }
+export const getJobById = cache(
+  async (id: string, userId?: string): Promise<JobDetailsData | null> => {
+    if (!hasDatabaseUrl()) {
+      return getMockJobById(id);
+    }
 
-  const job = await prisma.jobPost.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-    },
-    select: {
-      ...jobListSelect(userId),
-      author: {
-        select: {
-          id: true,
-          name: true,
-          profile: {
-            select: {
-              avatarUrl: true,
-              whatsapp: true,
-              avgRating: true,
-              totalReviews: true,
-              isTrusted: true,
-              region: true,
+    const job = await prisma.jobPost.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      select: {
+        ...jobListSelect(userId),
+        author: {
+          select: {
+            id: true,
+            name: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                whatsapp: true,
+                avgRating: true,
+                totalReviews: true,
+                isTrusted: true,
+                region: true,
+              },
             },
           },
         },
+        offers: userId
+          ? {
+              where: {
+                providerId: userId,
+              },
+              select: {
+                id: true,
+              },
+              take: 1,
+            }
+          : false,
       },
-      offers: userId
-        ? {
-            where: {
-              providerId: userId,
-            },
-            select: {
-              id: true,
-            },
-            take: 1,
-          }
-        : false,
-    },
-  });
+    });
 
-  if (!job) {
-    return null;
-  }
+    if (!job) {
+      return null;
+    }
 
-  const listItem = mapJobListItem(job, userId);
+    const listItem = mapJobListItem(job, userId);
 
-  return {
-    ...listItem,
-    author: {
-      ...listItem.author,
-      whatsapp: job.author.profile?.whatsapp ?? null,
-      avgRating: job.author.profile?.avgRating ?? 0,
-      totalReviews: job.author.profile?.totalReviews ?? 0,
-      region: job.author.profile?.region ?? null,
-    },
-    alreadyApplied: Boolean(userId && job.offers.length > 0),
-    isOwner: job.author.id === userId,
-  };
-}
-
-export async function getSimilarJobs(
-  categoryId: string,
-  excludeId: string,
-  userId?: string,
-): Promise<JobListItem[]> {
-  if (!hasDatabaseUrl()) {
-    return getMockSimilarJobs(categoryId, excludeId);
-  }
-
-  const jobs = await prisma.jobPost.findMany({
-    where: {
-      categoryId,
-      id: {
-        not: excludeId,
+    return {
+      ...listItem,
+      author: {
+        ...listItem.author,
+        whatsapp: job.author.profile?.whatsapp ?? null,
+        avgRating: job.author.profile?.avgRating ?? 0,
+        totalReviews: job.author.profile?.totalReviews ?? 0,
+        region: job.author.profile?.region ?? null,
       },
-      status: "OPEN",
-      deletedAt: null,
-    },
-    orderBy: [{ isUrgent: "desc" }, { createdAt: "desc" }],
-    take: 4,
-    select: jobListSelect(userId),
-  });
+      alreadyApplied: Boolean(userId && job.offers.length > 0),
+      isOwner: job.author.id === userId,
+    };
+  },
+);
 
-  return jobs.map((job) => mapJobListItem(job, userId));
-}
+export const getSimilarJobs = cache(
+  async (categoryId: string, excludeId: string, userId?: string): Promise<JobListItem[]> => {
+    if (!hasDatabaseUrl()) {
+      return getMockSimilarJobs(categoryId, excludeId);
+    }
+
+    const jobs = await prisma.jobPost.findMany({
+      where: {
+        categoryId,
+        id: {
+          not: excludeId,
+        },
+        status: "OPEN",
+        deletedAt: null,
+      },
+      orderBy: [{ isUrgent: "desc" }, { createdAt: "desc" }],
+      take: 4,
+      select: jobListSelect(userId),
+    });
+
+    return jobs.map((job) => mapJobListItem(job, userId));
+  },
+);
 
 export async function getUserJobs(userId: string): Promise<UserJobItem[]> {
   const jobs = await prisma.jobPost.findMany({

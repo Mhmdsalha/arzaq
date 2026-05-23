@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import type { AccountType, Prisma, Region, User, UserRole } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
+import { cache } from "react";
 
 import { prisma } from "@/lib/prisma";
 
@@ -51,14 +52,14 @@ export async function findUserByIdentifier(identifier: string) {
   });
 }
 
-export async function findUserById(userId: string) {
+export const findUserById = cache(async (userId: string) => {
   return prisma.user.findFirst({
     where: {
       id: userId,
       deletedAt: null,
     },
   });
-}
+});
 
 export async function validatePassword(password: string, passwordHash: string) {
   return compare(password, passwordHash);
@@ -146,7 +147,7 @@ export async function createUser(input: {
   });
 }
 
-export async function getRegistrationSkills() {
+export const getRegistrationSkills = cache(async () => {
   return prisma.skill.findMany({
     orderBy: {
       name: "asc",
@@ -157,7 +158,7 @@ export async function getRegistrationSkills() {
       slug: true,
     },
   });
-}
+});
 
 export async function createPasswordResetToken(identifier: string) {
   const user = await findUserByIdentifier(identifier);

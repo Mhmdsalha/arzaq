@@ -1,4 +1,5 @@
 import type { Prisma, Region, WorkMode } from "@prisma/client";
+import { cache } from "react";
 
 import { prisma } from "@/lib/prisma";
 import type { ProviderProfile } from "@/types/marketplace";
@@ -223,7 +224,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
   ]);
 }
 
-export async function getPublicProviders(): Promise<ProviderProfile[]> {
+export const getPublicProviders = cache(async (): Promise<ProviderProfile[]> => {
   const providers = await prisma.user.findMany({
     where: {
       accountType: "PROVIDER",
@@ -237,21 +238,23 @@ export async function getPublicProviders(): Promise<ProviderProfile[]> {
   });
 
   return providers.map(mapPublicProvider);
-}
+});
 
-export async function getPublicProviderById(providerId: string): Promise<ProviderProfile | null> {
-  const provider = await prisma.user.findFirst({
-    where: {
-      id: providerId,
-      accountType: "PROVIDER",
-      deletedAt: null,
-      isBanned: false,
-    },
-    select: publicProviderSelect(),
-  });
+export const getPublicProviderById = cache(
+  async (providerId: string): Promise<ProviderProfile | null> => {
+    const provider = await prisma.user.findFirst({
+      where: {
+        id: providerId,
+        accountType: "PROVIDER",
+        deletedAt: null,
+        isBanned: false,
+      },
+      select: publicProviderSelect(),
+    });
 
-  return provider ? mapPublicProvider(provider) : null;
-}
+    return provider ? mapPublicProvider(provider) : null;
+  },
+);
 
 function publicProviderSelect() {
   return {

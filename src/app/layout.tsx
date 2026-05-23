@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo, Tajawal } from "next/font/google";
 
+import { RouteProgressBar } from "@/components/shared/RouteProgressBar";
 import { auth } from "@/lib/auth";
 import { AppProviders } from "@/providers/app-providers";
 import { AuthSessionProvider } from "@/providers/SessionProvider";
@@ -41,6 +42,7 @@ export default async function RootLayout({
         className={`${cairo.variable} ${tajawal.variable} min-h-screen bg-background font-sans antialiased`}
       >
         <AuthSessionProvider session={session}>
+          <RouteProgressBar />
           <AppProviders>{children}</AppProviders>
         </AuthSessionProvider>
       </body>
