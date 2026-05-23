@@ -1,14 +1,14 @@
-import { PrismaClient, Region, UserRole, WorkMode } from "@prisma/client";
+import { JobStatus, OfferStatus, Region, UserRole, WorkMode } from "@prisma/client";
 import { hash } from "bcryptjs";
 
-const prisma = new PrismaClient();
+import { prisma } from "../src/lib/prisma";
 
 const categories = [
-  { name: "رقمي", slug: "digital", icon: "MonitorSmartphone", color: "#16a34a" },
-  { name: "تعليمي", slug: "education", icon: "GraduationCap", color: "#2563eb" },
-  { name: "ميداني", slug: "field", icon: "MapPinned", color: "#ea580c" },
-  { name: "فرص يومية", slug: "daily", icon: "BriefcaseBusiness", color: "#d97706" },
-  { name: "عمل من البيت", slug: "remote", icon: "Home", color: "#7c3aed" },
+  { name: "رقمي", slug: "digital", icon: "💻", color: "#3b82f6" },
+  { name: "تعليمي", slug: "education", icon: "📚", color: "#8b5cf6" },
+  { name: "ميداني", slug: "field", icon: "🔧", color: "#f59e0b" },
+  { name: "فرص يومية", slug: "daily", icon: "📋", color: "#ec4899" },
+  { name: "عمل من البيت", slug: "remote", icon: "🏠", color: "#10b981" },
 ];
 
 const skills = [
@@ -38,7 +38,7 @@ const sampleUsers = [
     whatsapp: "970599000101",
     bio: "مصممة واجهات وهوية بصرية للمشاريع الصغيرة.",
     isTrusted: true,
-    skillNames: ["تصميم جرافيك", "كتابة محتوى"],
+    skillNames: ["تصميم جرافيك", "كتابة محتوى", "تصوير"],
   },
   {
     id: "seed-user-ahmad",
@@ -49,7 +49,7 @@ const sampleUsers = [
     whatsapp: "970599000102",
     bio: "مطوّر ويب يبني صفحات عربية سريعة وخفيفة.",
     isTrusted: true,
-    skillNames: ["برمجة", "Excel"],
+    skillNames: ["برمجة", "Excel", "ترجمة"],
   },
   {
     id: "seed-user-lina",
@@ -62,17 +62,6 @@ const sampleUsers = [
     isTrusted: true,
     skillNames: ["إدخال بيانات", "Kobo Toolbox", "Excel"],
   },
-  {
-    id: "seed-user-yousef",
-    name: "يوسف برهوم",
-    email: "yousef@example.com",
-    phone: "0599000104",
-    region: Region.KHAN_YOUNIS,
-    whatsapp: "970599000104",
-    bio: "فني كهرباء وصيانة ميدانية للمنازل والمحال.",
-    isTrusted: false,
-    skillNames: ["كهرباء", "صيانة جوالات"],
-  },
 ];
 
 const jobPosts = [
@@ -82,9 +71,11 @@ const jobPosts = [
     description:
       "نحتاج صفحة هبوط عربية بسيطة تعرض المنتجات الأساسية وطرق التواصل عبر واتساب، مع اهتمام بسرعة التحميل.",
     budget: "150 - 250 شيكل",
+    duration: "3 أيام",
     isUrgent: true,
     region: Region.GAZA_CITY,
     workMode: WorkMode.ONLINE,
+    status: JobStatus.OPEN,
     authorId: "seed-user-lina",
     categorySlug: "digital",
   },
@@ -93,35 +84,124 @@ const jobPosts = [
     title: "تنظيم ملفات Excel لمبادرة مجتمعية",
     description: "مطلوب شخص يجيد Excel لترتيب بيانات مستفيدين وتنظيف التكرارات وتجهيز تقرير مختصر.",
     budget: "100 شيكل",
+    duration: "يومين",
     isUrgent: false,
     region: Region.CENTRAL,
     workMode: WorkMode.BOTH,
+    status: JobStatus.IN_PROGRESS,
     authorId: "seed-user-ahmad",
     categorySlug: "digital",
   },
   {
-    id: "seed-job-english-tutor",
-    title: "مدرس/ة لغة إنجليزية لطالب توجيهي",
-    description: "مطلوب متابعة أسبوعية لطالب توجيهي، شرح قواعد ومحادثة وحل نماذج امتحانات.",
+    id: "seed-job-electric-repair",
+    title: "فني كهرباء لصيانة محل صغير",
+    description: "نحتاج فني كهرباء يفحص تمديدات محل صغير ويصلح مشكلة انقطاع متكرر في الإضاءة.",
     budget: "حسب الاتفاق",
-    isUrgent: false,
+    duration: "نصف يوم",
+    isUrgent: true,
     region: Region.KHAN_YOUNIS,
     workMode: WorkMode.FIELD,
+    status: JobStatus.OPEN,
     authorId: "seed-user-sara",
-    categorySlug: "education",
+    categorySlug: "field",
+  },
+  {
+    id: "seed-job-field-survey",
+    title: "مساعدة ميدانية لجمع بيانات استبيان",
+    description: "مطلوب شخص لديه خبرة بسيطة في Kobo Toolbox لجمع بيانات ميدانية من 30 عينة.",
+    budget: "120 شيكل",
+    duration: "يوم واحد",
+    isUrgent: false,
+    region: Region.RAFAH,
+    workMode: WorkMode.FIELD,
+    status: JobStatus.OPEN,
+    authorId: "seed-user-ahmad",
+    categorySlug: "field",
   },
   {
     id: "seed-job-field-support",
     title: "مساعدة تنظيم فعالية تدريبية ليوم واحد",
     description: "مطلوب مساعدين لتسجيل الحضور وتنظيم القاعة لمدة 5 ساعات.",
     budget: "60 شيكل للفرد",
+    duration: "5 ساعات",
     isUrgent: true,
     region: Region.CENTRAL,
     workMode: WorkMode.FIELD,
-    authorId: "seed-user-yousef",
+    status: JobStatus.OPEN,
+    authorId: "seed-user-sara",
+    categorySlug: "daily",
+  },
+  {
+    id: "seed-job-content-entry",
+    title: "إدخال محتوى منتجات على ملف منظم",
+    description: "مطلوب إدخال أسماء وأسعار 80 منتجاً في ملف Excel مع مراجعة الأخطاء قبل التسليم.",
+    budget: "80 شيكل",
+    duration: "يوم واحد",
+    isUrgent: false,
+    region: Region.ONLINE,
+    workMode: WorkMode.ONLINE,
+    status: JobStatus.OPEN,
+    authorId: "seed-user-sara",
     categorySlug: "daily",
   },
 ];
+
+const offers = [
+  {
+    id: "seed-offer-landing-ahmad",
+    jobPostId: "seed-job-landing-page",
+    providerId: "seed-user-ahmad",
+    status: OfferStatus.PENDING,
+    message: "أقدر أبني صفحة هبوط عربية خفيفة خلال 3 أيام مع زر واتساب واضح.",
+    price: "220 شيكل",
+    duration: "3 أيام",
+  },
+  {
+    id: "seed-offer-excel-lina",
+    jobPostId: "seed-job-excel-cleanup",
+    providerId: "seed-user-lina",
+    status: OfferStatus.ACCEPTED,
+    message: "أستطيع تنظيف الملف وترتيبه وإرسال تقرير مختصر بالأخطاء والتكرارات.",
+    price: "100 شيكل",
+    duration: "يومين",
+  },
+  {
+    id: "seed-offer-survey-lina",
+    jobPostId: "seed-job-field-survey",
+    providerId: "seed-user-lina",
+    status: OfferStatus.PENDING,
+    message: "لدي خبرة في Kobo وجمع البيانات، ويمكنني تسليم النتائج بصيغة Excel.",
+    price: "120 شيكل",
+    duration: "يوم واحد",
+  },
+  {
+    id: "seed-offer-content-ahmad",
+    jobPostId: "seed-job-content-entry",
+    providerId: "seed-user-ahmad",
+    status: OfferStatus.PENDING,
+    message: "أراجع البيانات قبل التسليم وأرتب الملف بطريقة سهلة للفرز والبحث.",
+    price: "80 شيكل",
+    duration: "يوم واحد",
+  },
+];
+
+async function cleanupOldSeedData() {
+  await prisma.jobPost.deleteMany({
+    where: {
+      id: {
+        in: ["seed-job-english-tutor"],
+      },
+    },
+  });
+
+  await prisma.user.deleteMany({
+    where: {
+      id: {
+        in: ["seed-user-yousef"],
+      },
+    },
+  });
+}
 
 async function upsertCategories() {
   for (const category of categories) {
@@ -135,10 +215,12 @@ async function upsertCategories() {
 
 async function upsertSkills() {
   for (const name of skills) {
+    const slug = slugify(name);
+
     await prisma.skill.upsert({
-      where: { slug: slugify(name) },
+      where: { slug },
       update: { name },
-      create: { name, slug: slugify(name) },
+      create: { name, slug },
     });
   }
 }
@@ -148,6 +230,7 @@ async function upsertUsers(passwordHash: string) {
     where: { email: "admin@arzaq.local" },
     update: {
       name: "مدير أرزاق",
+      phone: "0599000000",
       role: UserRole.ADMIN,
       isVerified: true,
     },
@@ -159,14 +242,6 @@ async function upsertUsers(passwordHash: string) {
       passwordHash,
       role: UserRole.ADMIN,
       isVerified: true,
-      profile: {
-        create: {
-          region: Region.ONLINE,
-          whatsapp: "970599000000",
-          bio: "حساب إدارة المنصة للاختبار المحلي.",
-          isTrusted: true,
-        },
-      },
     },
   });
 
@@ -226,6 +301,10 @@ async function upsertUsers(passwordHash: string) {
       },
     });
 
+    await prisma.profileSkill.deleteMany({
+      where: { profileId: profile.id },
+    });
+
     const profileSkills = await Promise.all(
       user.skillNames.map(async (skillName) => {
         const skill = await prisma.skill.findUniqueOrThrow({
@@ -258,19 +337,25 @@ async function upsertJobs() {
         title: jobPost.title,
         description: jobPost.description,
         budget: jobPost.budget,
+        duration: jobPost.duration,
         isUrgent: jobPost.isUrgent,
         region: jobPost.region,
         workMode: jobPost.workMode,
+        status: jobPost.status,
+        authorId: jobPost.authorId,
         categoryId: category.id,
+        deletedAt: null,
       },
       create: {
         id: jobPost.id,
         title: jobPost.title,
         description: jobPost.description,
         budget: jobPost.budget,
+        duration: jobPost.duration,
         isUrgent: jobPost.isUrgent,
         region: jobPost.region,
         workMode: jobPost.workMode,
+        status: jobPost.status,
         authorId: jobPost.authorId,
         categoryId: category.id,
       },
@@ -278,29 +363,27 @@ async function upsertJobs() {
   }
 }
 
-async function upsertRelatedSampleData() {
-  await prisma.offer.upsert({
-    where: {
-      jobPostId_providerId: {
-        jobPostId: "seed-job-landing-page",
-        providerId: "seed-user-ahmad",
+async function upsertOffers() {
+  for (const offer of offers) {
+    await prisma.offer.upsert({
+      where: {
+        jobPostId_providerId: {
+          jobPostId: offer.jobPostId,
+          providerId: offer.providerId,
+        },
       },
-    },
-    update: {
-      message: "أقدر أبني صفحة هبوط عربية خفيفة خلال 3 أيام مع زر واتساب واضح.",
-      price: "220 شيكل",
-      duration: "3 أيام",
-    },
-    create: {
-      id: "seed-offer-landing-ahmad",
-      jobPostId: "seed-job-landing-page",
-      providerId: "seed-user-ahmad",
-      message: "أقدر أبني صفحة هبوط عربية خفيفة خلال 3 أيام مع زر واتساب واضح.",
-      price: "220 شيكل",
-      duration: "3 أيام",
-    },
-  });
+      update: {
+        status: offer.status,
+        message: offer.message,
+        price: offer.price,
+        duration: offer.duration,
+      },
+      create: offer,
+    });
+  }
+}
 
+async function upsertRelatedSampleData() {
   await prisma.savedJob.upsert({
     where: {
       userId_jobPostId: {
@@ -327,7 +410,7 @@ async function upsertRelatedSampleData() {
       comment: "التواصل ممتاز والتسليم كان مرتبًا وواضحًا.",
       giverId: "seed-user-lina",
       receiverId: "seed-user-sara",
-      jobPostId: "seed-job-english-tutor",
+      jobPostId: "seed-job-field-support",
     },
   });
 
@@ -355,6 +438,8 @@ async function upsertRelatedSampleData() {
     where: { id: "seed-report-job" },
     update: {
       reason: "بلاغ تجريبي على طلب يحتاج مراجعة إدارية.",
+      targetId: "seed-job-field-support",
+      jobPostId: "seed-job-field-support",
     },
     create: {
       id: "seed-report-job",
@@ -369,13 +454,13 @@ async function upsertRelatedSampleData() {
   await prisma.notification.upsert({
     where: { id: "seed-notification-admin" },
     update: {
-      message: "تم تجهيز بيانات Phase 2 التجريبية بنجاح.",
+      message: "تم تجهيز بيانات أرزاق التجريبية بنجاح.",
       isRead: false,
     },
     create: {
       id: "seed-notification-admin",
       type: "SYSTEM",
-      message: "تم تجهيز بيانات Phase 2 التجريبية بنجاح.",
+      message: "تم تجهيز بيانات أرزاق التجريبية بنجاح.",
       link: "/admin",
       userId: "seed-admin",
     },
@@ -393,10 +478,12 @@ function slugify(value: string) {
 async function main() {
   const passwordHash = await hash("Arzaq12345!", 12);
 
+  await cleanupOldSeedData();
   await upsertCategories();
   await upsertSkills();
   await upsertUsers(passwordHash);
   await upsertJobs();
+  await upsertOffers();
   await upsertRelatedSampleData();
 
   console.log("تم تجهيز بيانات أرزاق التجريبية بنجاح.");
