@@ -68,23 +68,18 @@ export async function validatePassword(password: string, passwordHash: string) {
 export async function createUser(input: {
   accountType: AccountType;
   name: string;
-  email?: string;
+  email: string;
   phone: string;
   password: string;
   region: Region;
   skills: string[];
 }) {
-  const email = input.email ? input.email.toLowerCase() : undefined;
+  const email = input.email.toLowerCase();
   const phone = normalizePhone(input.phone);
-  const orConditions: Prisma.UserWhereInput[] = [{ phone }];
-
-  if (email) {
-    orConditions.push({ email });
-  }
 
   const existingUser = await prisma.user.findFirst({
     where: {
-      OR: orConditions,
+      OR: [{ phone }, { email }],
     },
     select: {
       email: true,
@@ -96,7 +91,7 @@ export async function createUser(input: {
     throw new Error("رقم الجوال مسجل مسبقاً");
   }
 
-  if (email && existingUser?.email === email) {
+  if (existingUser?.email === email) {
     throw new Error("البريد الإلكتروني مسجل مسبقاً");
   }
 

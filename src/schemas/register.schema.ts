@@ -21,9 +21,9 @@ export const registerSchema = z
     email: z
       .string()
       .trim()
-      .optional()
-      .transform((value) => (value ? value.toLowerCase() : undefined))
-      .pipe(z.string().email("البريد الإلكتروني غير صحيح").optional()),
+      .min(1, "البريد الإلكتروني مطلوب")
+      .toLowerCase()
+      .email("البريد الإلكتروني غير صحيح"),
     phone: z.string().trim().regex(phoneRegex, "رقم الجوال غير صحيح"),
     password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
     confirmPassword: z.string().min(1, "تأكيد كلمة المرور مطلوب"),

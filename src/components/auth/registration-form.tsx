@@ -168,6 +168,18 @@ function RegistrationDetailsForm({
 
       <AnimatedField delay={0.12}>
         <TextField
+          id="email"
+          label="البريد الإلكتروني"
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+      </AnimatedField>
+
+      <AnimatedField delay={0.24}>
+        <TextField
           id="phone"
           label="رقم الجوال"
           placeholder="059..."
@@ -199,7 +211,7 @@ function RegistrationDetailsForm({
       </AnimatedField>
 
       {isProvider ? (
-        <AnimatedField delay={0.24}>
+        <AnimatedField delay={0.3}>
           <div className="space-y-2">
             <SkillsSelector
               skills={skills}
@@ -214,7 +226,7 @@ function RegistrationDetailsForm({
         </AnimatedField>
       ) : null}
 
-      <AnimatedField delay={isProvider ? 0.3 : 0.24}>
+      <AnimatedField delay={isProvider ? 0.36 : 0.3}>
         <PasswordField
           id="password"
           label="كلمة المرور"
@@ -224,7 +236,7 @@ function RegistrationDetailsForm({
         />
       </AnimatedField>
 
-      <AnimatedField delay={isProvider ? 0.36 : 0.3}>
+      <AnimatedField delay={isProvider ? 0.42 : 0.36}>
         <PasswordField
           id="confirmPassword"
           label="تأكيد المرور"
@@ -234,7 +246,7 @@ function RegistrationDetailsForm({
         />
       </AnimatedField>
 
-      <AnimatedField delay={isProvider ? 0.42 : 0.36}>
+      <AnimatedField delay={isProvider ? 0.48 : 0.42}>
         <Button
           type="submit"
           className="h-12 w-full rounded-xl bg-primary text-base font-semibold shadow-md shadow-green-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-green-700 active:scale-[0.98]"
