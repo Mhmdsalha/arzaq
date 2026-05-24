@@ -26,6 +26,10 @@ export const metadata: Metadata = {
     template: "%s | أرزاق",
   },
   description: "منصة عربية محلية لربط أصحاب الطلبات بمقدمي الخدمات في غزة.",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  manifest: "/site.webmanifest",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
 };
 

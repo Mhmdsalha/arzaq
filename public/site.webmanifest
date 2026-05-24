@@ -1,0 +1,19 @@
+{
+  "name": "أرزاق",
+  "short_name": "أرزاق",
+  "description": "منصة العمل والخدمات المحلية في غزة",
+  "start_url": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
