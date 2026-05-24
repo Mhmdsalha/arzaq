@@ -13,7 +13,6 @@ import {
   User,
   X,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,6 +25,7 @@ import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { signOutAndRedirect } from "@/lib/client-signout";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -59,6 +59,7 @@ export function PublicNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const isHome = pathname === "/";
   const isTransparent = isHome && !hasScrolled && !isOpen;
@@ -209,8 +210,13 @@ export function PublicNavbar() {
 
       <LogoutConfirmDialog
         open={showLogoutConfirm}
+        isPending={isSigningOut}
         onCancel={() => setShowLogoutConfirm(false)}
-        onConfirm={() => signOut({ callbackUrl: "/" })}
+        onConfirm={async () => {
+          setIsSigningOut(true);
+          setIsUserMenuOpen(false);
+          await signOutAndRedirect();
+        }}
       />
     </header>
   );

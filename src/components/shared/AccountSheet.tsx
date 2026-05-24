@@ -14,7 +14,6 @@ import {
   User,
   X,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { ComponentType } from "react";
@@ -22,6 +21,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { LogoutConfirmDialog } from "@/components/shared/LogoutConfirmDialog";
 import type { useUnreadCount } from "@/hooks/useUnreadCount";
+import { signOutAndRedirect } from "@/lib/client-signout";
 import { cn } from "@/lib/utils";
 
 type AccountSummary = ReturnType<typeof useUnreadCount>["summary"];
@@ -59,6 +59,7 @@ export function AccountSheet({
 }) {
   const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const isProvider = user?.accountType === "PROVIDER";
 
   const closeSheet = useCallback(() => {
@@ -100,8 +101,9 @@ export function AccountSheet({
   }
 
   async function confirmSignOut() {
+    setIsSigningOut(true);
     closeSheet();
-    await signOut({ callbackUrl: "/" });
+    await signOutAndRedirect();
   }
 
   return (
@@ -245,6 +247,7 @@ export function AccountSheet({
 
       <LogoutConfirmDialog
         open={showLogoutConfirm}
+        isPending={isSigningOut}
         onCancel={() => setShowLogoutConfirm(false)}
         onConfirm={confirmSignOut}
       />

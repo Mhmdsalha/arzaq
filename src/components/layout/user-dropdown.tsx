@@ -3,10 +3,11 @@
 import { BadgeCheck, ChevronDown, LogOut, MessageCircle, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { logoutAction } from "@/actions/auth.actions";
+import { LogoutConfirmDialog } from "@/components/shared/LogoutConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { signOutAndRedirect } from "@/lib/client-signout";
 import { cn } from "@/lib/utils";
 import type { DashboardShellUser } from "@/types/dashboard";
 
@@ -30,13 +31,14 @@ export function UserDropdown({
   placement?: "top" | "bottom";
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const avatarUrl = user.profile?.avatarUrl;
 
-  function handleLogout() {
-    startTransition(async () => {
-      await logoutAction();
-    });
+  async function handleLogout() {
+    setIsPending(true);
+    setIsOpen(false);
+    await signOutAndRedirect();
   }
 
   return (
@@ -120,7 +122,7 @@ export function UserDropdown({
               type="button"
               variant="ghost"
               className="justify-start text-red-600"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               disabled={isPending}
             >
               <LogOut className="size-4" />
@@ -129,6 +131,13 @@ export function UserDropdown({
           </div>
         </div>
       ) : null}
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        isPending={isPending}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

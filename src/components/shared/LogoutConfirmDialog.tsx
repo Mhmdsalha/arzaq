@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 
 export function LogoutConfirmDialog({
   open,
+  isPending = false,
   onCancel,
   onConfirm,
 }: {
   open: boolean;
+  isPending?: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }) {
   if (!open || typeof document === "undefined") {
     return null;
@@ -30,11 +32,11 @@ export function LogoutConfirmDialog({
         </h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">هل أنت متأكد أنك تريد تسجيل الخروج؟</p>
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={isPending}>
             إلغاء
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm}>
-            تسجيل الخروج
+          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending}>
+            {isPending ? "جاري الخروج..." : "تسجيل الخروج"}
           </Button>
         </div>
       </div>
