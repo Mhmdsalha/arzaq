@@ -17,7 +17,7 @@ export const accountTypeSchema = z.enum(["CLIENT", "PROVIDER"], {
 export const registerSchema = z
   .object({
     accountType: accountTypeSchema,
-    name: z.string().trim().min(2, "الاسم مطلوب ولا يقل عن حرفين").max(80, "الاسم طويل جدًا"),
+    name: z.string().trim().min(2, "الاسم مطلوب ولا يقل عن حرفين").max(80, "الاسم طويل جداً"),
     email: z
       .string()
       .trim()
@@ -30,7 +30,7 @@ export const registerSchema = z
     region: z.enum(regionValues, {
       error: "المنطقة مطلوبة",
     }),
-    skills: z.array(z.string().cuid("مهارة غير صحيحة")).max(10, "عدد المهارات كبير جدًا"),
+    skills: z.array(z.string().cuid("مهارة غير صحيحة")).max(10, "عدد المهارات كبير جداً"),
   })
   .refine((values) => values.password === values.confirmPassword, {
     path: ["confirmPassword"],

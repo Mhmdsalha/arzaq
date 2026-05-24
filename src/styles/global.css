@@ -134,6 +134,14 @@
 }
 
 @layer utilities {
+  .auth-blob-float {
+    animation: auth-blob-float 7s ease-in-out infinite;
+  }
+
+  .auth-blob-float-x {
+    animation: auth-blob-float-x 8s ease-in-out infinite;
+  }
+
   .hero-enter {
     animation: hero-fade-up 0.6s ease-out both;
   }
@@ -183,6 +191,31 @@
   .hero-enter,
   .hero-enter-scale {
     animation: none !important;
+  }
+
+  .auth-blob-float,
+  .auth-blob-float-x {
+    animation: none !important;
+  }
+}
+
+@keyframes auth-blob-float {
+  0%,
+  100% {
+    transform: translateY(-16px);
+  }
+  50% {
+    transform: translateY(16px);
+  }
+}
+
+@keyframes auth-blob-float-x {
+  0%,
+  100% {
+    transform: translateX(-14px);
+  }
+  50% {
+    transform: translateX(14px);
   }
 }
 

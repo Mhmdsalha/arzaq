@@ -5,7 +5,7 @@ export { registerSchema, type RegisterInput } from "@/schemas/register.schema";
 const requiredText = "هذا الحقل مطلوب";
 
 export const loginSchema = z.object({
-  identifier: z.string().trim().min(1, "البريد الإلكتروني أو رقم الجوال مطلوب"),
+  identifier: z.string().trim().min(1, "رقم الجوال مطلوب"),
   password: z.string().min(1, "كلمة المرور مطلوبة"),
 });
 
