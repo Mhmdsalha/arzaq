@@ -15,6 +15,28 @@ export async function getPresignedUploadUrl(key: string, contentType: string): P
   return getSignedUrl(r2Client, command, { expiresIn: 300 });
 }
 
+export async function uploadToR2({
+  key,
+  body,
+  contentType,
+  cacheControl = "public, max-age=31536000, immutable",
+}: {
+  key: string;
+  body: Buffer;
+  contentType: string;
+  cacheControl?: string;
+}): Promise<void> {
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+    CacheControl: cacheControl,
+  });
+
+  await r2Client.send(command);
+}
+
 export async function deleteFromR2(key: string): Promise<void> {
   const command = new DeleteObjectCommand({
     Bucket: R2_BUCKET,

@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { uploadAvatarImage } from "@/lib/upload-image";
 
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export function AvatarUploader({
   avatarUrl,
   onUploaded,
@@ -33,8 +35,8 @@ export function AvatarUploader({
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("يرجى اختيار صورة صحيحة");
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("نوع الصورة غير مدعوم، يسمح بـ JPG و PNG و WebP فقط");
       return;
     }
 
@@ -87,7 +89,7 @@ export function AvatarUploader({
       <div className="space-y-2">
         <p className="text-sm font-semibold text-slate-950">صورة البروفايل</p>
         <p className="max-w-md text-sm leading-6 text-slate-600">
-          سيتم ضغط الصورة تلقائيًا قبل الرفع لتبقى خفيفة وسريعة على الاتصالات الضعيفة.
+          نقبل JPG و PNG و WebP فقط. سيتم ضغط الصورة تلقائياً، والحد النهائي لصورة البروفايل 450KB.
         </p>
         <Button
           type="button"
@@ -107,7 +109,7 @@ export function AvatarUploader({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(event) => handleFile(event.target.files?.[0])}
       />

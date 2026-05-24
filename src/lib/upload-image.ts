@@ -1,5 +1,11 @@
 import imageCompression from "browser-image-compression";
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_ORIGINAL_AVATAR_BYTES = 6 * 1024 * 1024;
+const MAX_COMPRESSED_AVATAR_BYTES = 450 * 1024;
+const MIN_AVATAR_DIMENSION = 200;
+const MAX_AVATAR_DIMENSION = 4000;
+
 export async function compressImage(file: File) {
   return imageCompression(file, {
     maxSizeMB: 1,
@@ -13,60 +19,83 @@ export async function compressAvatarImage(file: File) {
     maxSizeMB: 0.4,
     maxWidthOrHeight: 800,
     useWebWorker: true,
+    fileType: file.type === "image/png" ? "image/png" : "image/webp",
   });
 }
 
 export async function uploadAvatarImage(file: File) {
+  await validateAvatarFile(file);
   const compressedFile = await compressAvatarImage(file);
-  const { presignedUrl, publicUrl } = await requestPresignedUploadUrl(compressedFile);
 
-  const uploadResponse = await fetch(presignedUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": compressedFile.type,
-    },
-    body: compressedFile,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error("تعذر رفع الصورة، حاول مرة أخرى");
+  if (compressedFile.size > MAX_COMPRESSED_AVATAR_BYTES) {
+    throw new Error("حجم الصورة بعد الضغط يجب ألا يتجاوز 450KB");
   }
 
-  return publicUrl;
-}
+  const formData = new FormData();
+  formData.append("file", compressedFile, normalizedFileName(compressedFile));
 
-async function requestPresignedUploadUrl(file: File): Promise<{
-  presignedUrl: string;
-  publicUrl: string;
-  key: string;
-}> {
-  const response = await fetch("/api/upload/presign", {
+  const response = await fetch("/api/upload/avatar", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      fileName: file.name,
-      contentType: file.type,
-      fileSize: file.size,
-      folder: "avatars",
-    }),
+    body: formData,
   });
 
   const data = (await response.json()) as Partial<{
-    presignedUrl: string;
     publicUrl: string;
-    key: string;
     error: string;
   }>;
 
-  if (!response.ok || !data.presignedUrl || !data.publicUrl || !data.key) {
-    throw new Error(data.error ?? "إعدادات رفع الصور غير مكتملة");
+  if (!response.ok || !data.publicUrl) {
+    throw new Error(data.error ?? "تعذر رفع الصورة، حاول مرة أخرى");
   }
 
-  return {
-    presignedUrl: data.presignedUrl,
-    publicUrl: data.publicUrl,
-    key: data.key,
-  };
+  return data.publicUrl;
+}
+
+async function validateAvatarFile(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("نوع الصورة غير مدعوم، يسمح بـ JPG و PNG و WebP فقط");
+  }
+
+  if (file.size > MAX_ORIGINAL_AVATAR_BYTES) {
+    throw new Error("حجم الصورة الأصلي يجب ألا يتجاوز 6MB");
+  }
+
+  const { width, height } = await readImageDimensions(file);
+
+  if (width < MIN_AVATAR_DIMENSION || height < MIN_AVATAR_DIMENSION) {
+    throw new Error("أبعاد الصورة صغيرة جداً، الحد الأدنى 200×200 بكسل");
+  }
+
+  if (width > MAX_AVATAR_DIMENSION || height > MAX_AVATAR_DIMENSION) {
+    throw new Error("أبعاد الصورة كبيرة جداً، الحد الأعلى 4000×4000 بكسل");
+  }
+}
+
+function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      });
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("تعذر قراءة أبعاد الصورة"));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function normalizedFileName(file: File) {
+  const extension = file.type === "image/png" ? "png" : file.type === "image/jpeg" ? "jpg" : "webp";
+  const baseName = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-") || "avatar";
+
+  return `${baseName}.${extension}`;
 }
