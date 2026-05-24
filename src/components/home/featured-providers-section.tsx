@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { ProviderCard } from "@/components/providers/provider-card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
 import type { ProviderProfile } from "@/types/marketplace";
 
 export function FeaturedProvidersSection({ providers }: { providers: ProviderProfile[] }) {
@@ -16,11 +18,23 @@ export function FeaturedProvidersSection({ providers }: { providers: ProviderPro
             عرض كل المزودين
           </Link>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {providers.slice(0, 4).map((provider) => (
-            <ProviderCard key={provider.id} provider={provider} />
-          ))}
-        </div>
+        {providers.length > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {providers.slice(0, 4).map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="لا يوجد مقدمو خدمات موثوقون بعد"
+            description="ستظهر هنا الحسابات الموثوقة بعد اكتمال البروفايلات وبدء التجربة."
+            action={
+              <Button asChild variant="secondary">
+                <Link href="/providers">تصفح مقدمي الخدمات</Link>
+              </Button>
+            }
+          />
+        )}
       </div>
     </section>
   );
