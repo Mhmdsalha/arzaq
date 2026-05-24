@@ -1,19 +1,22 @@
 import { PrismaClient } from "@prisma/client";
 
 const TRANSIENT_DATABASE_ERROR_CODES = new Set(["P1001", "P1002"]);
+const DATABASE_CONNECTION_ERROR_CODES = new Set(["P1000", "P1001", "P1002"]);
+const DATABASE_UNAVAILABLE_CACHE_MS = 30_000;
+
+let databaseUnavailableUntil = 0;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: ReturnType<typeof createPrismaClient> | undefined;
 };
 
 function createPrismaClient() {
-  const datasourceUrl =
-    process.env.NODE_ENV === "development"
-      ? (process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL)
-      : process.env.DATABASE_URL;
-
   return new PrismaClient({
-    datasourceUrl,
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   }).$extends({
     query: {
@@ -26,7 +29,10 @@ function createPrismaClient() {
   });
 }
 
-async function withDatabaseRetry<T>(operation: () => Promise<T>, attempts = 3): Promise<T> {
+async function withDatabaseRetry<T>(
+  operation: () => Promise<T>,
+  attempts = process.env.NODE_ENV === "development" ? 1 : 3,
+): Promise<T> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -34,6 +40,10 @@ async function withDatabaseRetry<T>(operation: () => Promise<T>, attempts = 3): 
       return await operation();
     } catch (error) {
       lastError = error;
+
+      if (isDatabaseConnectionError(error)) {
+        markDatabaseUnavailable();
+      }
 
       if (!isTransientDatabaseError(error) || attempt === attempts) {
         throw error;
@@ -47,13 +57,40 @@ async function withDatabaseRetry<T>(operation: () => Promise<T>, attempts = 3): 
 }
 
 function isTransientDatabaseError(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || !("code" in error)) {
-    return false;
-  }
-
-  const code = (error as { code?: unknown }).code;
+  const code = getPrismaErrorCode(error);
 
   return typeof code === "string" && TRANSIENT_DATABASE_ERROR_CODES.has(code);
+}
+
+export function isDatabaseConnectionError(error: unknown): boolean {
+  const code = getPrismaErrorCode(error);
+
+  if (typeof code === "string" && DATABASE_CONNECTION_ERROR_CODES.has(code)) {
+    return true;
+  }
+
+  const message = error instanceof Error ? error.message : "";
+
+  return (
+    message.includes("Can't reach database server") ||
+    message.includes("Authentication failed against database server")
+  );
+}
+
+export function isDatabaseTemporarilyUnavailable(): boolean {
+  return Date.now() < databaseUnavailableUntil;
+}
+
+function markDatabaseUnavailable() {
+  databaseUnavailableUntil = Date.now() + DATABASE_UNAVAILABLE_CACHE_MS;
+}
+
+function getPrismaErrorCode(error: unknown): unknown {
+  if (typeof error !== "object" || error === null || !("code" in error)) {
+    return undefined;
+  }
+
+  return (error as { code?: unknown }).code;
 }
 
 function wait(ms: number): Promise<void> {

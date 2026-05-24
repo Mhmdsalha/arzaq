@@ -3,7 +3,7 @@ import type { AccountType, Prisma, Region, User, UserRole } from "@prisma/client
 import { compare, hash } from "bcryptjs";
 import { cache } from "react";
 
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 
 export type AuthUser = Pick<
   User,
@@ -143,16 +143,28 @@ export async function createUser(input: {
 }
 
 export const getRegistrationSkills = cache(async () => {
-  return prisma.skill.findMany({
-    orderBy: {
-      name: "asc",
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  });
+  if (isDatabaseTemporarilyUnavailable()) {
+    return [];
+  }
+
+  try {
+    return await prisma.skill.findMany({
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
 });
 
 export async function createPasswordResetToken(identifier: string) {

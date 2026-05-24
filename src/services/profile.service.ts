@@ -1,7 +1,7 @@
 import type { Prisma, Region, WorkMode } from "@prisma/client";
 import { cache } from "react";
 
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 import type { ProviderProfile } from "@/types/marketplace";
 import type { ProfileEditorData } from "@/types/profile";
 
@@ -225,34 +225,58 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
 }
 
 export const getPublicProviders = cache(async (): Promise<ProviderProfile[]> => {
-  const providers = await prisma.user.findMany({
-    where: {
-      accountType: "PROVIDER",
-      deletedAt: null,
-      isBanned: false,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: publicProviderSelect(),
-  });
+  if (isDatabaseTemporarilyUnavailable()) {
+    return [];
+  }
 
-  return providers.map(mapPublicProvider);
-});
-
-export const getPublicProviderById = cache(
-  async (providerId: string): Promise<ProviderProfile | null> => {
-    const provider = await prisma.user.findFirst({
+  try {
+    const providers = await prisma.user.findMany({
       where: {
-        id: providerId,
         accountType: "PROVIDER",
         deletedAt: null,
         isBanned: false,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
       select: publicProviderSelect(),
     });
 
-    return provider ? mapPublicProvider(provider) : null;
+    return providers.map(mapPublicProvider);
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+});
+
+export const getPublicProviderById = cache(
+  async (providerId: string): Promise<ProviderProfile | null> => {
+    if (isDatabaseTemporarilyUnavailable()) {
+      return null;
+    }
+
+    try {
+      const provider = await prisma.user.findFirst({
+        where: {
+          id: providerId,
+          accountType: "PROVIDER",
+          deletedAt: null,
+          isBanned: false,
+        },
+        select: publicProviderSelect(),
+      });
+
+      return provider ? mapPublicProvider(provider) : null;
+    } catch (error) {
+      if (isDatabaseConnectionError(error)) {
+        return null;
+      }
+
+      throw error;
+    }
   },
 );
 

@@ -2,7 +2,7 @@ import type { JobStatus, Prisma, Region, WorkMode } from "@prisma/client";
 import { cache } from "react";
 
 import { assertClient } from "@/lib/authGuards";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 import { categories as mockCategories } from "@/mock/categories";
 import { jobs as mockJobs } from "@/mock/jobs";
 import type {
@@ -44,18 +44,30 @@ export const getJobFilterOptions = cache(async (): Promise<JobCategoryOption[]> 
     return getMockJobFilterOptions();
   }
 
-  return prisma.category.findMany({
-    orderBy: {
-      name: "asc",
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      color: true,
-      icon: true,
-    },
-  });
+  if (isDatabaseTemporarilyUnavailable()) {
+    return getMockJobFilterOptions();
+  }
+
+  try {
+    return await prisma.category.findMany({
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        color: true,
+        icon: true,
+      },
+    });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return getMockJobFilterOptions();
+    }
+
+    throw error;
+  }
 });
 
 export async function getJobsWithFilters(
@@ -68,26 +80,39 @@ export async function getJobsWithFilters(
 
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
+
+  if (isDatabaseTemporarilyUnavailable()) {
+    return getEmptyJobs(page, pageSize);
+  }
+
   const where = buildJobsWhere(filters);
 
-  const [items, total] = await prisma.$transaction([
-    prisma.jobPost.findMany({
-      where,
-      orderBy: [{ isUrgent: "desc" }, { createdAt: "desc" }],
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      select: jobListSelect(userId),
-    }),
-    prisma.jobPost.count({ where }),
-  ]);
+  try {
+    const [items, total] = await prisma.$transaction([
+      prisma.jobPost.findMany({
+        where,
+        orderBy: [{ isUrgent: "desc" }, { createdAt: "desc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: jobListSelect(userId),
+      }),
+      prisma.jobPost.count({ where }),
+    ]);
 
-  return {
-    items: items.map((job) => mapJobListItem(job, userId)),
-    total,
-    page,
-    pageSize,
-    totalPages: Math.max(Math.ceil(total / pageSize), 1),
-  };
+    return {
+      items: items.map((job) => mapJobListItem(job, userId)),
+      total,
+      page,
+      pageSize,
+      totalPages: Math.max(Math.ceil(total / pageSize), 1),
+    };
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return getEmptyJobs(page, pageSize);
+    }
+
+    throw error;
+  }
 }
 
 export const getJobById = cache(
@@ -96,42 +121,54 @@ export const getJobById = cache(
       return getMockJobById(id);
     }
 
-    const job = await prisma.jobPost.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-      select: {
-        ...jobListSelect(userId),
-        author: {
-          select: {
-            id: true,
-            name: true,
-            profile: {
-              select: {
-                avatarUrl: true,
-                whatsapp: true,
-                avgRating: true,
-                totalReviews: true,
-                isTrusted: true,
-                region: true,
+    if (isDatabaseTemporarilyUnavailable()) {
+      return null;
+    }
+
+    const job = await prisma.jobPost
+      .findFirst({
+        where: {
+          id,
+          deletedAt: null,
+        },
+        select: {
+          ...jobListSelect(userId),
+          author: {
+            select: {
+              id: true,
+              name: true,
+              profile: {
+                select: {
+                  avatarUrl: true,
+                  whatsapp: true,
+                  avgRating: true,
+                  totalReviews: true,
+                  isTrusted: true,
+                  region: true,
+                },
               },
             },
           },
+          offers: userId
+            ? {
+                where: {
+                  providerId: userId,
+                },
+                select: {
+                  id: true,
+                },
+                take: 1,
+              }
+            : false,
         },
-        offers: userId
-          ? {
-              where: {
-                providerId: userId,
-              },
-              select: {
-                id: true,
-              },
-              take: 1,
-            }
-          : false,
-      },
-    });
+      })
+      .catch((error: unknown) => {
+        if (isDatabaseConnectionError(error)) {
+          return null;
+        }
+
+        throw error;
+      });
 
     if (!job) {
       return null;
@@ -160,19 +197,31 @@ export const getSimilarJobs = cache(
       return getMockSimilarJobs(categoryId, excludeId);
     }
 
-    const jobs = await prisma.jobPost.findMany({
-      where: {
-        categoryId,
-        id: {
-          not: excludeId,
+    if (isDatabaseTemporarilyUnavailable()) {
+      return [];
+    }
+
+    const jobs = await prisma.jobPost
+      .findMany({
+        where: {
+          categoryId,
+          id: {
+            not: excludeId,
+          },
+          status: "OPEN",
+          deletedAt: null,
         },
-        status: "OPEN",
-        deletedAt: null,
-      },
-      orderBy: [{ isUrgent: "desc" }, { createdAt: "desc" }],
-      take: 4,
-      select: jobListSelect(userId),
-    });
+        orderBy: [{ isUrgent: "desc" }, { createdAt: "desc" }],
+        take: 4,
+        select: jobListSelect(userId),
+      })
+      .catch((error: unknown) => {
+        if (isDatabaseConnectionError(error)) {
+          return [];
+        }
+
+        throw error;
+      });
 
     return jobs.map((job) => mapJobListItem(job, userId));
   },
@@ -430,6 +479,16 @@ export async function incrementJobViews(id: string, viewerId?: string) {
 
 function hasDatabaseUrl() {
   return Boolean(process.env.DATABASE_URL?.trim());
+}
+
+function getEmptyJobs(page: number, pageSize: number): PaginatedJobs<JobListItem> {
+  return {
+    items: [],
+    total: 0,
+    page,
+    pageSize,
+    totalPages: 1,
+  };
 }
 
 function getMockJobFilterOptions(): JobCategoryOption[] {
