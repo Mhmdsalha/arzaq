@@ -3,7 +3,6 @@
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
 import { Logo } from "@/components/layout/logo";
 import { UserDropdown } from "@/components/layout/user-dropdown";
@@ -12,25 +11,32 @@ import { getDashboardNavLinks } from "@/constants/dashboard-nav";
 import { cn } from "@/lib/utils";
 import type { DashboardShellUser } from "@/types/dashboard";
 
-export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
+export function DashboardSidebar({
+  user,
+  isCollapsed,
+  onCollapsedChange,
+}: {
+  user: DashboardShellUser;
+  isCollapsed: boolean;
+  onCollapsedChange: (value: boolean) => void;
+}) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const navLinks = getDashboardNavLinks(user.accountType);
 
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-screen shrink-0 border-l border-slate-200 bg-white p-4 transition-all duration-200 lg:flex lg:flex-col",
+        "fixed right-0 top-0 z-40 hidden h-screen shrink-0 border-l border-slate-200 bg-white p-4 transition-all duration-200 lg:flex lg:flex-col",
         isCollapsed ? "w-24" : "w-72",
       )}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         {!isCollapsed ? <Logo /> : <Logo className="[&_span:last-child]:hidden" />}
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          onClick={() => setIsCollapsed((value) => !value)}
+          onClick={() => onCollapsedChange(!isCollapsed)}
           aria-label={isCollapsed ? "توسيع القائمة" : "طي القائمة"}
         >
           {isCollapsed ? (
@@ -41,7 +47,10 @@ export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
         </Button>
       </div>
 
-      <nav className="mt-8 grid gap-2" aria-label="روابط لوحة التحكم">
+      <nav
+        className="mt-8 grid flex-1 content-start gap-2 overflow-y-auto pb-4"
+        aria-label="روابط لوحة التحكم"
+      >
         {navLinks.map((link) => {
           const Icon = link.icon;
           const isActive = link.exact ? pathname === link.href : pathname.startsWith(link.href);
@@ -65,7 +74,7 @@ export function DashboardSidebar({ user }: { user: DashboardShellUser }) {
         })}
       </nav>
 
-      <div className="mt-auto pt-6">
+      <div className="shrink-0 border-t border-slate-100 pt-4">
         <UserDropdown user={user} compact={isCollapsed} placement="top" />
       </div>
     </aside>

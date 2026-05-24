@@ -15,11 +15,22 @@ export function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 lg:flex">
-      <DashboardSidebar user={user} />
-      <div className="min-w-0 flex-1">
+    <div className="min-h-screen bg-slate-50">
+      <DashboardSidebar
+        user={user}
+        isCollapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
+      />
+      <div
+        className={
+          isSidebarCollapsed
+            ? "min-w-0 transition-all duration-200 lg:pr-24"
+            : "min-w-0 transition-all duration-200 lg:pr-72"
+        }
+      >
         <DashboardTopbar user={user} onOpenMenu={() => setIsMobileNavOpen(true)} />
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
