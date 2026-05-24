@@ -1,5 +1,4 @@
 import imageCompression from "browser-image-compression";
-import { createClient } from "@supabase/supabase-js";
 
 export async function compressImage(file: File) {
   return imageCompression(file, {
@@ -17,32 +16,57 @@ export async function compressAvatarImage(file: File) {
   });
 }
 
-export async function uploadAvatarImage(file: File, userId: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("إعدادات رفع الصور غير مكتملة");
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export async function uploadAvatarImage(file: File) {
   const compressedFile = await compressAvatarImage(file);
-  const fileExtension = compressedFile.name.split(".").pop() ?? "jpg";
-  const filePath = `${userId}/${Date.now()}.${fileExtension}`;
+  const { presignedUrl, publicUrl } = await requestPresignedUploadUrl(compressedFile);
 
-  const { error } = await supabase.storage.from("avatars").upload(filePath, compressedFile, {
-    cacheControl: "31536000",
-    contentType: compressedFile.type,
-    upsert: true,
+  const uploadResponse = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": compressedFile.type,
+    },
+    body: compressedFile,
   });
 
-  if (error) {
+  if (!uploadResponse.ok) {
     throw new Error("تعذر رفع الصورة، حاول مرة أخرى");
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
   return publicUrl;
+}
+
+async function requestPresignedUploadUrl(file: File): Promise<{
+  presignedUrl: string;
+  publicUrl: string;
+  key: string;
+}> {
+  const response = await fetch("/api/upload/presign", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type,
+      fileSize: file.size,
+      folder: "avatars",
+    }),
+  });
+
+  const data = (await response.json()) as Partial<{
+    presignedUrl: string;
+    publicUrl: string;
+    key: string;
+    error: string;
+  }>;
+
+  if (!response.ok || !data.presignedUrl || !data.publicUrl || !data.key) {
+    throw new Error(data.error ?? "إعدادات رفع الصور غير مكتملة");
+  }
+
+  return {
+    presignedUrl: data.presignedUrl,
+    publicUrl: data.publicUrl,
+    key: data.key,
+  };
 }

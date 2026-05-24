@@ -71,7 +71,6 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
         </CardHeader>
         <CardContent className="space-y-6">
           <AvatarUploader
-            userId={data.profile.userId}
             avatarUrl={avatarUrl}
             onUploaded={(url) =>
               setValue("avatarUrl", url, { shouldDirty: true, shouldValidate: true })

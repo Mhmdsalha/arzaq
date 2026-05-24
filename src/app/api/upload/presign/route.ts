@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   if (typeof body.contentType !== "string" || !ALLOWED_TYPES.includes(body.contentType as never)) {
     return NextResponse.json(
-      { error: "نوع الملف غير مدعوم، يُسمح بـ JPG و PNG و WebP فقط" },
+      { error: "نوع الملف غير مدعوم، يسمح بـ JPG و PNG و WebP فقط" },
       { status: 400 },
     );
   }
@@ -51,9 +51,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "مجلد الرفع غير صحيح" }, { status: 400 });
   }
 
-  const key = generateFileKey(body.folder as UploadFolder, session.user.id, body.fileName);
-  const presignedUrl = await getPresignedUploadUrl(key, body.contentType);
-  const publicUrl = getPublicUrl(key);
+  try {
+    const key = generateFileKey(body.folder as UploadFolder, session.user.id, body.fileName);
+    const presignedUrl = await getPresignedUploadUrl(key, body.contentType);
+    const publicUrl = getPublicUrl(key);
 
-  return NextResponse.json({ presignedUrl, publicUrl, key });
+    return NextResponse.json({ presignedUrl, publicUrl, key });
+  } catch {
+    return NextResponse.json({ error: "إعدادات رفع الصور غير مكتملة" }, { status: 500 });
+  }
 }

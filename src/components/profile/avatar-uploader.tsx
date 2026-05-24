@@ -9,11 +9,9 @@ import { Button } from "@/components/ui/button";
 import { uploadAvatarImage } from "@/lib/upload-image";
 
 export function AvatarUploader({
-  userId,
   avatarUrl,
   onUploaded,
 }: {
-  userId: string;
   avatarUrl: string;
   onUploaded: (url: string) => void;
 }) {
@@ -52,7 +50,7 @@ export function AvatarUploader({
     setIsUploading(true);
 
     try {
-      const uploadedUrl = await uploadAvatarImage(file, userId);
+      const uploadedUrl = await uploadAvatarImage(file);
       onUploaded(uploadedUrl);
       toast.success("تم رفع الصورة بنجاح");
     } catch (error) {
