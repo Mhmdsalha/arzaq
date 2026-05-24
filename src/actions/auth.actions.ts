@@ -5,6 +5,7 @@ import type { AccountType } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { signIn, signOut } from "@/lib/auth";
+import { isDatabaseConnectionError } from "@/lib/prisma";
 import { getPostLoginRedirect } from "@/lib/redirects";
 import {
   forgotPasswordSchema,
@@ -40,6 +41,13 @@ export async function loginAction(input: LoginInput, callbackUrl?: string): Prom
     });
   } catch (error) {
     if (error instanceof AuthError) {
+      if (isAuthDatabaseError(error)) {
+        return {
+          ok: false,
+          message: "تعذر الاتصال بقاعدة البيانات حالياً، تأكد من إعدادات Neon ثم حاول مرة أخرى",
+        };
+      }
+
       return { ok: false, message: "بيانات الدخول غير صحيحة" };
     }
 
@@ -47,6 +55,20 @@ export async function loginAction(input: LoginInput, callbackUrl?: string): Prom
   }
 
   return { ok: true, message: "تم تسجيل الدخول بنجاح" };
+}
+
+function isAuthDatabaseError(error: AuthError) {
+  const possibleErrors = [error, error.cause, getNestedError(error.cause)];
+
+  return possibleErrors.some((possibleError) => isDatabaseConnectionError(possibleError));
+}
+
+function getNestedError(cause: unknown) {
+  if (typeof cause !== "object" || cause === null || !("err" in cause)) {
+    return undefined;
+  }
+
+  return (cause as { err?: unknown }).err;
 }
 
 export async function registerAction(input: RegisterInput): Promise<ActionResult> {
