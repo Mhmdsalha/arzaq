@@ -52,7 +52,7 @@ export function LoginForm({
   }
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+    <form className="space-y-6" method="post" noValidate onSubmit={handleSubmit(onSubmit)}>
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
