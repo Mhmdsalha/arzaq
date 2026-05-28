@@ -6,7 +6,7 @@ import { getNavigationSummaryFresh } from "@/services/navigation.service";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const STREAM_INTERVAL_MS = 5_000;
+const STREAM_INTERVAL_MS = 12_000;
 
 export async function GET(request: NextRequest) {
   const session = await auth();

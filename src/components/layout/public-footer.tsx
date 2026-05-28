@@ -49,6 +49,21 @@ export function PublicFooter() {
                 تواصل معنا
               </Link>
             </li>
+            <li>
+              <Link href="/terms" className="hover:text-primary-dark">
+                شروط الاستخدام
+              </Link>
+            </li>
+            <li>
+              <Link href="/privacy" className="hover:text-primary-dark">
+                سياسة الخصوصية
+              </Link>
+            </li>
+            <li>
+              <Link href="/safety" className="hover:text-primary-dark">
+                إرشادات السلامة
+              </Link>
+            </li>
             <li className="flex items-center gap-2 text-primary-dark">
               <HeartHandshake className="size-4" />
               مبني بروح محلية

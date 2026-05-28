@@ -7,13 +7,13 @@ import { LatestJobsSection } from "@/components/home/latest-jobs-section";
 import { SearchSection } from "@/components/home/search-section";
 import { categories } from "@/mock/categories";
 import { getJobsWithFilters } from "@/services/job.service";
-import { getPublicProviders } from "@/services/profile.service";
+import { getFeaturedProvidersForHome } from "@/services/profile.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [providers, latestJobs] = await Promise.all([
-    getPublicProviders(),
+  const [featuredProviders, latestJobs] = await Promise.all([
+    getFeaturedProvidersForHome(),
     getJobsWithFilters({ status: "OPEN", pageSize: 6 }),
   ]);
 
@@ -23,7 +23,10 @@ export default async function HomePage() {
       <SearchSection />
       <CategoriesGrid categories={categories} />
       <LatestJobsSection jobs={latestJobs.items} />
-      <FeaturedProvidersSection providers={providers.filter((provider) => provider.isTrusted)} />
+      <FeaturedProvidersSection
+        providers={featuredProviders.providers}
+        mode={featuredProviders.mode}
+      />
       <HowItWorksSection />
       <CTASection />
     </main>

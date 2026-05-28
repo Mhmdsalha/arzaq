@@ -21,6 +21,8 @@ export const rateLimiters = {
     rateLimit(`create-offer:${userId}`, { limit: 30, windowSeconds: 60 * 60 }),
   createReview: (userId: string) =>
     rateLimit(`create-review:${userId}`, { limit: 20, windowSeconds: 60 * 60 }),
+  report: (userId: string) =>
+    rateLimit(`report:${userId}`, { limit: 6, windowSeconds: 60 * 60 }),
   upload: (userId: string) => rateLimit(`upload:${userId}`, { limit: 40, windowSeconds: 60 * 60 }),
   passwordReset: (key: string) =>
     rateLimit(`password-reset:${key}`, { limit: 5, windowSeconds: 60 * 60 }),

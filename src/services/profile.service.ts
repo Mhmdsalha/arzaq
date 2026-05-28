@@ -252,6 +252,54 @@ export const getPublicProviders = cache(async (): Promise<ProviderProfile[]> => 
   }
 });
 
+export const getFeaturedProvidersForHome = cache(async (): Promise<{
+  providers: ProviderProfile[];
+  mode: "trusted" | "featured";
+}> => {
+  if (isDatabaseTemporarilyUnavailable()) {
+    return { providers: [], mode: "featured" };
+  }
+
+  try {
+    const trustedProviders = await prisma.user.findMany({
+      where: {
+        accountType: "PROVIDER",
+        deletedAt: null,
+        isBanned: false,
+        profile: {
+          isTrusted: true,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+      select: publicProviderCardSelect(),
+    });
+
+    if (trustedProviders.length > 0) {
+      return { providers: trustedProviders.map(mapPublicProviderCard), mode: "trusted" };
+    }
+
+    const featuredProviders = await prisma.user.findMany({
+      where: {
+        accountType: "PROVIDER",
+        deletedAt: null,
+        isBanned: false,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+      select: publicProviderCardSelect(),
+    });
+
+    return { providers: featuredProviders.map(mapPublicProviderCard), mode: "featured" };
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return { providers: [], mode: "featured" };
+    }
+
+    throw error;
+  }
+});
+
 export const getPublicProviderById = cache(
   async (providerId: string): Promise<ProviderProfile | null> => {
     if (isDatabaseTemporarilyUnavailable()) {
@@ -346,8 +394,50 @@ function publicProviderSelect() {
   } satisfies Prisma.UserSelect;
 }
 
+function publicProviderCardSelect() {
+  return {
+    id: true,
+    name: true,
+    createdAt: true,
+    profile: {
+      select: {
+        title: true,
+        bio: true,
+        avatarUrl: true,
+        region: true,
+        whatsapp: true,
+        avgRating: true,
+        totalReviews: true,
+        isTrusted: true,
+        skills: {
+          select: {
+            skill: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    offers: {
+      where: {
+        status: "ACCEPTED",
+      },
+      select: {
+        id: true,
+      },
+    },
+  } satisfies Prisma.UserSelect;
+}
+
 type PublicProviderPayload = Prisma.UserGetPayload<{
   select: ReturnType<typeof publicProviderSelect>;
+}>;
+
+type PublicProviderCardPayload = Prisma.UserGetPayload<{
+  select: ReturnType<typeof publicProviderCardSelect>;
 }>;
 
 function mapPublicProvider(provider: PublicProviderPayload): ProviderProfile {
@@ -381,5 +471,27 @@ function mapPublicProvider(provider: PublicProviderPayload): ProviderProfile {
       comment: review.comment ?? "",
       createdAt: review.createdAt.toISOString().slice(0, 10),
     })),
+  };
+}
+
+function mapPublicProviderCard(provider: PublicProviderCardPayload): ProviderProfile {
+  const profile = provider.profile;
+
+  return {
+    id: provider.id,
+    name: provider.name,
+    title: profile?.title || "مقدم خدمة",
+    bio: profile?.bio || "مقدم خدمة ضمن منصة أرزاق.",
+    avatarUrl: profile?.avatarUrl || fallbackAvatar,
+    region: profile?.region ?? "ONLINE",
+    categorySlugs: profile?.skills.map((item) => item.skill.slug) ?? [],
+    skills: profile?.skills.map((item) => item.skill.name) ?? [],
+    rating: profile?.avgRating ?? 0,
+    reviewsCount: profile?.totalReviews ?? 0,
+    completedJobs: provider.offers.length,
+    isTrusted: profile?.isTrusted ?? false,
+    whatsapp: profile?.whatsapp ?? "",
+    portfolio: [],
+    reviews: [],
   };
 }

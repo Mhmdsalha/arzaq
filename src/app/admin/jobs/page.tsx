@@ -1,0 +1,115 @@
+import type { JobStatus } from "@prisma/client";
+import Link from "next/link";
+
+import { adminDeleteJobFormAction } from "@/actions/admin.actions";
+import { regionLabels } from "@/constants/regions";
+import { getAdminJobs } from "@/services/admin.service";
+
+const jobStatusLabels: Record<JobStatus, string> = {
+  OPEN: "مفتوح",
+  IN_PROGRESS: "قيد التنفيذ",
+  COMPLETED: "مكتمل",
+  CANCELLED: "ملغي",
+};
+
+export default async function AdminJobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const q = getParam(params.q);
+  const status = parseJobStatus(getParam(params.status));
+  const page = Number(getParam(params.page) ?? "1");
+  const data = await getAdminJobs({ q, status, page });
+
+  return (
+    <section className="container-responsive py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold text-white">إدارة الطلبات</h1>
+        <Link href="/admin" className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">
+          رجوع
+        </Link>
+      </div>
+
+      <form className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-[1fr_220px_auto]">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="بحث بعنوان الطلب أو الوصف"
+          className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-white outline-none"
+        />
+        <select
+          name="status"
+          defaultValue={status ?? ""}
+          className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-white outline-none"
+        >
+          <option value="">كل الحالات</option>
+          {Object.entries(jobStatusLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button className="min-h-11 rounded-xl bg-primary px-5 font-semibold text-white">
+          بحث
+        </button>
+      </form>
+
+      <div className="mt-6 grid gap-4">
+        {data.jobs.map((job) => (
+          <article key={job.id} className="rounded-2xl border border-white/10 bg-slate-900 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-bold text-white">{job.title}</h2>
+                  <span className="rounded-full bg-primary/15 px-3 py-1 text-xs text-primary-light">
+                    {jobStatusLabels[job.status]}
+                  </span>
+                  {job.isUrgent ? (
+                    <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs text-amber-200">
+                      عاجل
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-sm text-slate-300">
+                  {job.category.name} · {regionLabels[job.region]} · صاحب الطلب: {job.author.name}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {job._count.offers} عروض · {job._count.reports} بلاغات · {job.views} مشاهدة
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={`/jobs/${job.id}`}
+                  className="inline-flex min-h-10 items-center rounded-xl bg-white/10 px-4 text-sm font-semibold text-white"
+                >
+                  عرض
+                </Link>
+                <form action={adminDeleteJobFormAction}>
+                  <input type="hidden" name="jobId" value={job.id} />
+                  <button className="min-h-10 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">
+                    إخفاء
+                  </button>
+                </form>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function getParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parseJobStatus(value: string | undefined): JobStatus | undefined {
+  return value === "OPEN" ||
+    value === "IN_PROGRESS" ||
+    value === "COMPLETED" ||
+    value === "CANCELLED"
+    ? value
+    : undefined;
+}

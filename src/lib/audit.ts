@@ -20,6 +20,10 @@ export type AuditAction =
   | "CREATE_REPORT"
   | "BAN_USER"
   | "UNBAN_USER"
+  | "TRUST_PROVIDER"
+  | "UNTRUST_PROVIDER"
+  | "ADMIN_DELETE_JOB"
+  | "REVIEW_REPORT"
   | "UPLOAD_FILE"
   | "ACCOUNT_TYPE_SWITCH";
 

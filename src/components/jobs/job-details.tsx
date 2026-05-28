@@ -16,6 +16,7 @@ import Link from "next/link";
 import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { SimilarJobs } from "@/components/jobs/similar-jobs";
 import { OfferForm } from "@/components/offers/offer-form";
+import { ReportButton } from "@/components/shared/report-button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
@@ -128,6 +129,14 @@ export function JobDetails({
               isSaved={job.isSaved}
               className="w-full"
             />
+            {isAuthenticated && !job.isOwner ? (
+              <ReportButton
+                targetType="JOB_POST"
+                targetId={job.id}
+                label="الإبلاغ عن الطلب"
+                className="w-full"
+              />
+            ) : null}
           </CardContent>
         </Card>
       </aside>

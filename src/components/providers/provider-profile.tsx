@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { ProviderPortfolio } from "@/components/providers/provider-portfolio";
 import { ProviderReviews } from "@/components/providers/provider-reviews";
+import { ReportButton } from "@/components/shared/report-button";
 import { StarRating } from "@/components/shared/star-rating";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -79,6 +80,12 @@ export function ProviderProfile({ provider }: { provider: ProviderProfileType })
               phone={provider.whatsapp}
               className="w-full"
               label="تواصل مع مقدم الخدمة"
+            />
+            <ReportButton
+              targetType="USER"
+              targetId={provider.id}
+              label="الإبلاغ عن المستخدم"
+              className="w-full"
             />
           </CardContent>
         </Card>

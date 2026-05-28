@@ -22,7 +22,7 @@ type NavigationSummaryResponse = {
 };
 
 const SUMMARY_TTL_MS = 8_000;
-const SUMMARY_POLL_MS = 15_000;
+const SUMMARY_POLL_MS = 60_000;
 const SUMMARY_REFRESH_EVENT = "arzaq:navigation-summary-refresh";
 
 let cachedSummary: NavigationSummaryResponse | null = null;
