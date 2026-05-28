@@ -56,7 +56,7 @@ export async function createJobAction(input: CreateJobInput): Promise<JobActionR
     revalidatePath("/dashboard/jobs");
     logAudit("CREATE_JOB", { userId: session.user.id, entityType: "JobPost", entityId: job.id });
 
-    return { ok: true, message: "تم نشر طلبك بنجاح 🎉", jobId: job.id };
+    return { ok: true, message: "تم إرسال طلبك للإدارة للمراجعة", jobId: job.id };
   } catch (error) {
     return {
       ok: false,
@@ -90,7 +90,7 @@ export async function updateJobAction(id: string, input: CreateJobInput): Promis
     revalidatePath("/dashboard/jobs");
     logAudit("UPDATE_JOB", { userId: session.user.id, entityType: "JobPost", entityId: id });
 
-    return { ok: true, message: "تم حفظ التعديلات بنجاح", jobId: id };
+    return { ok: true, message: "تم حفظ التعديلات وإرسال الطلب للمراجعة", jobId: id };
   } catch (error) {
     return {
       ok: false,

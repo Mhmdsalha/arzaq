@@ -7,6 +7,8 @@ export const workModeLabels: Record<WorkMode, string> = {
 };
 
 export const jobStatusLabels: Record<JobStatus, string> = {
+  PENDING_REVIEW: "قيد مراجعة الإدارة",
+  NEEDS_EDIT: "يحتاج تعديل",
   OPEN: "مفتوح",
   IN_PROGRESS: "قيد التنفيذ",
   COMPLETED: "مكتمل",

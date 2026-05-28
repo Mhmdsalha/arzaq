@@ -1,16 +1,23 @@
 import type { JobStatus } from "@prisma/client";
 import Link from "next/link";
 
-import { adminDeleteJobFormAction } from "@/actions/admin.actions";
+import {
+  adminDeleteJobFormAction,
+  approveJobFormAction,
+  requestJobEditFormAction,
+} from "@/actions/admin.actions";
+import { jobStatusLabels } from "@/constants/jobs";
 import { regionLabels } from "@/constants/regions";
 import { getAdminJobs } from "@/services/admin.service";
 
-const jobStatusLabels: Record<JobStatus, string> = {
-  OPEN: "مفتوح",
-  IN_PROGRESS: "قيد التنفيذ",
-  COMPLETED: "مكتمل",
-  CANCELLED: "ملغي",
-};
+const jobStatusValues: JobStatus[] = [
+  "PENDING_REVIEW",
+  "NEEDS_EDIT",
+  "OPEN",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+];
 
 export default async function AdminJobsPage({
   searchParams,
@@ -26,13 +33,18 @@ export default async function AdminJobsPage({
   return (
     <section className="container-responsive py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold text-white">إدارة الطلبات</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-white">مراجعة الطلبات</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            الطلبات الجديدة لا تظهر للعامة إلا بعد اعتمادها من الإدارة.
+          </p>
+        </div>
         <Link href="/admin" className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">
           رجوع
         </Link>
       </div>
 
-      <form className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-[1fr_220px_auto]">
+      <form className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-[1fr_240px_auto]">
         <input
           name="q"
           defaultValue={q}
@@ -45,9 +57,9 @@ export default async function AdminJobsPage({
           className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-white outline-none"
         >
           <option value="">كل الحالات</option>
-          {Object.entries(jobStatusLabels).map(([value, label]) => (
+          {jobStatusValues.map((value) => (
             <option key={value} value={value}>
-              {label}
+              {jobStatusLabels[value]}
             </option>
           ))}
         </select>
@@ -58,9 +70,12 @@ export default async function AdminJobsPage({
 
       <div className="mt-6 grid gap-4">
         {data.jobs.map((job) => (
-          <article key={job.id} className="rounded-2xl border border-white/10 bg-slate-900 p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+          <article
+            key={job.id}
+            className="rounded-2xl border border-white/10 bg-slate-900 p-4"
+          >
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-bold text-white">{job.title}</h2>
                   <span className="rounded-full bg-primary/15 px-3 py-1 text-xs text-primary-light">
@@ -79,6 +94,7 @@ export default async function AdminJobsPage({
                   {job._count.offers} عروض · {job._count.reports} بلاغات · {job.views} مشاهدة
                 </p>
               </div>
+
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={`/jobs/${job.id}`}
@@ -86,6 +102,14 @@ export default async function AdminJobsPage({
                 >
                   عرض
                 </Link>
+                {job.status === "PENDING_REVIEW" || job.status === "NEEDS_EDIT" ? (
+                  <form action={approveJobFormAction}>
+                    <input type="hidden" name="jobId" value={job.id} />
+                    <button className="min-h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark">
+                      اعتماد ونشر
+                    </button>
+                  </form>
+                ) : null}
                 <form action={adminDeleteJobFormAction}>
                   <input type="hidden" name="jobId" value={job.id} />
                   <button className="min-h-10 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">
@@ -94,6 +118,20 @@ export default async function AdminJobsPage({
                 </form>
               </div>
             </div>
+
+            {job.status === "PENDING_REVIEW" || job.status === "OPEN" ? (
+              <form action={requestJobEditFormAction} className="mt-4 grid gap-2 md:grid-cols-[1fr_auto]">
+                <input type="hidden" name="jobId" value={job.id} />
+                <input
+                  name="note"
+                  placeholder="ملاحظة للعميل عند طلب التعديل، مثال: يرجى توضيح الميزانية أو وصف المهمة"
+                  className="h-11 rounded-xl border border-white/10 bg-slate-950 px-4 text-sm text-white outline-none"
+                />
+                <button className="min-h-11 rounded-xl border border-amber-400/40 px-4 text-sm font-semibold text-amber-100 hover:bg-amber-500/10">
+                  طلب تعديل
+                </button>
+              </form>
+            ) : null}
           </article>
         ))}
       </div>
@@ -106,10 +144,5 @@ function getParam(value: string | string[] | undefined) {
 }
 
 function parseJobStatus(value: string | undefined): JobStatus | undefined {
-  return value === "OPEN" ||
-    value === "IN_PROGRESS" ||
-    value === "COMPLETED" ||
-    value === "CANCELLED"
-    ? value
-    : undefined;
+  return jobStatusValues.includes(value as JobStatus) ? (value as JobStatus) : undefined;
 }

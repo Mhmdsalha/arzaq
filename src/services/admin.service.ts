@@ -1,6 +1,8 @@
 import type { AccountType, JobStatus, ReportStatus, ReportTargetType } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
+import type { CreateAdminInput } from "@/schemas/admin.schema";
 
 const ADMIN_PAGE_SIZE = 20;
 
@@ -13,6 +15,7 @@ export async function getAdminOverview() {
     pendingReports,
     trustedProviders,
     bannedUsers,
+    pendingJobs,
   ] = await prisma.$transaction([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.user.count({ where: { deletedAt: null, accountType: "CLIENT" } }),
@@ -21,6 +24,7 @@ export async function getAdminOverview() {
     prisma.report.count({ where: { status: "PENDING" } }),
     prisma.profile.count({ where: { isTrusted: true, user: { accountType: "PROVIDER" } } }),
     prisma.user.count({ where: { deletedAt: null, isBanned: true } }),
+    prisma.jobPost.count({ where: { deletedAt: null, status: "PENDING_REVIEW" } }),
   ]);
 
   return {
@@ -31,7 +35,66 @@ export async function getAdminOverview() {
     pendingReports,
     trustedProviders,
     bannedUsers,
+    pendingJobs,
   };
+}
+
+export async function getAdminAccounts() {
+  return prisma.user.findMany({
+    where: {
+      role: "ADMIN",
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      isVerified: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function createAdminUser(data: CreateAdminInput) {
+  const existing = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: data.email }, ...(data.phone ? [{ phone: data.phone }] : [])],
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    throw new Error("يوجد حساب بنفس البريد أو رقم الجوال");
+  }
+
+  const passwordHash = await bcrypt.hash(data.password, 12);
+
+  return prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      phone: data.phone?.trim() || null,
+      passwordHash,
+      role: "ADMIN",
+      accountType: "CLIENT",
+      isVerified: true,
+      profile: {
+        create: {
+          region: "ONLINE",
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
 }
 
 export async function getAdminUsers({
@@ -200,6 +263,14 @@ export async function setUserBanned(userId: string, isBanned: boolean) {
   });
 }
 
+export async function setUserVerified(userId: string, isVerified: boolean) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { isVerified },
+    select: { id: true, isVerified: true },
+  });
+}
+
 export async function setProviderTrusted(userId: string, isTrusted: boolean) {
   return prisma.profile.update({
     where: { userId },
@@ -213,6 +284,50 @@ export async function adminSoftDeleteJob(jobId: string) {
     where: { id: jobId },
     data: { deletedAt: new Date(), status: "CANCELLED" },
     select: { id: true },
+  });
+}
+
+export async function approveJobPost(jobId: string) {
+  return prisma.$transaction(async (tx) => {
+    const job = await tx.jobPost.update({
+      where: { id: jobId },
+      data: { status: "OPEN" },
+      select: { id: true, title: true, authorId: true },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: job.authorId,
+        type: "SYSTEM",
+        message: `تم اعتماد طلبك ونشره: ${job.title}`,
+        link: `/jobs/${job.id}`,
+      },
+    });
+
+    return job;
+  });
+}
+
+export async function requestJobEdit(jobId: string, note?: string) {
+  return prisma.$transaction(async (tx) => {
+    const job = await tx.jobPost.update({
+      where: { id: jobId },
+      data: { status: "NEEDS_EDIT" },
+      select: { id: true, title: true, authorId: true },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: job.authorId,
+        type: "SYSTEM",
+        message: note?.trim()
+          ? `يرجى تعديل طلبك: ${job.title} - ${note.trim()}`
+          : `يرجى تعديل طلبك قبل النشر: ${job.title}`,
+        link: `/dashboard/jobs/${job.id}/edit`,
+      },
+    });
+
+    return job;
   });
 }
 

@@ -1,7 +1,13 @@
 export type RegionKey = "NORTH_GAZA" | "GAZA_CITY" | "CENTRAL" | "KHAN_YOUNIS" | "RAFAH" | "ONLINE";
 
 export type WorkMode = "ONLINE" | "FIELD" | "BOTH";
-export type JobStatus = "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type JobStatus =
+  | "PENDING_REVIEW"
+  | "NEEDS_EDIT"
+  | "OPEN"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED";
 
 export type Category = {
   id: string;

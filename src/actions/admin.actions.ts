@@ -8,11 +8,16 @@ import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/authGuards";
 import { sanitizeText } from "@/lib/sanitize";
 import {
+  approveJobPost,
+  createAdminUser,
   adminSoftDeleteJob,
+  requestJobEdit,
   setProviderTrusted,
   setUserBanned,
+  setUserVerified,
   updateReportReview,
 } from "@/services/admin.service";
+import { createAdminSchema, jobRejectionSchema } from "@/schemas/admin.schema";
 
 export async function setUserBanAction(userId: string, isBanned: boolean): Promise<ActionResult> {
   try {
@@ -40,6 +45,76 @@ export async function setUserBanFormAction(formData: FormData): Promise<void> {
   const isBanned = String(formData.get("isBanned") ?? "") === "true";
 
   await setUserBanAction(userId, isBanned);
+}
+
+export async function createAdminAccountAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    const parsed = createAdminSchema.safeParse({
+      name: sanitizeText(String(formData.get("name") ?? "")),
+      email: sanitizeText(String(formData.get("email") ?? "")).toLowerCase(),
+      phone: sanitizeText(String(formData.get("phone") ?? "")),
+      password: String(formData.get("password") ?? ""),
+    });
+
+    if (!parsed.success) {
+      return { ok: false, message: parsed.error.issues[0]?.message ?? "بيانات غير صحيحة" };
+    }
+
+    const admin = await createAdminUser({
+      ...parsed.data,
+      phone: parsed.data.phone?.trim() || undefined,
+    });
+
+    revalidatePath("/admin/admins");
+    logAudit("CREATE_ADMIN", {
+      userId: session.user.id,
+      entityType: "User",
+      entityId: admin.id,
+    });
+
+    return { ok: true, message: "تم إنشاء حساب الأدمن بنجاح" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+    };
+  }
+}
+
+export async function createAdminAccountFormAction(formData: FormData): Promise<void> {
+  await createAdminAccountAction(formData);
+}
+
+export async function setUserVerifiedAction(
+  userId: string,
+  isVerified: boolean,
+): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    const user = await setUserVerified(sanitizeText(userId), isVerified);
+
+    revalidatePath("/admin/users");
+    logAudit(isVerified ? "VERIFY_ACCOUNT" : "UNVERIFY_ACCOUNT", {
+      userId: session.user.id,
+      entityType: "User",
+      entityId: user.id,
+    });
+
+    return { ok: true, message: isVerified ? "تم توثيق الحساب" : "تم إلغاء توثيق الحساب" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+    };
+  }
+}
+
+export async function setUserVerifiedFormAction(formData: FormData): Promise<void> {
+  const userId = String(formData.get("userId") ?? "");
+  const isVerified = String(formData.get("isVerified") ?? "") === "true";
+
+  await setUserVerifiedAction(userId, isVerified);
 }
 
 export async function setProviderTrustAction(
@@ -101,6 +176,72 @@ export async function adminDeleteJobFormAction(formData: FormData): Promise<void
   const jobId = String(formData.get("jobId") ?? "");
 
   await adminDeleteJobAction(jobId);
+}
+
+export async function approveJobAction(jobId: string): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    const job = await approveJobPost(sanitizeText(jobId));
+
+    revalidateTag("jobs", "max");
+    revalidatePath("/admin/jobs");
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${job.id}`);
+    logAudit("APPROVE_JOB", {
+      userId: session.user.id,
+      entityType: "JobPost",
+      entityId: job.id,
+    });
+
+    return { ok: true, message: "تم اعتماد الطلب ونشره" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+    };
+  }
+}
+
+export async function approveJobFormAction(formData: FormData): Promise<void> {
+  const jobId = String(formData.get("jobId") ?? "");
+
+  await approveJobAction(jobId);
+}
+
+export async function requestJobEditAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    const parsed = jobRejectionSchema.safeParse({
+      jobId: String(formData.get("jobId") ?? ""),
+      note: sanitizeText(String(formData.get("note") ?? "")),
+    });
+
+    if (!parsed.success) {
+      return { ok: false, message: parsed.error.issues[0]?.message ?? "بيانات غير صحيحة" };
+    }
+
+    const job = await requestJobEdit(parsed.data.jobId, parsed.data.note);
+
+    revalidateTag("jobs", "max");
+    revalidatePath("/admin/jobs");
+    revalidatePath("/dashboard/jobs");
+    logAudit("REQUEST_JOB_EDIT", {
+      userId: session.user.id,
+      entityType: "JobPost",
+      entityId: job.id,
+    });
+
+    return { ok: true, message: "تم إرسال طلب التعديل لصاحب الطلب" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+    };
+  }
+}
+
+export async function requestJobEditFormAction(formData: FormData): Promise<void> {
+  await requestJobEditAction(formData);
 }
 
 export async function updateReportStatusAction(

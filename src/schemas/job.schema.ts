@@ -9,7 +9,14 @@ const regionValues = [
   "ONLINE",
 ] as const;
 const workModeValues = ["ONLINE", "FIELD", "BOTH"] as const;
-const jobStatusValues = ["OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const;
+const jobStatusValues = [
+  "PENDING_REVIEW",
+  "NEEDS_EDIT",
+  "OPEN",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
 
 export const jobFiltersSchema = z.object({
   q: z.string().trim().optional(),

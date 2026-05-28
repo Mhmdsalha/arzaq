@@ -1,7 +1,11 @@
 import type { AccountType } from "@prisma/client";
 import Link from "next/link";
 
-import { setProviderTrustFormAction, setUserBanFormAction } from "@/actions/admin.actions";
+import {
+  setProviderTrustFormAction,
+  setUserBanFormAction,
+  setUserVerifiedFormAction,
+} from "@/actions/admin.actions";
 import { regionLabels } from "@/constants/regions";
 import { getAdminUsers } from "@/services/admin.service";
 
@@ -87,6 +91,13 @@ export default async function AdminUsersPage({
                     <input type="hidden" name="isBanned" value={String(!user.isBanned)} />
                     <button className="min-h-10 rounded-xl bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/15">
                       {user.isBanned ? "فك الحظر" : "حظر"}
+                    </button>
+                  </form>
+                  <form action={setUserVerifiedFormAction}>
+                    <input type="hidden" name="userId" value={user.id} />
+                    <input type="hidden" name="isVerified" value={String(!user.isVerified)} />
+                    <button className="min-h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">
+                      {user.isVerified ? "إلغاء توثيق الحساب" : "توثيق الحساب"}
                     </button>
                   </form>
                   {user.accountType === "PROVIDER" ? (

@@ -342,7 +342,7 @@ export async function getJobForEdit(id: string, userId: string): Promise<JobForm
     },
   });
 
-  if (!job || job.status !== "OPEN") {
+  if (!job || !["OPEN", "PENDING_REVIEW", "NEEDS_EDIT"].includes(job.status)) {
     return null;
   }
 
@@ -410,6 +410,7 @@ export async function createJob(data: CreateJobInput, userId: string) {
       budget: data.budget?.trim() || null,
       duration: data.duration?.trim() || null,
       isUrgent: data.isUrgent,
+      status: "PENDING_REVIEW",
       expiresAt: parseOptionalDate(data.expiresAt),
     },
     select: {
@@ -418,26 +419,7 @@ export async function createJob(data: CreateJobInput, userId: string) {
     },
   });
 
-  const admins = await prisma.user.findMany({
-    where: {
-      role: "ADMIN",
-      deletedAt: null,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (admins.length > 0) {
-    await prisma.notification.createMany({
-      data: admins.map((admin) => ({
-        userId: admin.id,
-        type: "SYSTEM",
-        message: `تم نشر طلب جديد: ${job.title}`,
-        link: `/jobs/${job.id}`,
-      })),
-    });
-  }
+  await notifyAdminsForJobReview(job.id, job.title);
 
   return job;
 }
@@ -447,7 +429,9 @@ export async function updateJob(id: string, data: CreateJobInput, userId: string
     where: {
       id,
       authorId: userId,
-      status: "OPEN",
+      status: {
+        in: ["OPEN", "PENDING_REVIEW", "NEEDS_EDIT"],
+      },
       deletedAt: null,
     },
     data: {
@@ -459,6 +443,7 @@ export async function updateJob(id: string, data: CreateJobInput, userId: string
       budget: data.budget?.trim() || null,
       duration: data.duration?.trim() || null,
       isUrgent: data.isUrgent,
+      status: "PENDING_REVIEW",
       expiresAt: parseOptionalDate(data.expiresAt),
     },
   });
@@ -466,6 +451,7 @@ export async function updateJob(id: string, data: CreateJobInput, userId: string
   if (result.count === 0) {
     throw new Error("لا يمكن تعديل هذا الطلب");
   }
+  await notifyAdminsForJobReview(id, data.title);
 }
 
 export async function closeJob(id: string, userId: string) {
@@ -519,6 +505,31 @@ export async function incrementJobViews(id: string, viewerId?: string) {
         increment: 1,
       },
     },
+  });
+}
+
+async function notifyAdminsForJobReview(jobId: string, title: string) {
+  const admins = await prisma.user.findMany({
+    where: {
+      role: "ADMIN",
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (admins.length === 0) {
+    return;
+  }
+
+  await prisma.notification.createMany({
+    data: admins.map((admin) => ({
+      userId: admin.id,
+      type: "SYSTEM",
+      message: `طلب جديد بانتظار المراجعة: ${title}`,
+      link: `/admin/jobs?status=PENDING_REVIEW&job=${jobId}`,
+    })),
   });
 }
 

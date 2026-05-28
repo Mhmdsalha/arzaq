@@ -3,10 +3,31 @@ import Link from "next/link";
 import { getAdminOverview } from "@/services/admin.service";
 
 const adminLinks = [
-  { href: "/admin/users", label: "إدارة المستخدمين", description: "حظر، توثيق، ومراجعة الحسابات" },
-  { href: "/admin/jobs", label: "إدارة الطلبات", description: "مراجعة الطلبات وإخفاء المخالف" },
-  { href: "/admin/reports", label: "البلاغات", description: "متابعة بلاغات المستخدمين" },
-  { href: "/admin/audit", label: "سجل التدقيق", description: "تتبع العمليات الحساسة" },
+  {
+    href: "/admin/admins",
+    label: "حسابات الإدارة",
+    description: "إضافة حسابات أدمن جديدة وإدارة دخول الفريق.",
+  },
+  {
+    href: "/admin/users",
+    label: "إدارة المستخدمين",
+    description: "حظر، توثيق، ومراجعة حسابات أصحاب الطلبات ومقدمي الخدمات.",
+  },
+  {
+    href: "/admin/jobs",
+    label: "مراجعة الطلبات",
+    description: "اعتماد الطلبات الجديدة أو إرجاعها للعميل للتعديل قبل النشر.",
+  },
+  {
+    href: "/admin/reports",
+    label: "البلاغات",
+    description: "متابعة بلاغات المستخدمين والتعامل مع المحتوى المخالف.",
+  },
+  {
+    href: "/admin/audit",
+    label: "سجل التدقيق",
+    description: "تتبع العمليات الحساسة داخل المنصة.",
+  },
 ];
 
 export default async function AdminPage() {
@@ -16,6 +37,7 @@ export default async function AdminPage() {
     { label: "أصحاب الطلبات", value: overview.clientUsers },
     { label: "مقدمو الخدمات", value: overview.providerUsers },
     { label: "الطلبات المفتوحة", value: overview.openJobs },
+    { label: "طلبات بانتظار المراجعة", value: overview.pendingJobs },
     { label: "بلاغات معلقة", value: overview.pendingReports },
     { label: "مقدمو خدمات موثقون", value: overview.trustedProviders },
     { label: "حسابات محظورة", value: overview.bannedUsers },
@@ -27,7 +49,7 @@ export default async function AdminPage() {
         <p className="text-sm font-semibold text-primary-light">أرزاق Admin</p>
         <h1 className="mt-2 text-3xl font-bold text-white">لوحة الإدارة</h1>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
-          مركز مراقبة المنصة، مراجعة البلاغات، وإدارة الثقة والحسابات قبل الإطلاق.
+          مركز مراقبة المنصة ومراجعة الطلبات والتوثيق والبلاغات قبل الإطلاق.
         </p>
       </div>
 

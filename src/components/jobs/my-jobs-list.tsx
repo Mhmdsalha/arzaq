@@ -98,7 +98,7 @@ export function MyJobsList({ jobs }: { jobs: UserJobItem[] }) {
 function JobRowActions({ job }: { job: UserJobItem }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const canEdit = job.status === "OPEN";
+  const canEdit = ["OPEN", "PENDING_REVIEW", "NEEDS_EDIT"].includes(job.status);
 
   function runAction(type: "close" | "delete") {
     const message =
