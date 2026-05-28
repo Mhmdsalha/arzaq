@@ -20,7 +20,7 @@ export function MyJobsList({ jobs }: { jobs: UserJobItem[] }) {
     return (
       <EmptyState
         title="لا توجد طلبات حتى الآن"
-        description="ابدأ بنشر أول طلب ليظهر للمهنيين ومقدمي الخدمات."
+        description="ابدأ بنشر أول طلب ليظهر لمقدمي الخدمات بعد مراجعته من الإدارة."
         action={
           <Button asChild>
             <Link href="/dashboard/jobs/new">نشر طلب</Link>
@@ -37,6 +37,7 @@ export function MyJobsList({ jobs }: { jobs: UserJobItem[] }) {
           <thead className="bg-slate-50 text-right text-slate-600">
             <tr>
               <th className="px-4 py-3 font-semibold">العنوان</th>
+              <th className="px-4 py-3 font-semibold">معرّف الطلب</th>
               <th className="px-4 py-3 font-semibold">التصنيف</th>
               <th className="px-4 py-3 font-semibold">المنطقة</th>
               <th className="px-4 py-3 font-semibold">الحالة</th>
@@ -50,6 +51,7 @@ export function MyJobsList({ jobs }: { jobs: UserJobItem[] }) {
             {jobs.map((job) => (
               <tr key={job.id}>
                 <td className="max-w-xs px-4 py-4 font-semibold text-slate-950">{job.title}</td>
+                <td className="px-4 py-4 font-mono text-slate-600">{job.code}</td>
                 <td className="px-4 py-4 text-slate-600">{job.categoryName}</td>
                 <td className="px-4 py-4 text-slate-600">{regionLabels[job.region]}</td>
                 <td className="px-4 py-4">
@@ -75,6 +77,7 @@ export function MyJobsList({ jobs }: { jobs: UserJobItem[] }) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-bold text-slate-950">{job.title}</h2>
+                <p className="mt-1 font-mono text-xs text-slate-500">معرّف الطلب: {job.code}</p>
                 <p className="mt-1 text-sm text-slate-500">
                   {job.categoryName} · {regionLabels[job.region]}
                 </p>

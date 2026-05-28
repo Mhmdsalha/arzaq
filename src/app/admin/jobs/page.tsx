@@ -44,7 +44,7 @@ export default async function AdminJobsPage({
         <input
           name="q"
           defaultValue={q}
-          placeholder="بحث بعنوان الطلب أو الوصف"
+          placeholder="بحث بمعرّف الطلب أو العنوان أو الوصف"
           className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-white outline-none"
         />
         <select
@@ -71,6 +71,9 @@ export default async function AdminJobsPage({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-bold text-white">{job.title}</h2>
+                  <span className="rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-slate-200">
+                    معرّف الطلب: {job.code}
+                  </span>
                   <span className="rounded-full bg-primary/15 px-3 py-1 text-xs text-primary-light">
                     {jobStatusLabels[job.status]}
                   </span>

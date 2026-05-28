@@ -10,6 +10,7 @@ export type JobCategoryOption = {
 
 export type JobListItem = {
   id: string;
+  code: string;
   title: string;
   description: string;
   budget: string;
@@ -45,6 +46,7 @@ export type JobDetailsData = JobListItem & {
 
 export type UserJobItem = {
   id: string;
+  code: string;
   title: string;
   categoryName: string;
   region: Region;

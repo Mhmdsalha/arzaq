@@ -20,6 +20,7 @@ export type Category = {
 
 export type JobPost = {
   id: string;
+  code?: string;
   title: string;
   description: string;
   categorySlug: string;

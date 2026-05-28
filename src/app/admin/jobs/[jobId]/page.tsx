@@ -36,6 +36,7 @@ export default async function AdminJobReviewPage({
         <div>
           <p className="text-sm font-semibold text-primary-light">مراجعة طلب</p>
           <h1 className="mt-2 text-3xl font-bold text-white">{job.title}</h1>
+          <p className="mt-2 font-mono text-sm text-slate-300">معرّف الطلب: {job.code}</p>
           <p className="mt-2 text-sm text-slate-300">
             راجع تفاصيل الطلب بالكامل قبل اعتماد النشر أو إرجاعه لصاحب الطلب للتعديل.
           </p>
@@ -64,6 +65,7 @@ export default async function AdminJobReviewPage({
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <InfoCard label="التصنيف" value={job.category.name} />
+              <InfoCard label="معرّف الطلب" value={job.code} mono />
               <InfoCard label="المنطقة" value={regionLabels[job.region]} />
               <InfoCard label="طريقة العمل" value={workModeLabels[job.workMode]} />
               <InfoCard label="الميزانية" value={job.budget ?? "حسب الاتفاق"} />
@@ -171,11 +173,11 @@ export default async function AdminJobReviewPage({
   );
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) {
+function InfoCard({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950 p-4">
       <p className="text-xs text-slate-400">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-white">{value}</p>
+      <p className={`mt-2 text-sm font-semibold text-white ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>
   );
 }

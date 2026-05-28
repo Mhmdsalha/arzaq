@@ -175,6 +175,11 @@ export const getJobById = cache(
         where: {
           id,
           deletedAt: null,
+          ...(userId
+            ? {
+                OR: [{ status: "OPEN" }, { authorId: userId }],
+              }
+            : { status: "OPEN" }),
         },
         select: {
           ...jobListSelect(userId),
@@ -283,6 +288,7 @@ export async function getUserJobs(userId: string): Promise<UserJobItem[]> {
     },
     select: {
       id: true,
+      code: true,
       title: true,
       region: true,
       status: true,
@@ -304,6 +310,7 @@ export async function getUserJobs(userId: string): Promise<UserJobItem[]> {
 
   return jobs.map((job) => ({
     id: job.id,
+    code: job.code,
     title: job.title,
     categoryName: job.category.name,
     region: job.region,
@@ -401,6 +408,7 @@ export async function createJob(data: CreateJobInput, userId: string) {
 
   const job = await prisma.jobPost.create({
     data: {
+      code: await generateJobCode(),
       title: data.title,
       description: data.description,
       categoryId: data.categoryId,
@@ -415,6 +423,7 @@ export async function createJob(data: CreateJobInput, userId: string) {
     },
     select: {
       id: true,
+      code: true,
       title: true,
     },
   });
@@ -533,6 +542,22 @@ async function notifyAdminsForJobReview(jobId: string, title: string) {
   });
 }
 
+async function generateJobCode(): Promise<string> {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = `ARZ-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const exists = await prisma.jobPost.findUnique({
+      where: { code },
+      select: { id: true },
+    });
+
+    if (!exists) {
+      return code;
+    }
+  }
+
+  return `ARZ-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+}
+
 function hasDatabaseUrl() {
   return Boolean(process.env.DATABASE_URL?.trim());
 }
@@ -634,6 +659,7 @@ function mapMockJobListItem(job: (typeof mockJobs)[number]): JobListItem {
 
   return {
     id: job.id,
+    code: `ARZ-${job.id.slice(-6).toUpperCase()}`,
     title: job.title,
     description: job.description,
     budget: job.budget,
@@ -719,6 +745,7 @@ function buildJobsWhere(filters: JobFiltersInput): Prisma.JobPostWhereInput {
     ...(query
       ? {
           OR: [
+            { code: { contains: query, mode: "insensitive" } },
             { title: { contains: query, mode: "insensitive" } },
             { description: { contains: query, mode: "insensitive" } },
           ],
@@ -734,6 +761,7 @@ function buildJobsWhere(filters: JobFiltersInput): Prisma.JobPostWhereInput {
 function jobListSelect(userId?: string) {
   return {
     id: true,
+    code: true,
     title: true,
     description: true,
     budget: true,
@@ -792,6 +820,7 @@ type JobListPayload = Prisma.JobPostGetPayload<{
 function mapJobListItem(job: JobListPayload, userId?: string): JobListItem {
   return {
     id: job.id,
+    code: job.code,
     title: job.title,
     description: job.description,
     budget: job.budget ?? "حسب الاتفاق",

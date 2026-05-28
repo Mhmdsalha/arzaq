@@ -29,6 +29,9 @@ export function JobCard({
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-slate-100 px-3 py-1 font-mono text-xs font-semibold text-slate-600">
+                  {job.code}
+                </span>
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
                   {job.category.name}
                 </span>

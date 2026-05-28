@@ -148,6 +148,7 @@ model ProfileSkill {
 
 model JobPost {
   id          String    @id @default(cuid())
+  code        String    @unique
   title       String
   description String
   budget      String?
@@ -177,6 +178,7 @@ model JobPost {
   @@index([isUrgent, createdAt])
   @@index([authorId])
   @@index([categoryId])
+  @@index([code])
 }
 
 model Offer {

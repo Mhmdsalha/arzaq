@@ -174,6 +174,7 @@ export async function getAdminJobs({
     ...(q
       ? {
           OR: [
+            { code: { contains: q, mode: "insensitive" as const } },
             { title: { contains: q, mode: "insensitive" as const } },
             { description: { contains: q, mode: "insensitive" as const } },
           ],
@@ -189,6 +190,7 @@ export async function getAdminJobs({
       take: ADMIN_PAGE_SIZE,
       select: {
         id: true,
+        code: true,
         title: true,
         status: true,
         region: true,
@@ -219,6 +221,7 @@ export async function getAdminJobById(jobId: string) {
     },
     select: {
       id: true,
+      code: true,
       title: true,
       description: true,
       budget: true,

@@ -53,6 +53,7 @@ export function JobDetails({
               {job.description}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
+              <DetailItem icon={BriefcaseBusiness} label="معرّف الطلب" value={job.code} mono />
               <DetailItem icon={MapPin} label="المنطقة" value={regionLabels[job.region]} />
               <DetailItem
                 icon={BriefcaseBusiness}
@@ -188,10 +189,12 @@ function DetailItem({
   icon: Icon,
   label,
   value,
+  mono = false,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  mono?: boolean;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -199,7 +202,7 @@ function DetailItem({
         <Icon className="size-4 text-primary" />
         {label}
       </div>
-      <p className="mt-2 font-semibold text-slate-950">{value}</p>
+      <p className={`mt-2 font-semibold text-slate-950 ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>
   );
 }
