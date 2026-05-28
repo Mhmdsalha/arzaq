@@ -32,8 +32,10 @@ import {
   createEmailVerificationCode,
   createPasswordResetToken,
   createUser,
+  findUserByIdentifier,
   resendEmailVerificationCode,
   resetPassword,
+  validatePassword,
   verifyEmailCode,
 } from "@/services/auth.service";
 
@@ -114,6 +116,86 @@ export async function loginAction(input: LoginInput, callbackUrl?: string): Prom
   }
 
   return { ok: true, message: "تم تسجيل الدخول بنجاح", redirectTo: "/dashboard" };
+}
+
+export async function adminLoginAction(input: LoginInput): Promise<ActionResult> {
+  const parsed = loginSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "بيانات الدخول غير صحيحة" };
+  }
+
+  const cleanIdentifier = sanitizeText(parsed.data.identifier);
+
+  try {
+    const loginLimit = await rateLimiters.login(`admin:${cleanIdentifier}`);
+
+    if (!loginLimit.success) {
+      return {
+        ok: false,
+        message: "تم تجاوز عدد المحاولات المسموح. حاول لاحقاً",
+      };
+    }
+
+    const lockedMinutes = await getLoginLockoutMinutes(cleanIdentifier);
+
+    if (lockedMinutes) {
+      return {
+        ok: false,
+        message: `تم قفل الحساب مؤقتاً. يمكنك المحاولة بعد ${lockedMinutes} دقيقة`,
+      };
+    }
+
+    const user = await findUserByIdentifier(cleanIdentifier);
+    const isValidPassword = user
+      ? await validatePassword(parsed.data.password, user.passwordHash)
+      : false;
+
+    if (!user || !isValidPassword) {
+      const lockMinutes = await recordFailedLogin(cleanIdentifier);
+      logAudit("LOGIN_FAILED", { metadata: { adminLogin: true, locked: Boolean(lockMinutes) } });
+
+      return {
+        ok: false,
+        message: lockMinutes
+          ? "تم قفل الحساب مؤقتاً بسبب محاولات دخول متعددة. حاول بعد 15 دقيقة"
+          : "بيانات الدخول غير صحيحة",
+      };
+    }
+
+    if (user.isBanned) {
+      return { ok: false, message: "تم تعليق حسابك، تواصل مع الدعم" };
+    }
+
+    if (user.role !== "ADMIN") {
+      return { ok: false, message: "هذا الدخول مخصص لحسابات الإدارة فقط" };
+    }
+
+    const result = await signIn("credentials", {
+      identifier: cleanIdentifier,
+      password: parsed.data.password,
+      redirectTo: "/admin",
+      redirect: false,
+    });
+
+    await clearLoginLockout(cleanIdentifier);
+    logAudit("LOGIN", {
+      userId: user.id,
+      metadata: { adminLogin: true },
+    });
+
+    return {
+      ok: true,
+      message: "تم تسجيل دخول الإدارة بنجاح",
+      redirectTo: typeof result === "string" ? result : "/admin",
+    };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { ok: false, message: "بيانات الدخول غير صحيحة" };
+    }
+
+    throw error;
+  }
 }
 
 function isAuthDatabaseError(error: AuthError) {

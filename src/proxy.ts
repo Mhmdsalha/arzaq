@@ -29,17 +29,25 @@ export default async function proxy(request: NextRequest) {
   const accountType = token?.accountType === "PROVIDER" ? "PROVIDER" : "CLIENT";
   const currentPath = `${pathname}${request.nextUrl.search}`;
 
+  if (pathname === "/admin/login") {
+    if (isAdmin) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+
+    return NextResponse.next();
+  }
+
   if (authRoutes.some((route) => pathname.startsWith(route)) && isAuthenticated) {
     return NextResponse.redirect(new URL(getAuthenticatedRedirect(accountType), request.url));
   }
 
   if (pathname.startsWith("/admin")) {
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL(getAuthRedirect(currentPath), request.url));
+      return NextResponse.redirect(new URL(`/admin/login?callbackUrl=${encodeURIComponent(currentPath)}`, request.url));
     }
 
     if (!isAdmin) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/admin/login?error=admin_required", request.url));
     }
   }
 
