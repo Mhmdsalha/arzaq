@@ -2,8 +2,12 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { NotificationsReadSync } from "@/components/dashboard/notifications-read-sync";
 import { auth } from "@/lib/auth";
-import { getUserNotifications } from "@/services/navigation.service";
+import {
+  getUserNotifications,
+  markUserNotificationsAsRead,
+} from "@/services/navigation.service";
 
 export const metadata = {
   title: "الإشعارات",
@@ -16,10 +20,12 @@ export default async function NotificationsPage() {
     redirect("/auth/login");
   }
 
+  await markUserNotificationsAsRead(session.user.id);
   const notifications = await getUserNotifications(session.user.id);
 
   return (
     <div className="space-y-6">
+      <NotificationsReadSync />
       <div>
         <h1 className="text-2xl font-bold text-slate-950">الإشعارات</h1>
         <p className="mt-1 text-sm text-slate-600">آخر التحديثات والتنبيهات الخاصة بحسابك.</p>

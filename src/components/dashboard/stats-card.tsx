@@ -23,19 +23,19 @@ export function StatsCard({
   };
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
+      <div className="flex items-start justify-between gap-2 lg:gap-4">
         <div
-          className={cn("flex size-12 items-center justify-center rounded-2xl", toneClasses[tone])}
+          className={cn("flex size-10 items-center justify-center rounded-2xl lg:size-12", toneClasses[tone])}
         >
-          <Icon className="size-6" />
+          <Icon className="size-5 lg:size-6" />
         </div>
-        <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
+        <span className="rounded-full bg-slate-50 px-2 py-1 text-[10px] font-semibold text-slate-500 lg:px-3 lg:text-xs">
           {trend}
         </span>
       </div>
-      <p className="mt-5 text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-slate-950">{value.toLocaleString("ar")}</p>
+      <p className="mt-4 text-xs font-medium leading-relaxed text-slate-500 lg:mt-5 lg:text-sm">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-950 lg:text-3xl">{value.toLocaleString("ar")}</p>
     </article>
   );
 }

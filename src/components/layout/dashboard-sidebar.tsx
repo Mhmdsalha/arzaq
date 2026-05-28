@@ -26,8 +26,8 @@ export function DashboardSidebar({
   return (
     <aside
       className={cn(
-        "fixed right-0 top-0 z-40 hidden h-screen shrink-0 border-l border-slate-200 bg-white p-4 transition-all duration-200 lg:flex lg:flex-col",
-        isCollapsed ? "w-24" : "w-72",
+        "fixed right-0 top-0 z-40 hidden h-[100svh] shrink-0 border-l border-slate-200 bg-white p-4 transition-all duration-200 lg:flex lg:flex-col",
+        isCollapsed ? "w-24" : "w-64",
       )}
     >
       <div className="flex shrink-0 items-center justify-between gap-2">

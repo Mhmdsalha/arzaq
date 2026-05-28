@@ -35,7 +35,7 @@ export function PasswordField({
         />
         <button
           type="button"
-          className="absolute left-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
+          className="absolute left-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
           onClick={() => setIsVisible((value) => !value)}
           aria-label={isVisible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
         >

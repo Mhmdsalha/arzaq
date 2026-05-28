@@ -6,9 +6,14 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/"
-      className={cn("inline-flex items-center text-3xl font-bold text-primary-dark", className)}
+      className={cn(
+        "inline-flex h-20 items-center overflow-visible text-primary-dark lg:h-14",
+        className,
+      )}
     >
-      <span className="font-palestine leading-none">أرزاق</span>
+      <span className="block translate-y-1.5 pt-[20px] font-palestine text-[40px] font-bold leading-none sm:text-[2.8rem] lg:-translate-y-2 lg:pt-0 lg:text-[2.35rem] lg:leading-[1.25]">
+        أرزاق
+      </span>
     </Link>
   );
 }

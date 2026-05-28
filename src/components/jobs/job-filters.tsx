@@ -24,12 +24,12 @@ export function JobFilters({
   onChange: (value: JobFilterState) => void;
 }) {
   return (
-    <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-slate-950">الفلاتر</h2>
         <button
           type="button"
-          className="text-sm font-medium text-primary-dark"
+          className="min-h-11 rounded-xl px-3 text-sm font-medium text-primary-dark"
           onClick={() =>
             onChange({
               region: "all",
@@ -85,12 +85,12 @@ export function JobFilters({
             { value: "CANCELLED", label: "ملغي" },
           ]}
         />
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-800">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-800">
           <input
             type="checkbox"
             checked={value.urgentOnly}
             onChange={(event) => onChange({ ...value, urgentOnly: event.target.checked })}
-            className="rounded border-amber-300 text-primary focus:ring-primary"
+            className="size-5 rounded border-amber-300 text-primary focus:ring-primary"
           />
           الطلبات العاجلة فقط
         </label>
@@ -116,7 +116,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 rounded-xl border-slate-200 bg-white text-sm focus:border-primary focus:ring-primary"
+        className="h-12 rounded-xl border-slate-200 bg-white text-base focus:border-primary focus:ring-primary"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import type { ActionResult } from "@/actions/auth.actions";
+import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
+import { requireNotBanned } from "@/lib/authGuards";
+import { sanitizePhone, sanitizeText } from "@/lib/sanitize";
 import {
   accountSettingsSchema,
   changePasswordSchema,
@@ -33,7 +36,11 @@ export async function updateAccountSettingsAction(
   }
 
   try {
-    await updateAccountSettings(session.user.id, parsed.data);
+    await requireNotBanned();
+    await updateAccountSettings(session.user.id, {
+      phone: sanitizePhone(parsed.data.phone),
+      email: parsed.data.email ? sanitizeText(parsed.data.email).toLowerCase() : undefined,
+    });
   } catch (error) {
     return {
       ok: false,
@@ -63,9 +70,15 @@ export async function changePasswordAction(input: ChangePasswordInput): Promise<
   }
 
   try {
+    await requireNotBanned();
     await changeUserPassword(session.user.id, {
       currentPassword: parsed.data.currentPassword,
       newPassword: parsed.data.newPassword,
+    });
+    logAudit("PASSWORD_CHANGE", {
+      userId: session.user.id,
+      entityType: "User",
+      entityId: session.user.id,
     });
   } catch (error) {
     return {
@@ -87,11 +100,18 @@ export async function switchAccountTypeAction(
   }
 
   try {
+    await requireNotBanned();
     const result = await switchAccountType(session.user.id, targetAccountType);
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/settings");
     revalidatePath("/dashboard/profile");
+    logAudit("ACCOUNT_TYPE_SWITCH", {
+      userId: session.user.id,
+      entityType: "User",
+      entityId: session.user.id,
+      metadata: { targetAccountType },
+    });
 
     return {
       ok: true,

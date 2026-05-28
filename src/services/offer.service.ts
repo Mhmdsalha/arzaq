@@ -320,12 +320,22 @@ export async function getUserOffers(
             },
             author: {
               select: {
+                id: true,
                 profile: {
                   select: {
                     whatsapp: true,
                   },
                 },
               },
+            },
+            reviews: {
+              where: {
+                giverId: userId,
+              },
+              select: {
+                id: true,
+              },
+              take: 1,
             },
           },
         },
@@ -382,6 +392,16 @@ export async function getJobOffers(jobId: string, userId: string): Promise<JobOf
                   whatsapp: true,
                 },
               },
+              reviewsReceived: {
+                where: {
+                  giverId: userId,
+                  jobPostId: jobId,
+                },
+                select: {
+                  id: true,
+                },
+                take: 1,
+              },
             },
           },
         },
@@ -421,7 +441,8 @@ function mapUserOffer(
           workMode: true;
           status: true;
           category: { select: { name: true } };
-          author: { select: { profile: { select: { whatsapp: true } } } };
+          author: { select: { id: true; profile: { select: { whatsapp: true } } } };
+          reviews: { select: { id: true } };
         };
       };
     };
@@ -437,12 +458,14 @@ function mapUserOffer(
     job: {
       id: offer.jobPost.id,
       title: offer.jobPost.title,
+      ownerId: offer.jobPost.author.id,
       categoryName: offer.jobPost.category.name,
       region: offer.jobPost.region,
       workMode: offer.jobPost.workMode,
       status: offer.jobPost.status,
       ownerWhatsapp: offer.jobPost.author.profile?.whatsapp ?? null,
     },
+    reviewedByCurrentUser: offer.jobPost.reviews.length > 0,
   };
 }
 
@@ -469,6 +492,7 @@ function mapReceivedOffer(
               whatsapp: true;
             };
           };
+          reviewsReceived: { select: { id: true } };
         };
       };
     };
@@ -491,6 +515,7 @@ function mapReceivedOffer(
       isTrusted: offer.provider.profile?.isTrusted ?? false,
       whatsapp: offer.provider.profile?.whatsapp ?? null,
     },
+    reviewedByCurrentUser: offer.provider.reviewsReceived.length > 0,
   };
 }
 

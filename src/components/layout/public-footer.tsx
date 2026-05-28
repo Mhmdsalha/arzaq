@@ -8,7 +8,7 @@ import { publicNavLinks } from "@/constants/nav-links";
 export function PublicFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white">
-      <div className="container grid gap-8 py-10 md:grid-cols-[1.5fr_1fr_1fr]">
+      <div className="container-responsive grid gap-8 py-10 md:grid-cols-[1.5fr_1fr_1fr]">
         <div className="space-y-4">
           <Logo />
           <p className="max-w-md text-sm leading-7 text-slate-600">

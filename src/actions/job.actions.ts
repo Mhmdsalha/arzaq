@@ -1,9 +1,13 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import type { ActionResult } from "@/actions/auth.actions";
+import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
+import { requireClient, requireNotBanned } from "@/lib/authGuards";
+import { rateLimiters } from "@/lib/rateLimit";
+import { sanitizeText } from "@/lib/sanitize";
 import { createJobSchema, updateJobSchema, type CreateJobInput } from "@/schemas/job.schema";
 import {
   closeJob,
@@ -35,9 +39,22 @@ export async function createJobAction(input: CreateJobInput): Promise<JobActionR
   }
 
   try {
-    const job = await createJob(parsed.data, session.user.id);
+    await requireClient();
+    await requireNotBanned();
+    const limit = await rateLimiters.createJob(session.user.id);
+
+    if (!limit.success) {
+      return {
+        ok: false,
+        message: "تم تجاوز عدد الطلبات المسموح خلال الساعة. حاول لاحقاً",
+      };
+    }
+
+    const job = await createJob(sanitizeJobInput(parsed.data), session.user.id);
+    revalidateTag("jobs", "max");
     revalidatePath("/jobs");
     revalidatePath("/dashboard/jobs");
+    logAudit("CREATE_JOB", { userId: session.user.id, entityType: "JobPost", entityId: job.id });
 
     return { ok: true, message: "تم نشر طلبك بنجاح 🎉", jobId: job.id };
   } catch (error) {
@@ -65,10 +82,13 @@ export async function updateJobAction(id: string, input: CreateJobInput): Promis
   }
 
   try {
-    await updateJob(id, parsed.data, session.user.id);
+    await requireNotBanned();
+    await updateJob(id, sanitizeJobInput(parsed.data), session.user.id);
+    revalidateTag("jobs", "max");
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${id}`);
     revalidatePath("/dashboard/jobs");
+    logAudit("UPDATE_JOB", { userId: session.user.id, entityType: "JobPost", entityId: id });
 
     return { ok: true, message: "تم حفظ التعديلات بنجاح", jobId: id };
   } catch (error) {
@@ -87,10 +107,13 @@ export async function closeJobAction(id: string): Promise<JobActionResult> {
   }
 
   try {
+    await requireNotBanned();
     await closeJob(id, session.user.id);
+    revalidateTag("jobs", "max");
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${id}`);
     revalidatePath("/dashboard/jobs");
+    logAudit("CLOSE_JOB", { userId: session.user.id, entityType: "JobPost", entityId: id });
 
     return { ok: true, message: "تم إغلاق الطلب" };
   } catch (error) {
@@ -109,9 +132,12 @@ export async function deleteJobAction(id: string): Promise<JobActionResult> {
   }
 
   try {
+    await requireNotBanned();
     await softDeleteJob(id, session.user.id);
+    revalidateTag("jobs", "max");
     revalidatePath("/jobs");
     revalidatePath("/dashboard/jobs");
+    logAudit("DELETE_JOB", { userId: session.user.id, entityType: "JobPost", entityId: id });
 
     return { ok: true, message: "تم حذف الطلب" };
   } catch (error) {
@@ -130,8 +156,8 @@ export async function toggleSaveJobAction(id: string): Promise<JobActionResult> 
   }
 
   try {
+    await requireNotBanned();
     const isSaved = await toggleSavedJob(id, session.user.id);
-    revalidatePath("/jobs");
     revalidatePath(`/jobs/${id}`);
     revalidatePath("/dashboard/saved");
 
@@ -146,4 +172,15 @@ export async function toggleSaveJobAction(id: string): Promise<JobActionResult> 
       message: error instanceof Error ? error.message : "حدث خطأ، حاول مرة أخرى",
     };
   }
+}
+
+function sanitizeJobInput(input: CreateJobInput): CreateJobInput {
+  return {
+    ...input,
+    title: sanitizeText(input.title),
+    description: sanitizeText(input.description),
+    budget: sanitizeText(input.budget ?? ""),
+    duration: sanitizeText(input.duration ?? ""),
+    expiresAt: sanitizeText(input.expiresAt ?? ""),
+  };
 }

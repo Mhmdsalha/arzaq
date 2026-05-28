@@ -20,12 +20,12 @@ export function ProviderFilters({
   onChange: (value: ProviderFilterState) => void;
 }) {
   return (
-    <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-slate-950">فلترة المزودين</h2>
+        <h2 className="font-bold text-slate-950">فلترة مقدمي الخدمات</h2>
         <button
           type="button"
-          className="text-sm font-medium text-primary-dark"
+          className="min-h-11 rounded-xl px-3 text-sm font-medium text-primary-dark"
           onClick={() => onChange({ region: "all", category: "all", trustedOnly: false })}
         >
           مسح
@@ -47,12 +47,12 @@ export function ProviderFilters({
             ...categories.map((category) => ({ value: category.slug, label: category.name })),
           ]}
         />
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
           <input
             type="checkbox"
             checked={value.trustedOnly}
             onChange={(event) => onChange({ ...value, trustedOnly: event.target.checked })}
-            className="rounded border-emerald-300 text-primary focus:ring-primary"
+            className="size-5 rounded border-emerald-300 text-primary focus:ring-primary"
           />
           الموثقون فقط
         </label>
@@ -78,7 +78,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 rounded-xl border-slate-200 bg-white text-sm focus:border-primary focus:ring-primary"
+        className="h-12 rounded-xl border-slate-200 bg-white text-base focus:border-primary focus:ring-primary"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

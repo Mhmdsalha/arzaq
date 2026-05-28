@@ -4,15 +4,14 @@ import { JobList } from "@/components/jobs/job-list";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { regionLabels } from "@/constants/regions";
-import { auth } from "@/lib/auth";
 import { jobFiltersSchema } from "@/schemas/job.schema";
-import { getJobFilterOptions, getJobsWithFilters } from "@/services/job.service";
+import { getCachedJobFilterOptions, getCachedJobsWithFilters } from "@/services/job.service";
 
 export const metadata = {
   title: "طلبات العمل والخدمات",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default function JobsPage({
   searchParams,
@@ -49,14 +48,13 @@ async function JobsContent({
     page: getSingleParam(params.page),
   });
   const filters = parsedFilters.success ? parsedFilters.data : {};
-  const session = await auth();
   const [categories, jobs] = await Promise.all([
-    getJobFilterOptions(),
-    getJobsWithFilters(filters, session?.user?.id),
+    getCachedJobFilterOptions(),
+    getCachedJobsWithFilters(filters),
   ]);
 
   return (
-    <section className="container py-8">
+    <section className="container-responsive py-6 lg:py-8">
       <JobList
         jobs={jobs.items}
         categories={categories}
@@ -74,7 +72,6 @@ async function JobsContent({
           total: jobs.total,
           totalPages: jobs.totalPages,
         }}
-        isAuthenticated={Boolean(session?.user?.id)}
       />
     </section>
   );
@@ -82,7 +79,7 @@ async function JobsContent({
 
 function JobsContentSkeleton() {
   return (
-    <section className="container py-8">
+    <section className="container-responsive py-6 lg:py-8">
       <Skeleton className="mb-6 h-16 w-full rounded-2xl" />
       <div className="space-y-4">
         {Array.from({ length: 6 }).map((_, index) => (

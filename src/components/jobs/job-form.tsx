@@ -68,7 +68,7 @@ export function JobForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Card>
-        <CardContent className="space-y-5 p-6">
+        <CardContent className="space-y-5 p-4 lg:p-6">
           {initialData && initialData.offersCount > 0 ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
               لديك عروض على هذا الطلب، التعديل سيُبلّغ المتقدمين لاحقًا عند تفعيل الإشعارات
@@ -162,14 +162,14 @@ export function JobForm({
           <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800">
             <input
               type="checkbox"
-              className="rounded border-amber-300 text-primary focus:ring-primary"
+              className="size-5 rounded border-amber-300 text-primary focus:ring-primary"
               {...register("isUrgent")}
             />
             طلب عاجل
           </label>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" className="h-12 w-full sm:w-auto sm:min-w-[160px]" disabled={isPending}>
               {isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -220,7 +220,7 @@ function SelectField({
       <Label htmlFor={id}>{label}</Label>
       <select
         id={id}
-        className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         aria-invalid={Boolean(error)}
         {...props}
       >
@@ -246,7 +246,7 @@ function TextAreaField({
       <Label htmlFor={id}>{label}</Label>
       <textarea
         id={id}
-        className="min-h-40 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm leading-7 transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="min-h-[120px] w-full resize-y rounded-xl border border-input bg-white px-4 py-3 text-base leading-relaxed transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-invalid={Boolean(error)}
         {...props}
       />

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ export function RegistrationForm({ skills }: { skills: SkillOption[] }) {
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="space-y-6"
           >
-            <div className="space-y-2">
+            <div className="space-y-0.5 sm:space-y-2">
               <h1 className="font-palestine text-3xl font-bold leading-10 text-slate-950">
                 كيف ستستخدم أرزاق؟
               </h1>
@@ -88,6 +89,7 @@ function RegistrationDetailsForm({
   skills: SkillOption[];
   onChangeType: () => void;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -117,7 +119,12 @@ function RegistrationDetailsForm({
 
       if (!result.ok) {
         toast.error(result.message);
+        return;
       }
+
+      toast.success(result.message);
+
+      router.push(result.redirectTo ?? `/auth/verify-email?email=${encodeURIComponent(values.email)}`);
     });
   }
 

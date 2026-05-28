@@ -46,7 +46,7 @@ export function ProviderList({
   }, [filters, providers, query]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-5 lg:grid-cols-[280px_1fr] lg:gap-6">
       <ProviderFilters
         categories={categories}
         regions={regions}
@@ -61,19 +61,19 @@ export function ProviderList({
             onChange={setQuery}
             placeholder="ابحث بالاسم، المهارة أو المجال..."
           />
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-500 sm:text-sm">
             تم العثور على {filteredProviders.length} مقدم خدمة.
           </p>
         </div>
 
         {filteredProviders.length > 0 ? (
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2">
             {filteredProviders.map((provider) => (
               <ProviderCard key={provider.id} provider={provider} />
             ))}
           </div>
         ) : (
-          <EmptyState title="لا يوجد مزودون مطابقون" />
+          <EmptyState title="لا يوجد أي مقدم خدمة مطابق للبحث" />
         )}
 
         {filteredProviders.length > 0 ? <Pagination currentPage={1} totalPages={2} /> : null}

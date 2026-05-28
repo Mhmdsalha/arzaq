@@ -53,7 +53,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white shadow-[0_-4px_12px_rgba(15,23,42,0.06)] safe-bottom lg:hidden"
         aria-label="تنقل الجوال"
       >
         <div className="grid h-16 grid-cols-4">
@@ -66,14 +66,14 @@ export function MobileBottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 text-xs font-medium text-slate-500 transition-colors",
+                  "relative flex min-h-16 flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-slate-400 transition-colors",
                   isActive && "font-bold text-primary-dark",
                 )}
               >
                 <span
                   className={cn(
-                    "absolute top-1 h-1 w-6 rounded-full bg-transparent transition-colors",
-                    isActive && "bg-primary",
+                    "absolute top-0 h-0.5 w-6 scale-x-0 rounded-full bg-primary transition-transform duration-200",
+                    isActive && "scale-x-100",
                   )}
                 />
                 <Icon className="size-5" />
@@ -94,14 +94,14 @@ export function MobileBottomNav() {
               router.push("/auth/login");
             }}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1 text-xs font-medium text-slate-500 transition-colors disabled:opacity-60",
+              "relative flex min-h-16 flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-slate-400 transition-colors disabled:opacity-60",
               isAccountActive && "font-bold text-primary-dark",
             )}
           >
             <span
               className={cn(
-                "absolute top-1 h-1 w-6 rounded-full bg-transparent transition-colors",
-                isAccountActive && "bg-primary",
+                "absolute top-0 h-0.5 w-6 scale-x-0 rounded-full bg-primary transition-transform duration-200",
+                isAccountActive && "scale-x-100",
               )}
             />
             {isLoading ? (

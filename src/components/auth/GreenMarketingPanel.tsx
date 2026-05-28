@@ -15,8 +15,8 @@ const slides = [
   },
   {
     icon: Star,
-    title: "مقدمو خدمات موثوقون",
-    description: "كل مزود يملك بروفايلاً كاملاً بتقييمات حقيقية من عملاء سابقين.",
+    title: "مقدمو الخدمات الموثوقون",
+    description: "كل مقدم خدمة يملك بروفايلاً كاملاً بتقييمات حقيقية من عملاء سابقين.",
     mock: <ProviderMock />,
   },
   {
@@ -72,9 +72,10 @@ export function GreenMarketingPanel() {
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        <div className="mb-12 space-y-3">
-          <p className="font-palestine text-5xl font-bold drop-shadow-sm">أرزاق</p>
-          <p className="font-cairo text-lg text-white/80">معاً نبني الفرص</p>
+        <div className="mb-14">
+          <p className="font-palestine text-5xl font-bold leading-snug text-white drop-shadow-sm xl:text-6xl">
+            معاً نبني الفرص
+          </p>
         </div>
 
         <div className="min-h-[360px] w-full max-w-md">
@@ -123,7 +124,7 @@ export function GreenMarketingPanel() {
       </div>
 
       <div className="absolute bottom-8 left-0 right-0 z-10 text-center font-cairo text-sm text-white/70">
-        ٢٠٠+ طلب <span className="mx-3">·</span> ١٥٠+ مزود <span className="mx-3">·</span> ٥ مناطق
+        ٢٠٠+ طلب <span className="mx-3">·</span> ١٥٠+ مقدم خدمة <span className="mx-3">·</span> ٥ مناطق
       </div>
     </aside>
   );

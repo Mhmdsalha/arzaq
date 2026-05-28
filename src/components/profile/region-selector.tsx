@@ -19,7 +19,7 @@ export function RegionSelector({
         id="region"
         value={value}
         onChange={(event) => onChange(event.target.value as Region)}
-        className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         aria-invalid={Boolean(error)}
       >
         {Object.entries(regionLabels).map(([region, label]) => (

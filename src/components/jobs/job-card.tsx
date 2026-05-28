@@ -13,15 +13,13 @@ import type { JobListItem } from "@/types/job";
 
 export function JobCard({
   job,
-  isAuthenticated = false,
 }: {
   job: JobListItem;
-  isAuthenticated?: boolean;
 }) {
   return (
     <article
       className={cn(
-        "group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5",
+        "group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md lg:p-5",
         job.isUrgent && "border-r-4 border-r-accent-gold bg-amber-50/40",
         job.status !== "OPEN" && "opacity-75",
       )}
@@ -40,21 +38,20 @@ export function JobCard({
                   <StatusBadge status={job.status} />
                 )}
               </div>
-              <h2 className="line-clamp-2 text-lg font-bold leading-7 text-slate-950 group-hover:text-primary-dark sm:text-xl">
+              <h2 className="line-clamp-2 text-base font-bold leading-7 text-slate-950 group-hover:text-primary-dark sm:text-lg lg:text-xl">
                 <Link href={`/jobs/${job.id}`}>{job.title}</Link>
               </h2>
             </div>
             <SaveJobButton
               jobId={job.id}
               isSaved={job.isSaved}
-              isAuthenticated={isAuthenticated}
               className="shrink-0"
             />
           </div>
 
           <p className="mt-3 line-clamp-2 text-sm leading-7 text-slate-600">{job.description}</p>
 
-          <div className="mt-4 grid gap-2 text-sm text-slate-600 min-[520px]:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-2 text-sm leading-relaxed text-slate-600 min-[520px]:grid-cols-2 xl:grid-cols-4">
             <span className="flex items-center gap-2">
               <MapPin className="size-4 text-primary" />
               {regionLabels[job.region]}
@@ -81,7 +78,7 @@ export function JobCard({
             {job.author.isTrusted ? <ShieldCheck className="size-3.5 text-primary" /> : null}
             {job.author.name}
           </p>
-          <Button asChild variant="secondary" className="mt-4 w-full">
+          <Button asChild variant="secondary" className="mt-4 h-11 w-full">
             <Link href={`/jobs/${job.id}`}>عرض التفاصيل</Link>
           </Button>
         </div>

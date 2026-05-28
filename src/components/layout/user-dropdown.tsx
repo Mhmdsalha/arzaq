@@ -1,8 +1,9 @@
 "use client";
 
-import { BadgeCheck, ChevronDown, LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ChevronDown, Home, LogOut, MessageCircle, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { LogoutConfirmDialog } from "@/components/shared/LogoutConfirmDialog";
@@ -31,9 +32,12 @@ export function UserDropdown({
   placement?: "top" | "bottom";
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openPathname, setOpenPathname] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const avatarUrl = user.profile?.avatarUrl;
+  const pathname = usePathname();
+  const isMenuVisible = isOpen && openPathname === pathname;
 
   async function handleLogout() {
     setIsPending(true);
@@ -49,7 +53,10 @@ export function UserDropdown({
           "flex min-h-11 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-2 text-right shadow-sm transition hover:bg-slate-50",
           compact && "justify-center border-transparent bg-transparent shadow-none",
         )}
-        onClick={() => setIsOpen((value) => !value)}
+        onClick={() => {
+          setOpenPathname(pathname);
+          setIsOpen(!isMenuVisible);
+        }}
         aria-expanded={isOpen}
       >
         <Avatar name={user.name} avatarUrl={avatarUrl} />
@@ -71,10 +78,10 @@ export function UserDropdown({
         ) : null}
       </button>
 
-      {isOpen ? (
+      {isMenuVisible ? (
         <div
           className={cn(
-            "absolute left-0 z-50 max-h-[min(420px,70vh)] w-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl",
+            "absolute right-0 z-50 max-h-[min(420px,70vh)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl",
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2",
           )}
         >
@@ -101,9 +108,15 @@ export function UserDropdown({
 
           <div className="mt-3 grid gap-2">
             <Link
+              href="/"
+              className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Home className="size-4" />
+              الرئيسية
+            </Link>
+            <Link
               href="/dashboard/profile"
               className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              onClick={() => setIsOpen(false)}
             >
               إدارة البروفايل
             </Link>

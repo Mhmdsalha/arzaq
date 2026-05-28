@@ -32,7 +32,7 @@ async function ProvidersContent() {
   const providers = await getPublicProviders();
 
   return (
-    <section className="container py-8">
+    <section className="container-responsive py-6 lg:py-8">
       <ProviderList providers={providers} categories={categories} regions={regions} />
     </section>
   );
@@ -40,9 +40,9 @@ async function ProvidersContent() {
 
 function ProvidersContentSkeleton() {
   return (
-    <section className="container py-8">
+    <section className="container-responsive py-6 lg:py-8">
       <Skeleton className="mb-6 h-16 rounded-2xl" />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-56 rounded-2xl" />
         ))}

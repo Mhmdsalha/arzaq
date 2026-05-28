@@ -43,7 +43,7 @@ export default async function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body
-        className={`${cairo.variable} ${tajawal.variable} min-h-screen bg-background font-sans antialiased`}
+        className={`${cairo.variable} ${tajawal.variable} min-h-[100svh] overflow-x-hidden bg-background font-sans antialiased`}
       >
         <AuthSessionProvider session={session}>
           <RouteProgressBar />

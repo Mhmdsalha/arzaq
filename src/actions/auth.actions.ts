@@ -4,26 +4,45 @@ import { AuthError } from "next-auth";
 import type { AccountType } from "@prisma/client";
 import { redirect } from "next/navigation";
 
+import { logAudit } from "@/lib/audit";
 import { signIn, signOut } from "@/lib/auth";
+import { sendEmailVerificationCode } from "@/lib/email";
+import {
+  clearLoginLockout,
+  getLoginLockoutMinutes,
+  recordFailedLogin,
+} from "@/lib/loginLockout";
 import { isDatabaseConnectionError } from "@/lib/prisma";
+import { rateLimiters } from "@/lib/rateLimit";
 import { getPostLoginRedirect } from "@/lib/redirects";
+import { sanitizePhone, sanitizeText } from "@/lib/sanitize";
 import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
   type ForgotPasswordInput,
   type LoginInput,
   type RegisterInput,
   type ResetPasswordInput,
+  type VerifyEmailInput,
 } from "@/schemas/auth.schema";
-import { createPasswordResetToken, createUser, resetPassword } from "@/services/auth.service";
+import {
+  createEmailVerificationCode,
+  createPasswordResetToken,
+  createUser,
+  resendEmailVerificationCode,
+  resetPassword,
+  verifyEmailCode,
+} from "@/services/auth.service";
 
 export type ActionResult = {
   ok: boolean;
   message: string;
   resetUrl?: string;
   accountType?: AccountType;
+  redirectTo?: string;
 };
 
 export async function loginAction(input: LoginInput, callbackUrl?: string): Promise<ActionResult> {
@@ -34,11 +53,40 @@ export async function loginAction(input: LoginInput, callbackUrl?: string): Prom
   }
 
   try {
-    await signIn("credentials", {
-      identifier: parsed.data.identifier,
+    const cleanIdentifier = sanitizeText(parsed.data.identifier);
+    const loginLimit = await rateLimiters.login(cleanIdentifier);
+
+    if (!loginLimit.success) {
+      return {
+        ok: false,
+        message: "تم تجاوز عدد المحاولات المسموح. حاول لاحقاً",
+      };
+    }
+
+    const lockedMinutes = await getLoginLockoutMinutes(cleanIdentifier);
+
+    if (lockedMinutes) {
+      return {
+        ok: false,
+        message: `تم قفل الحساب مؤقتاً. يمكنك المحاولة بعد ${lockedMinutes} دقيقة`,
+      };
+    }
+
+    const redirectTo = getPostLoginRedirect("CLIENT", callbackUrl);
+    const result = await signIn("credentials", {
+      identifier: cleanIdentifier,
       password: parsed.data.password,
-      redirectTo: getPostLoginRedirect("CLIENT", callbackUrl),
+      redirectTo,
+      redirect: false,
     });
+    await clearLoginLockout(cleanIdentifier);
+    logAudit("LOGIN");
+
+    return {
+      ok: true,
+      message: "تم تسجيل الدخول بنجاح",
+      redirectTo: typeof result === "string" ? result : redirectTo,
+    };
   } catch (error) {
     if (error instanceof AuthError) {
       if (isAuthDatabaseError(error)) {
@@ -48,13 +96,24 @@ export async function loginAction(input: LoginInput, callbackUrl?: string): Prom
         };
       }
 
+      const cleanIdentifier = sanitizeText(parsed.data.identifier);
+      const lockMinutes = await recordFailedLogin(cleanIdentifier);
+      logAudit("LOGIN_FAILED", { metadata: { locked: Boolean(lockMinutes) } });
+
+      if (lockMinutes) {
+        return {
+          ok: false,
+          message: "تم قفل الحساب مؤقتاً بسبب محاولات دخول متعددة. حاول بعد 15 دقيقة",
+        };
+      }
+
       return { ok: false, message: "بيانات الدخول غير صحيحة" };
     }
 
     throw error;
   }
 
-  return { ok: true, message: "تم تسجيل الدخول بنجاح" };
+  return { ok: true, message: "تم تسجيل الدخول بنجاح", redirectTo: "/dashboard" };
 }
 
 function isAuthDatabaseError(error: AuthError) {
@@ -78,8 +137,34 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     return { ok: false, message: parsed.error.issues[0]?.message ?? "حدث خطأ، حاول مرة أخرى" };
   }
 
+  const clean = sanitizeRegisterInput(parsed.data);
+  const registerLimit = await rateLimiters.register(clean.email || clean.phone);
+
+  if (!registerLimit.success) {
+    return {
+      ok: false,
+      message: "تم تجاوز عدد محاولات إنشاء الحساب. حاول لاحقاً",
+    };
+  }
+
   try {
-    await createUser(parsed.data);
+    const user = await createUser(clean);
+    const userEmail = user.email ?? clean.email;
+    const verification = await createEmailVerificationCode(user.id, userEmail);
+    const emailResult = await sendEmailVerificationCode({
+      to: userEmail,
+      name: clean.name,
+      code: verification.code,
+    });
+    logAudit("REGISTER", { userId: user.id, entityType: "User", entityId: user.id });
+
+    return {
+      ok: true,
+      message: emailResult.sent
+        ? "تم إنشاء الحساب وإرسال رمز التحقق إلى بريدك"
+        : "تم إنشاء الحساب، لكن تعذر إرسال رمز التحقق. تأكد من إعدادات البريد ثم أعد الإرسال",
+      redirectTo: `/auth/verify-email?email=${encodeURIComponent(clean.email)}`,
+    };
   } catch (error) {
     return {
       ok: false,
@@ -87,28 +172,22 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     };
   }
 
-  try {
-    await signIn("credentials", {
-      identifier: parsed.data.email ?? parsed.data.phone,
-      password: parsed.data.password,
-      redirectTo:
-        parsed.data.accountType === "PROVIDER"
-          ? "/dashboard?welcome=provider"
-          : "/dashboard?welcome=client",
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { ok: false, message: "تم إنشاء الحساب، لكن تعذر تسجيل الدخول تلقائيًا" };
-    }
-
-    throw error;
-  }
-
   return { ok: true, message: "تم إنشاء الحساب بنجاح" };
 }
 
 export async function logoutAction() {
+  logAudit("LOGOUT");
   await signOut({ redirectTo: "/" });
+}
+
+function sanitizeRegisterInput(input: RegisterInput): RegisterInput {
+  return {
+    ...input,
+    name: sanitizeText(input.name),
+    email: sanitizeText(input.email).toLowerCase(),
+    phone: sanitizePhone(input.phone),
+    skills: input.skills.map(sanitizeText),
+  };
 }
 
 export async function forgotPasswordAction(input: ForgotPasswordInput): Promise<ActionResult> {
@@ -118,7 +197,17 @@ export async function forgotPasswordAction(input: ForgotPasswordInput): Promise<
     return { ok: false, message: parsed.error.issues[0]?.message ?? "حدث خطأ، حاول مرة أخرى" };
   }
 
-  const token = await createPasswordResetToken(parsed.data.identifier);
+  const cleanIdentifier = sanitizeText(parsed.data.identifier);
+  const resetLimit = await rateLimiters.passwordReset(cleanIdentifier);
+
+  if (!resetLimit.success) {
+    return {
+      ok: false,
+      message: "تم تجاوز عدد المحاولات المسموح. حاول لاحقاً",
+    };
+  }
+
+  const token = await createPasswordResetToken(cleanIdentifier);
 
   if (!token) {
     return {
@@ -154,4 +243,67 @@ export async function resetPasswordAction(input: ResetPasswordInput): Promise<Ac
   }
 
   redirect("/auth/login?reset=success");
+}
+
+export async function verifyEmailAction(input: VerifyEmailInput): Promise<ActionResult> {
+  const parsed = verifyEmailSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "رمز التحقق غير صحيح" };
+  }
+
+  try {
+    const userId = await verifyEmailCode(parsed.data);
+    logAudit("EMAIL_VERIFIED", { userId, entityType: "User", entityId: userId });
+
+    return {
+      ok: true,
+      message: "تم توثيق البريد الإلكتروني بنجاح",
+      redirectTo: "/auth/login?verified=success",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "رمز التحقق غير صحيح أو منتهي",
+    };
+  }
+}
+
+export async function resendEmailVerificationAction(email: string): Promise<ActionResult> {
+  const parsedEmail = verifyEmailSchema.shape.email.safeParse(email);
+
+  if (!parsedEmail.success) {
+    return { ok: false, message: "البريد الإلكتروني غير صحيح" };
+  }
+
+  const limit = await rateLimiters.passwordReset(parsedEmail.data);
+
+  if (!limit.success) {
+    return {
+      ok: false,
+      message: "تم تجاوز عدد المحاولات المسموح. حاول لاحقاً",
+    };
+  }
+
+  const verification = await resendEmailVerificationCode(parsedEmail.data);
+
+  if (!verification) {
+    return {
+      ok: true,
+      message: "إذا كان الحساب بحاجة إلى توثيق، سيتم إرسال رمز جديد.",
+    };
+  }
+
+  const emailResult = await sendEmailVerificationCode({
+    to: parsedEmail.data,
+    name: "مستخدم أرزاق",
+    code: verification.code,
+  });
+
+  return {
+    ok: true,
+    message: emailResult.sent
+      ? "تم إرسال رمز تحقق جديد إلى بريدك"
+      : "تعذر إرسال رمز التحقق حالياً. تأكد من إعدادات البريد ثم حاول مرة أخرى",
+  };
 }

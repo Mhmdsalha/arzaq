@@ -33,9 +33,13 @@ export async function uploadAvatarImage(file: File) {
 
   const formData = new FormData();
   formData.append("file", compressedFile, normalizedFileName(compressedFile));
+  const csrfToken = await getCsrfToken();
 
   const response = await fetch("/api/upload/avatar", {
     method: "POST",
+    headers: {
+      "x-csrf-token": csrfToken,
+    },
     body: formData,
   });
 
@@ -49,6 +53,20 @@ export async function uploadAvatarImage(file: File) {
   }
 
   return data.publicUrl;
+}
+
+async function getCsrfToken() {
+  const response = await fetch("/api/csrf", {
+    method: "GET",
+    cache: "no-store",
+  });
+  const data = (await response.json()) as Partial<{ token: string }>;
+
+  if (!response.ok || !data.token) {
+    throw new Error("تعذر تجهيز حماية الطلب، حاول مرة أخرى");
+  }
+
+  return data.token;
 }
 
 async function validateAvatarFile(file: File) {

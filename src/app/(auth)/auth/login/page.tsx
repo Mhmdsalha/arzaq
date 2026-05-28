@@ -7,9 +7,15 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; callbackUrl?: string }>;
+  searchParams: Promise<{ reset?: string; verified?: string; callbackUrl?: string }>;
 }) {
-  const { reset, callbackUrl } = await searchParams;
+  const { reset, verified, callbackUrl } = await searchParams;
 
-  return <LoginForm resetSuccess={reset === "success"} callbackUrl={callbackUrl} />;
+  return (
+    <LoginForm
+      resetSuccess={reset === "success"}
+      verifiedSuccess={verified === "success"}
+      callbackUrl={callbackUrl}
+    />
+  );
 }

@@ -8,7 +8,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-slate-50 pb-16 md:pb-0">
+    <div className="min-h-[100svh] overflow-x-hidden bg-slate-50 pb-20 lg:pb-0">
       <PublicNavbar />
       {children}
       <PublicFooter />

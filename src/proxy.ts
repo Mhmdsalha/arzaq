@@ -18,6 +18,11 @@ const authRoutes = [
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/api/") && isMutatingRequest(request) && !isAllowedApiOrigin(request)) {
+    return NextResponse.json({ error: "طلب غير مصرح به" }, { status: 403 });
+  }
+
   const token = await getSessionToken(request);
   const isAuthenticated = Boolean(token);
   const isAdmin = token?.role === "ADMIN";
@@ -51,6 +56,33 @@ export default async function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+function isMutatingRequest(request: NextRequest) {
+  return ["POST", "PUT", "PATCH", "DELETE"].includes(request.method);
+}
+
+function isAllowedApiOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin");
+
+  if (!origin) {
+    return true;
+  }
+
+  try {
+    const originUrl = new URL(origin);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+      ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+      : null;
+    const requestHost = request.headers.get("host");
+
+    return (
+      originUrl.host === requestHost ||
+      Boolean(siteUrl && originUrl.origin === siteUrl.origin)
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function getSessionToken(request: NextRequest) {

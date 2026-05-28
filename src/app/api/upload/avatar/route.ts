@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
+import { validateCSRFToken } from "@/lib/csrf";
+import { prisma } from "@/lib/prisma";
+import { rateLimiters } from "@/lib/rateLimit";
 import { generateFileKey, getPublicUrl, uploadToR2 } from "@/lib/uploadImage";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -11,6 +15,31 @@ export async function POST(req: NextRequest) {
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  }
+
+  const csrfToken = req.headers.get("x-csrf-token");
+
+  if (!csrfToken || !validateCSRFToken(csrfToken)) {
+    return NextResponse.json({ error: "طلب غير مصرح به" }, { status: 403 });
+  }
+
+  const uploadLimit = await rateLimiters.upload(session.user.id);
+
+  if (!uploadLimit.success) {
+    return NextResponse.json({ error: "تم تجاوز حد الرفع، حاول لاحقاً" }, { status: 429 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+    select: {
+      isBanned: true,
+    },
+  });
+
+  if (user?.isBanned) {
+    return NextResponse.json({ error: "تم تعليق حسابك" }, { status: 403 });
   }
 
   const formData = await req.formData();
@@ -42,6 +71,12 @@ export async function POST(req: NextRequest) {
       key,
       body: buffer,
       contentType: file.type,
+    });
+    logAudit("UPLOAD_FILE", {
+      userId: session.user.id,
+      entityType: "R2Object",
+      entityId: key,
+      metadata: { folder: "avatars", contentType: file.type, fileSize: file.size },
     });
 
     return NextResponse.json({

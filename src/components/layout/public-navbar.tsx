@@ -5,6 +5,7 @@ import {
   BriefcaseBusiness,
   ChevronDown,
   FileText,
+  Home,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -57,34 +58,54 @@ export function PublicNavbar() {
   const { unreadCount, summary } = useUnreadCount(isAuth, user?.accountType);
   const navUser = summary?.user ?? user;
   const [isOpen, setIsOpen] = useState(false);
+  const [openPathname, setOpenPathname] = useState<string | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [userMenuPathname, setUserMenuPathname] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const isHome = pathname === "/";
-  const isTransparent = isHome && !hasScrolled && !isOpen;
+  const isMobileMenuOpen = isOpen && openPathname === pathname;
+  const isUserMenuVisible = isUserMenuOpen && userMenuPathname === pathname;
+  const isTransparent = isHome && !hasScrolled && !isMobileMenuOpen;
 
   useEffect(() => {
+    if (!isHome) {
+      return;
+    }
+
+    const hero = document.querySelector("[data-hero-section='true']");
+
+    if (hero) {
+      const observer = new IntersectionObserver(
+        ([entry]) => setHasScrolled(!entry.isIntersecting),
+        { rootMargin: "-80px 0px 0px 0px", threshold: 0.02 },
+      );
+
+      observer.observe(hero);
+      return () => observer.disconnect();
+    }
+
     function handleScroll() {
       setHasScrolled(window.scrollY > 80);
     }
 
-    handleScroll();
+    window.requestAnimationFrame(handleScroll);
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isHome]);
 
   return (
     <header
       className={cn(
-        "fixed left-0 right-0 top-0 z-50 transition-all duration-300",
+        "fixed left-0 right-0 top-0 z-50 safe-top transition-all duration-300",
         isTransparent
           ? "border-transparent bg-transparent"
           : "border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur-md",
       )}
     >
-      <div className="container flex h-16 items-center justify-between gap-4">
+      <div className="container-responsive flex h-20 items-center justify-between gap-4 lg:h-20 lg:pt-3">
         <Logo className={cn(isTransparent && "text-white")} />
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="التنقل الرئيسي">
@@ -108,7 +129,7 @@ export function PublicNavbar() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {isLoading ? (
             <div className="flex animate-pulse items-center gap-2">
               <div className="h-10 w-20 rounded-xl bg-slate-200/70" />
@@ -119,7 +140,10 @@ export function PublicNavbar() {
               <NotificationBell count={unreadCount} isTransparent={isTransparent} />
               <button
                 type="button"
-                onClick={() => setIsUserMenuOpen((value) => !value)}
+                onClick={() => {
+                  setUserMenuPathname(pathname);
+                  setIsUserMenuOpen(!isUserMenuVisible);
+                }}
                 className={cn(
                   "inline-flex h-10 items-center gap-2 rounded-xl px-2 text-sm font-bold transition",
                   isTransparent
@@ -132,7 +156,7 @@ export function PublicNavbar() {
                 <ChevronDown className="size-4" />
               </button>
 
-              {isUserMenuOpen ? (
+              {isUserMenuVisible ? (
                 <UserMenu
                   name={navUser?.name}
                   accountType={navUser?.accountType}
@@ -159,24 +183,30 @@ export function PublicNavbar() {
           )}
         </div>
 
-        <button
-          type="button"
-          className={cn(
-            "inline-flex size-11 items-center justify-center rounded-xl border transition lg:hidden",
-            isTransparent
-              ? "border-white/25 text-white hover:bg-white/10"
-              : "border-slate-200 text-slate-700",
-          )}
-          onClick={() => setIsOpen((value) => !value)}
-          aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
-        >
-          {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex min-h-16 items-center gap-2 lg:hidden">
+          {isAuth ? <NotificationBell count={unreadCount} isTransparent={isTransparent} /> : null}
+          <button
+            type="button"
+            className={cn(
+              "inline-flex size-11 items-center justify-center rounded-xl border transition",
+              isTransparent
+                ? "border-white/25 text-white hover:bg-white/10"
+                : "border-slate-200 text-slate-700",
+            )}
+            onClick={() => {
+              setOpenPathname(pathname);
+              setIsOpen(!isMobileMenuOpen);
+            }}
+            aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
+          >
+            {isMobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </div>
 
-      {isOpen ? (
-        <div className="border-t border-slate-200 bg-white shadow-sm lg:hidden">
-          <div className="container grid gap-2 py-4">
+      {isMobileMenuOpen ? (
+        <div className="fixed inset-x-0 top-[calc(5rem+env(safe-area-inset-top))] border-t border-slate-200 bg-white shadow-lg lg:hidden">
+          <div className="container-responsive grid gap-2 py-4">
             {navLinks.map((link) => {
               const active = link.active(pathname);
 
@@ -184,9 +214,8 @@ export function PublicNavbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={() => setIsOpen(false)}
                   className={cn(
-                    "rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100",
+                    "flex min-h-11 items-center rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100",
                     active && "bg-primary/10 font-bold text-primary-dark",
                   )}
                 >
@@ -236,7 +265,7 @@ function UserMenu({
   const isProvider = accountType === "PROVIDER";
 
   return (
-    <div className="absolute left-0 top-12 w-72 rounded-2xl border border-slate-200 bg-white p-2 text-slate-700 shadow-xl">
+    <div className="absolute right-0 top-12 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-2 text-slate-700 shadow-xl">
       <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
         <Avatar src={avatarUrl} name={name} size="lg" />
         <div className="min-w-0">
@@ -252,6 +281,7 @@ function UserMenu({
         </div>
       </div>
       <div className="my-2 border-t border-slate-100" />
+      <DropdownItem href="/" icon={Home} label="الرئيسية" />
       <DropdownItem href="/dashboard" icon={LayoutDashboard} label="لوحة التحكم" />
       <DropdownItem href="/dashboard/profile" icon={User} label="بروفايلي" />
       {isProvider ? (

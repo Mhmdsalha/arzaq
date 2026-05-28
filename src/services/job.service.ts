@@ -1,8 +1,10 @@
 import type { JobStatus, Prisma, Region, WorkMode } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { assertClient } from "@/lib/authGuards";
 import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
+import { sanitizeSearchQuery } from "@/lib/sanitize";
 import { categories as mockCategories } from "@/mock/categories";
 import { jobs as mockJobs } from "@/mock/jobs";
 import type {
@@ -39,6 +41,36 @@ export type CreateJobInput = {
   expiresAt?: string;
 };
 
+const cachedJobFilterOptions = unstable_cache(
+  async () => getJobFilterOptions(),
+  ["job-filter-options"],
+  {
+    revalidate: 60,
+    tags: ["jobs"],
+  },
+);
+
+const cachedJobsWithFilters = unstable_cache(
+  async (serializedFilters: string) => {
+    return getJobsWithFilters(JSON.parse(serializedFilters) as JobFiltersInput);
+  },
+  ["jobs-with-filters"],
+  {
+    revalidate: 60,
+    tags: ["jobs"],
+  },
+);
+
+export function getCachedJobFilterOptions(): Promise<JobCategoryOption[]> {
+  return cachedJobFilterOptions();
+}
+
+export function getCachedJobsWithFilters(
+  filters: JobFiltersInput,
+): Promise<PaginatedJobs<JobListItem>> {
+  return cachedJobsWithFilters(serializeJobFilters(filters));
+}
+
 export const getJobFilterOptions = cache(async (): Promise<JobCategoryOption[]> => {
   if (!hasDatabaseUrl()) {
     return getMockJobFilterOptions();
@@ -69,6 +101,19 @@ export const getJobFilterOptions = cache(async (): Promise<JobCategoryOption[]> 
     throw error;
   }
 });
+
+function serializeJobFilters(filters: JobFiltersInput): string {
+  return JSON.stringify({
+    q: filters.q ?? "",
+    category: filters.category ?? "",
+    region: filters.region ?? "",
+    workMode: filters.workMode ?? "",
+    urgent: filters.urgent ?? false,
+    status: filters.status ?? "OPEN",
+    page: filters.page ?? 1,
+    pageSize: filters.pageSize ?? DEFAULT_PAGE_SIZE,
+  });
+}
 
 export async function getJobsWithFilters(
   filters: JobFiltersInput,
@@ -655,7 +700,7 @@ export async function toggleSavedJob(id: string, userId: string) {
 }
 
 function buildJobsWhere(filters: JobFiltersInput): Prisma.JobPostWhereInput {
-  const query = filters.q?.trim();
+  const query = filters.q ? sanitizeSearchQuery(filters.q) : "";
 
   return {
     deletedAt: null,

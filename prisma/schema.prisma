@@ -91,6 +91,7 @@ model User {
   savedJobs       SavedJob[]
   notifications   Notification[]
   resetTokens     PasswordResetToken[]
+  emailTokens     EmailVerificationToken[]
 }
 
 model Profile {
@@ -283,4 +284,36 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([token, expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  codeHash  String
+  email     String
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }

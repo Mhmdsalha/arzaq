@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { createHash, randomBytes, randomInt, timingSafeEqual } from "crypto";
 import type { AccountType, Prisma, Region, User, UserRole } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
 import { cache } from "react";
@@ -139,7 +139,112 @@ export async function createUser(input: {
         },
       },
     },
+    select: {
+      id: true,
+      email: true,
+    },
   });
+}
+
+export async function createEmailVerificationCode(userId: string, email: string) {
+  const normalizedEmail = email.toLowerCase();
+  const code = String(randomInt(100000, 1000000));
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 15);
+
+  await prisma.emailVerificationToken.updateMany({
+    where: {
+      userId,
+      email: normalizedEmail,
+      usedAt: null,
+    },
+    data: {
+      usedAt: new Date(),
+    },
+  });
+
+  await prisma.emailVerificationToken.create({
+    data: {
+      userId,
+      email: normalizedEmail,
+      codeHash: hashVerificationCode(code),
+      expiresAt,
+    },
+  });
+
+  return { code, expiresAt };
+}
+
+export async function verifyEmailCode(input: { email: string; code: string }) {
+  const email = input.email.toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: {
+      email,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      isVerified: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("رمز التحقق غير صحيح أو منتهي");
+  }
+
+  if (user.isVerified) {
+    return user.id;
+  }
+
+  const token = await prisma.emailVerificationToken.findFirst({
+    where: {
+      userId: user.id,
+      email,
+      usedAt: null,
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (!token || !safeCompare(token.codeHash, hashVerificationCode(input.code))) {
+    throw new Error("رمز التحقق غير صحيح أو منتهي");
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { isVerified: true },
+    }),
+    prisma.emailVerificationToken.update({
+      where: { id: token.id },
+      data: { usedAt: new Date() },
+    }),
+  ]);
+
+  return user.id;
+}
+
+export async function resendEmailVerificationCode(email: string) {
+  const normalizedEmail = email.toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: {
+      email: normalizedEmail,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      isVerified: true,
+    },
+  });
+
+  if (!user || user.isVerified) {
+    return null;
+  }
+
+  return createEmailVerificationCode(user.id, normalizedEmail);
 }
 
 export const getRegistrationSkills = cache(async () => {
@@ -266,4 +371,16 @@ function phoneToWhatsApp(phone: string) {
   }
 
   return phone;
+}
+
+function hashVerificationCode(code: string) {
+  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "arzaq-dev-secret";
+  return createHash("sha256").update(`${code}:${secret}`).digest("hex");
+}
+
+function safeCompare(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+
+  return left.length === right.length && timingSafeEqual(left, right);
 }

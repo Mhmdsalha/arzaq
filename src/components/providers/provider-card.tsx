@@ -10,25 +10,26 @@ import type { ProviderProfile } from "@/types/marketplace";
 
 export function ProviderCard({ provider }: { provider: ProviderProfile }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-start gap-4">
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md lg:p-5">
+      <div className="flex items-start gap-3 lg:gap-4">
         <Image
           src={provider.avatarUrl}
           alt={provider.name}
           width={72}
           height={72}
-          className="size-16 rounded-2xl object-cover"
+          sizes="(max-width: 640px) 48px, 72px"
+          className="size-12 rounded-2xl object-cover lg:size-16"
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-bold text-slate-950">
+            <h2 className="text-base font-bold text-slate-950 lg:text-lg">
               <Link href={`/providers/${provider.id}`}>{provider.name}</Link>
             </h2>
             {provider.isTrusted ? (
               <BadgeCheck className="size-5 fill-primary text-white" aria-label="موثوق" />
             ) : null}
           </div>
-          <p className="mt-1 line-clamp-1 text-sm text-slate-600">{provider.title}</p>
+          <p className="mt-1 line-clamp-1 text-xs text-slate-600 sm:text-sm">{provider.title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <MapPin className="size-4 text-primary" />
@@ -42,7 +43,7 @@ export function ProviderCard({ provider }: { provider: ProviderProfile }) {
         </div>
       </div>
 
-      <p className="mt-4 line-clamp-2 text-sm leading-7 text-slate-600">{provider.bio}</p>
+      <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-slate-600">{provider.bio}</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {provider.skills.slice(0, 4).map((skill) => (

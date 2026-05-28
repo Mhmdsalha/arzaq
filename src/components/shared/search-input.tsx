@@ -25,7 +25,7 @@ export function SearchInput({
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="h-12 pr-11"
+        className="h-12 pr-11 text-base"
         type="search"
       />
     </div>

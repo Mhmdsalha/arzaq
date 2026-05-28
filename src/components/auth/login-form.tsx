@@ -17,9 +17,11 @@ import { loginSchema, type LoginInput } from "@/schemas/auth.schema";
 
 export function LoginForm({
   resetSuccess = false,
+  verifiedSuccess = false,
   callbackUrl,
 }: {
   resetSuccess?: boolean;
+  verifiedSuccess?: boolean;
   callbackUrl?: string;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -39,7 +41,11 @@ export function LoginForm({
     if (resetSuccess) {
       toast.success("تم تحديث كلمة المرور، يمكنك تسجيل الدخول الآن");
     }
-  }, [resetSuccess]);
+
+    if (verifiedSuccess) {
+      toast.success("تم توثيق البريد الإلكتروني، يمكنك تسجيل الدخول الآن");
+    }
+  }, [resetSuccess, verifiedSuccess]);
 
   function onSubmit(values: LoginInput) {
     startTransition(async () => {
@@ -47,7 +53,10 @@ export function LoginForm({
 
       if (!result.ok) {
         toast.error(result.message);
+        return;
       }
+
+      window.location.replace(result.redirectTo ?? "/dashboard");
     });
   }
 
@@ -73,13 +82,14 @@ export function LoginForm({
           className="grid gap-1.5"
         >
           <Label htmlFor="identifier" className="text-sm font-medium text-slate-700">
-            رقم الجوال
+            البريد الإلكتروني أو رقم الجوال
           </Label>
           <Input
             id="identifier"
             type="text"
             autoComplete="username"
-            placeholder="059..."
+            inputMode="email"
+            placeholder="example@email.com أو 059..."
             aria-invalid={Boolean(errors.identifier)}
             className="h-12 rounded-xl border-slate-200 px-4 text-right text-base focus:border-primary focus-visible:ring-primary/20"
             {...register("identifier")}

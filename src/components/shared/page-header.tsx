@@ -16,10 +16,10 @@ export function PageHeader({
 }) {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="container py-8 sm:py-10">
+      <div className="container-responsive pb-4 pt-20 sm:pb-6 lg:pt-24">
         {breadcrumbs.length > 0 ? (
-          <nav className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-primary-dark">
+          <nav className="mb-4 flex min-h-11 flex-wrap items-center gap-2 text-xs text-slate-500 sm:text-sm">
+            <Link href="/" className="flex min-h-11 items-center hover:text-primary-dark">
               الرئيسية
             </Link>
             {breadcrumbs.map((item) => (
@@ -37,8 +37,8 @@ export function PageHeader({
           </nav>
         ) : null}
         <div className="max-w-3xl space-y-3">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
-          {description ? <p className="text-base leading-8 text-slate-600">{description}</p> : null}
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">{title}</h1>
+          {description ? <p className="text-sm leading-relaxed text-slate-600 lg:text-base">{description}</p> : null}
         </div>
       </div>
     </section>

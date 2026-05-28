@@ -18,7 +18,7 @@ export function DashboardLayout({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-[100svh] overflow-x-hidden bg-slate-50">
       <DashboardSidebar
         user={user}
         isCollapsed={isSidebarCollapsed}
@@ -28,11 +28,11 @@ export function DashboardLayout({
         className={
           isSidebarCollapsed
             ? "min-w-0 transition-all duration-200 lg:pr-24"
-            : "min-w-0 transition-all duration-200 lg:pr-72"
+            : "min-w-0 transition-all duration-200 lg:pr-64"
         }
       >
         <DashboardTopbar user={user} onOpenMenu={() => setIsMobileNavOpen(true)} />
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="container-responsive pb-24 pt-6 sm:pt-8 lg:pb-10 lg:pt-8">
           {children}
         </main>
       </div>

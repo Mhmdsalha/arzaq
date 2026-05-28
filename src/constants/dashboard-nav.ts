@@ -1,6 +1,7 @@
 import {
   Bookmark,
   BriefcaseBusiness,
+  Home,
   LayoutDashboard,
   PlusCircle,
   Send,
@@ -11,6 +12,12 @@ import {
 import type { AccountType } from "@prisma/client";
 
 export const dashboardNavLinks = [
+  {
+    href: "/",
+    label: "الرئيسية",
+    icon: Home,
+    exact: true,
+  },
   {
     href: "/dashboard",
     label: "لوحة التحكم",

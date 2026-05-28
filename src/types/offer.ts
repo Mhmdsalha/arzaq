@@ -16,12 +16,14 @@ export type UserOfferItem = {
   job: {
     id: string;
     title: string;
+    ownerId: string;
     categoryName: string;
     region: Region;
     workMode: WorkMode;
     status: JobStatus;
     ownerWhatsapp: string | null;
   };
+  reviewedByCurrentUser: boolean;
 };
 
 export type ReceivedOfferItem = {
@@ -41,6 +43,7 @@ export type ReceivedOfferItem = {
     isTrusted: boolean;
     whatsapp: string | null;
   };
+  reviewedByCurrentUser: boolean;
 };
 
 export type JobOffersData = {

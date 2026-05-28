@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+import { env } from "@/lib/env";
+
 const TRANSIENT_DATABASE_ERROR_CODES = new Set(["P1001", "P1002"]);
 const DATABASE_CONNECTION_ERROR_CODES = new Set(["P1000", "P1001", "P1002"]);
 const DATABASE_UNAVAILABLE_CACHE_MS = 30_000;
@@ -16,8 +18,8 @@ function createPrismaClient() {
       db: {
         url:
           process.env.NODE_ENV === "development"
-            ? (process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL)
-            : process.env.DATABASE_URL,
+            ? env.DATABASE_URL_UNPOOLED
+            : env.DATABASE_URL,
       },
     },
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],

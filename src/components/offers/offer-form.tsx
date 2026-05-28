@@ -11,6 +11,7 @@ import { createOfferAction, updateOfferAction } from "@/actions/offer.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { refreshNavigationSummary } from "@/hooks/useUnreadCount";
 import { createOfferSchema, type CreateOfferInput } from "@/schemas/offer.schema";
 import type { OfferFormDefaults } from "@/types/offer";
 
@@ -56,6 +57,7 @@ export function OfferForm({
 
       if (result.ok) {
         toast.success(result.message);
+        refreshNavigationSummary();
         onDone?.();
         router.refresh();
         return;

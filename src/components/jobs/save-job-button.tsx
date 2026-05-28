@@ -7,26 +7,26 @@ import { toast } from "sonner";
 
 import { toggleSaveJobAction } from "@/actions/job.actions";
 import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 
 export function SaveJobButton({
   jobId,
   isSaved,
-  isAuthenticated,
   className,
 }: {
   jobId: string;
   isSaved: boolean;
-  isAuthenticated: boolean;
   className?: string;
 }) {
   const router = useRouter();
+  const { isAuth, isLoading } = useCurrentUser();
   const [isPending, startTransition] = useTransition();
   const [optimisticSaved, toggleOptimisticSaved] = useOptimistic(isSaved, (state) => !state);
 
   function handleSave() {
-    if (!isAuthenticated) {
-      router.push("/auth/login");
+    if (!isAuth) {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/jobs/${jobId}`)}`);
       return;
     }
 
@@ -51,7 +51,7 @@ export function SaveJobButton({
       variant="secondary"
       size="icon"
       onClick={handleSave}
-      disabled={isPending}
+      disabled={isPending || isLoading}
       aria-label={optimisticSaved ? "إزالة من المحفوظات" : "حفظ الطلب"}
       className={cn(optimisticSaved && "border-primary bg-primary/10 text-primary-dark", className)}
     >

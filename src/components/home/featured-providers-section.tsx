@@ -7,27 +7,29 @@ import type { ProviderProfile } from "@/types/marketplace";
 
 export function FeaturedProvidersSection({ providers }: { providers: ProviderProfile[] }) {
   return (
-    <section className="bg-white py-14">
-      <div className="container space-y-8">
+    <section className="section-spacing bg-white">
+      <div className="container-responsive space-y-6 lg:space-y-8">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <h2 className="text-3xl font-bold text-slate-950">مزودون موثوقون</h2>
-            <p className="mt-2 text-slate-600">ملفات مهنية تساعدك تختار الشخص المناسب بسرعة.</p>
+            <h2 className="text-3xl font-bold text-slate-950">مقدمو الخدمات الموثقون</h2>
+            <p className="mt-2 text-slate-600">
+              تظهر هنا الحسابات التي تم توثيقها، لتختار مقدم الخدمة المناسب بثقة.
+            </p>
           </div>
           <Link href="/providers" className="text-sm font-semibold text-primary-dark">
-            عرض كل المزودين
+            عرض كل مقدمي الخدمات
           </Link>
         </div>
         {providers.length > 0 ? (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
             {providers.slice(0, 4).map((provider) => (
               <ProviderCard key={provider.id} provider={provider} />
             ))}
           </div>
         ) : (
           <EmptyState
-            title="لا يوجد مقدمو خدمات موثوقون بعد"
-            description="ستظهر هنا الحسابات الموثوقة بعد اكتمال البروفايلات وبدء التجربة."
+            title="لا يوجد أي مقدم خدمة موثق بعد"
+            description="سيظهر مقدمو الخدمات هنا بعد تفعيل نظام التوثيق واعتماد الحسابات الموثوقة."
             action={
               <Button asChild variant="secondary">
                 <Link href="/providers">تصفح مقدمي الخدمات</Link>

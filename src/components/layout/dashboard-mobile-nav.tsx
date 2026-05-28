@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,14 @@ export function DashboardMobileNav({
 }) {
   const pathname = usePathname();
   const navLinks = getDashboardNavLinks(user.accountType);
+  const previousPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      previousPathname.current = pathname;
+      onClose();
+    }
+  }, [onClose, pathname]);
 
   if (!isOpen) {
     return null;
@@ -34,7 +43,7 @@ export function DashboardMobileNav({
         aria-label="إغلاق القائمة"
         onClick={onClose}
       />
-      <section className="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-white p-4 shadow-2xl">
+      <section className="ios-momentum absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[2rem] bg-white p-4 shadow-2xl safe-bottom">
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-950">قائمة لوحة التحكم</h2>
@@ -52,7 +61,6 @@ export function DashboardMobileNav({
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={onClose}
                 className={cn(
                   "flex min-h-11 items-center gap-3 rounded-xl border-r-4 border-r-transparent px-3 py-2 text-sm font-semibold text-slate-600",
                   link.featured && "bg-primary text-white",

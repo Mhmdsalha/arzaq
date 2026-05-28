@@ -23,6 +23,10 @@ export type NavigationSummary = {
 };
 
 export const getNavigationSummary = cache(async (userId: string): Promise<NavigationSummary> => {
+  return getNavigationSummaryFresh(userId);
+});
+
+export async function getNavigationSummaryFresh(userId: string): Promise<NavigationSummary> {
   const [user, profile, unreadCount, postedJobs, receivedOffers, sentOffers, acceptedOffers] =
     await prisma.$transaction([
       prisma.user.findFirst({
@@ -111,7 +115,7 @@ export const getNavigationSummary = cache(async (userId: string): Promise<Naviga
       acceptedOffers,
     },
   };
-});
+}
 
 export async function getUserNotifications(userId: string) {
   return prisma.notification.findMany({
@@ -128,6 +132,18 @@ export async function getUserNotifications(userId: string) {
       link: true,
       isRead: true,
       createdAt: true,
+    },
+  });
+}
+
+export async function markUserNotificationsAsRead(userId: string) {
+  await prisma.notification.updateMany({
+    where: {
+      userId,
+      isRead: false,
+    },
+    data: {
+      isRead: true,
     },
   });
 }

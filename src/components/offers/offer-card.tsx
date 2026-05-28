@@ -6,14 +6,17 @@ import { Check, Clock, Edit, ShieldCheck, Star, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { acceptOfferAction, rejectOfferAction, withdrawOfferAction } from "@/actions/offer.actions";
 import { OfferForm } from "@/components/offers/offer-form";
 import { OfferStatusBadge } from "@/components/offers/offer-status-badge";
+import { ReviewForm } from "@/components/reviews/review-form";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { regionLabels } from "@/constants/regions";
+import { refreshNavigationSummary } from "@/hooks/useUnreadCount";
 import type { ReceivedOfferItem, UserOfferItem } from "@/types/offer";
 
 export function OfferCard(
@@ -43,6 +46,7 @@ function SubmittedOfferCard({ offer }: { offer: UserOfferItem }) {
 
       if (result.ok) {
         toast.success(result.message);
+        refreshNavigationSummary();
         router.refresh();
         return;
       }
@@ -98,6 +102,20 @@ function SubmittedOfferCard({ offer }: { offer: UserOfferItem }) {
         </div>
       ) : null}
 
+      {offer.status === "ACCEPTED" && !offer.reviewedByCurrentUser ? (
+        <ReviewForm
+          receiverId={offer.job.ownerId}
+          jobPostId={offer.job.id}
+          receiverName="صاحب الطلب"
+        />
+      ) : null}
+
+      {offer.status === "ACCEPTED" && offer.reviewedByCurrentUser ? (
+        <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-600">
+          تم إرسال تقييمك لهذا الطلب.
+        </p>
+      ) : null}
+
       <div className="mt-5 flex flex-wrap gap-2">
         {offer.status === "PENDING" ? (
           <>
@@ -134,27 +152,22 @@ function SubmittedOfferCard({ offer }: { offer: UserOfferItem }) {
 function ReceivedOfferCard({ offer, jobId }: { offer: ReceivedOfferItem; jobId: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [confirmAction, setConfirmAction] = useState<"accept" | "reject" | null>(null);
 
   function runAction(type: "accept" | "reject") {
-    const message =
-      type === "accept"
-        ? "هل تريد قبول هذا العرض؟ سيتم رفض باقي العروض المعلقة تلقائياً."
-        : "هل تريد رفض هذا العرض؟";
-
-    if (!window.confirm(message)) {
-      return;
-    }
-
     startTransition(async () => {
       const result =
         type === "accept" ? await acceptOfferAction(offer.id) : await rejectOfferAction(offer.id);
 
       if (result.ok) {
         toast.success(result.message);
+        setConfirmAction(null);
+        refreshNavigationSummary();
         router.refresh();
         return;
       }
 
+      setConfirmAction(null);
       toast.error(result.message);
     });
   }
@@ -207,7 +220,7 @@ function ReceivedOfferCard({ offer, jobId }: { offer: ReceivedOfferItem; jobId: 
               type="button"
               size="sm"
               disabled={isPending}
-              onClick={() => runAction("accept")}
+              onClick={() => setConfirmAction("accept")}
             >
               <Check className="size-4" />
               قبول العرض
@@ -217,7 +230,7 @@ function ReceivedOfferCard({ offer, jobId }: { offer: ReceivedOfferItem; jobId: 
               variant="destructive"
               size="sm"
               disabled={isPending}
-              onClick={() => runAction("reject")}
+              onClick={() => setConfirmAction("reject")}
             >
               <X className="size-4" />
               رفض العرض
@@ -226,6 +239,78 @@ function ReceivedOfferCard({ offer, jobId }: { offer: ReceivedOfferItem; jobId: 
         ) : null}
       </div>
       <span className="sr-only">طلب مرتبط: {jobId}</span>
+      {offer.status === "ACCEPTED" && !offer.reviewedByCurrentUser ? (
+        <ReviewForm receiverId={offer.provider.id} jobPostId={jobId} receiverName={offer.provider.name} />
+      ) : null}
+
+      {offer.status === "ACCEPTED" && offer.reviewedByCurrentUser ? (
+        <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-600">
+          تم تقييم مقدم الخدمة.
+        </p>
+      ) : null}
+
+      <OfferActionConfirmDialog
+        action={confirmAction}
+        isPending={isPending}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          if (confirmAction) {
+            runAction(confirmAction);
+          }
+        }}
+      />
     </article>
+  );
+}
+
+function OfferActionConfirmDialog({
+  action,
+  isPending,
+  onCancel,
+  onConfirm,
+}: {
+  action: "accept" | "reject" | null;
+  isPending: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!action || typeof document === "undefined") {
+    return null;
+  }
+
+  const isAccept = action === "accept";
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] grid min-h-[100svh] place-items-center bg-slate-950/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="offer-action-confirm-title"
+    >
+      <div className="w-[calc(100%-32px)] max-w-sm rounded-2xl bg-white p-6 text-right shadow-2xl sm:w-full">
+        <h3 id="offer-action-confirm-title" className="text-lg font-bold text-slate-950">
+          {isAccept ? "قبول العرض" : "رفض العرض"}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          {isAccept
+            ? "هل أنت متأكد من قبول هذا العرض؟ سيتم رفض باقي العروض المعلقة تلقائياً."
+            : "هل أنت متأكد من رفض هذا العرض؟"}
+        </p>
+        <div className="mt-5 flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2 sm:gap-2">
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={isPending}>
+            إلغاء
+          </Button>
+          <Button
+            type="button"
+            variant={isAccept ? "default" : "destructive"}
+            onClick={onConfirm}
+            disabled={isPending}
+          >
+            {isPending ? "جاري التنفيذ..." : isAccept ? "تأكيد القبول" : "تأكيد الرفض"}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }

@@ -76,7 +76,7 @@ export function JobDetails({
           </CardContent>
         </Card>
 
-        <SimilarJobs jobs={similarJobs} isAuthenticated={isAuthenticated} />
+        <SimilarJobs jobs={similarJobs} />
       </article>
 
       <aside className="space-y-4">
@@ -126,7 +126,6 @@ export function JobDetails({
             <SaveJobButton
               jobId={job.id}
               isSaved={job.isSaved}
-              isAuthenticated={isAuthenticated}
               className="w-full"
             />
           </CardContent>

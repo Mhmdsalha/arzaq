@@ -8,19 +8,19 @@ import { regions } from "@/mock/regions";
 export function SearchSection() {
   return (
     <section className="bg-slate-50 py-8">
-      <div className="container">
+      <div className="container-responsive">
         <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_auto]">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-            <Input placeholder="ما الخدمة أو المهارة التي تبحث عنها؟" className="h-12 pr-11" />
+            <Input placeholder="ما الخدمة أو المهارة التي تبحث عنها؟" className="h-12 pr-11 text-base" />
           </div>
-          <select className="h-12 rounded-xl border-slate-200 text-sm focus:border-primary focus:ring-primary">
+          <select className="h-12 rounded-xl border-slate-200 text-base focus:border-primary focus:ring-primary">
             <option>كل المناطق</option>
             {regions.map((region) => (
               <option key={region.value}>{region.label}</option>
             ))}
           </select>
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="h-12 w-full md:w-auto">
             <Link href="/jobs">ابحث الآن</Link>
           </Button>
         </div>

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { passwordSchema } from "@/schemas/password.schema";
+
 const phoneRegex = /^[0-9+\-\s()]{10,20}$/;
 const regionValues = [
   "NORTH_GAZA",
@@ -25,7 +27,7 @@ export const registerSchema = z
       .toLowerCase()
       .email("البريد الإلكتروني غير صحيح"),
     phone: z.string().trim().regex(phoneRegex, "رقم الجوال غير صحيح"),
-    password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
+    password: passwordSchema,
     confirmPassword: z.string().min(1, "تأكيد كلمة المرور مطلوب"),
     region: z.enum(regionValues, {
       error: "المنطقة مطلوبة",

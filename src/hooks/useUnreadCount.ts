@@ -21,7 +21,9 @@ type NavigationSummaryResponse = {
   };
 };
 
-const SUMMARY_TTL_MS = 30_000;
+const SUMMARY_TTL_MS = 8_000;
+const SUMMARY_POLL_MS = 15_000;
+const SUMMARY_REFRESH_EVENT = "arzaq:navigation-summary-refresh";
 
 let cachedSummary: NavigationSummaryResponse | null = null;
 let cachedAt = 0;
@@ -37,14 +39,15 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
     }
 
     let isMounted = true;
+    let eventSource: EventSource | null = null;
 
-    async function fetchSummary() {
+    async function fetchSummary(force = false) {
       if (document.visibilityState === "hidden") {
         return;
       }
 
       try {
-        const data = await getNavigationSummary();
+        const data = await getNavigationSummary({ force });
 
         if (isMounted) {
           setSummary(data);
@@ -58,19 +61,47 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
-        void fetchSummary();
+        void fetchSummary(true);
       }
     }
 
+    function handleFocus() {
+      void fetchSummary(true);
+    }
+
+    function handleManualRefresh() {
+      void fetchSummary(true);
+    }
+
     void fetchSummary();
-    const intervalId = setInterval(fetchSummary, 60_000);
+    if ("EventSource" in window) {
+      eventSource = new EventSource("/api/navigation/stream");
+      eventSource.addEventListener("summary", (event) => {
+        if (!isMounted) {
+          return;
+        }
+
+        const data = JSON.parse((event as MessageEvent).data) as NavigationSummaryResponse;
+        cachedSummary = data;
+        cachedAt = Date.now();
+        setSummary(data);
+        setIsLoading(false);
+      });
+    }
+
+    const intervalId = setInterval(fetchSummary, SUMMARY_POLL_MS);
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener(SUMMARY_REFRESH_EVENT, handleManualRefresh);
 
     return () => {
       isMounted = false;
 
       clearInterval(intervalId);
+      eventSource?.close();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener(SUMMARY_REFRESH_EVENT, handleManualRefresh);
     };
   }, [enabled, accountType]);
 
@@ -83,10 +114,16 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
   };
 }
 
-async function getNavigationSummary() {
+export function refreshNavigationSummary() {
+  cachedSummary = null;
+  cachedAt = 0;
+  window.dispatchEvent(new Event(SUMMARY_REFRESH_EVENT));
+}
+
+async function getNavigationSummary({ force = false }: { force?: boolean } = {}) {
   const now = Date.now();
 
-  if (cachedSummary && now - cachedAt < SUMMARY_TTL_MS) {
+  if (!force && cachedSummary && now - cachedAt < SUMMARY_TTL_MS) {
     return cachedSummary;
   }
 

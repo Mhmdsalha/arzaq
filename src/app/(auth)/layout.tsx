@@ -7,13 +7,13 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="h-screen overflow-hidden bg-white">
+    <main className="h-[100svh] overflow-hidden bg-white">
       <div className="flex h-full flex-row">
-        <section className="w-full overflow-y-auto bg-white lg:w-1/2">
+        <section className="ios-momentum w-full overflow-y-auto bg-white lg:w-1/2">
           <div className="flex h-32 items-center justify-center rounded-b-3xl bg-[linear-gradient(135deg,#15803d,#16a34a,#22c55e)] lg:hidden">
             <div className="text-center text-white">
               <p className="font-palestine text-4xl font-bold">أرزاق</p>
-              <p className="mt-1 text-sm text-white/80">معاً نبني الفرص</p>
+              <p className="text-sm text-white/80">معاً نبني الفرص</p>
             </div>
           </div>
           <AuthFormWrapper>{children}</AuthFormWrapper>

@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   ChevronLeft,
   FileText,
+  Home,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -96,8 +97,9 @@ export function AccountSheet({
       ];
 
   function closeAndGo(href: string) {
-    closeSheet();
     router.push(href);
+    onOpenChange(false);
+    setShowLogoutConfirm(false);
   }
 
   async function confirmSignOut() {
@@ -107,14 +109,14 @@ export function AccountSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-[70] md:hidden" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
       <button
         type="button"
         className="absolute inset-0 bg-slate-950/40"
         aria-label="إغلاق"
         onClick={closeSheet}
       />
-      <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl">
+      <div className="ios-momentum absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl safe-bottom md:mx-auto md:max-w-md">
         <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-200" />
         <button
           type="button"
@@ -171,6 +173,7 @@ export function AccountSheet({
             </div>
 
             <div className="mt-5 space-y-1">
+              <SheetItem icon={Home} label="الرئيسية" onClick={() => closeAndGo("/")} />
               <SheetItem
                 icon={LayoutDashboard}
                 label="لوحة التحكم"
