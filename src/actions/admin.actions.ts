@@ -156,6 +156,7 @@ export async function adminDeleteJobAction(jobId: string): Promise<ActionResult>
 
     revalidateTag("jobs", "max");
     revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
     revalidatePath("/jobs");
     logAudit("ADMIN_DELETE_JOB", {
       userId: session.user.id,
@@ -185,6 +186,7 @@ export async function approveJobAction(jobId: string): Promise<ActionResult> {
 
     revalidateTag("jobs", "max");
     revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${job.id}`);
     logAudit("APPROVE_JOB", {
@@ -224,6 +226,7 @@ export async function requestJobEditAction(formData: FormData): Promise<ActionRe
 
     revalidateTag("jobs", "max");
     revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
     revalidatePath("/dashboard/jobs");
     logAudit("REQUEST_JOB_EDIT", {
       userId: session.user.id,

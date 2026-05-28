@@ -211,6 +211,61 @@ export async function getAdminJobs({
   };
 }
 
+export async function getAdminJobById(jobId: string) {
+  return prisma.jobPost.findFirst({
+    where: {
+      id: jobId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      budget: true,
+      duration: true,
+      isUrgent: true,
+      views: true,
+      region: true,
+      workMode: true,
+      status: true,
+      expiresAt: true,
+      createdAt: true,
+      updatedAt: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          isVerified: true,
+          isBanned: true,
+          profile: {
+            select: {
+              region: true,
+              whatsapp: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
+      category: {
+        select: {
+          name: true,
+          slug: true,
+          color: true,
+        },
+      },
+      _count: {
+        select: {
+          offers: true,
+          reports: true,
+          savedBy: true,
+        },
+      },
+    },
+  });
+}
+
 export async function getAdminReports({
   status,
   targetType,

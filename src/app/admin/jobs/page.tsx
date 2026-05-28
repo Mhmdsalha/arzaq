@@ -1,11 +1,7 @@
 import type { JobStatus } from "@prisma/client";
 import Link from "next/link";
 
-import {
-  adminDeleteJobFormAction,
-  approveJobFormAction,
-  requestJobEditFormAction,
-} from "@/actions/admin.actions";
+import { adminDeleteJobFormAction } from "@/actions/admin.actions";
 import { jobStatusLabels } from "@/constants/jobs";
 import { regionLabels } from "@/constants/regions";
 import { getAdminJobs } from "@/services/admin.service";
@@ -36,7 +32,7 @@ export default async function AdminJobsPage({
         <div>
           <h1 className="text-3xl font-bold text-white">مراجعة الطلبات</h1>
           <p className="mt-2 text-sm text-slate-300">
-            الطلبات الجديدة لا تظهر للعامة إلا بعد اعتمادها من الإدارة.
+            افتح صفحة المراجعة الداخلية لكل طلب لاعتماده أو إرجاعه للعميل للتعديل.
           </p>
         </div>
         <Link href="/admin" className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">
@@ -70,10 +66,7 @@ export default async function AdminJobsPage({
 
       <div className="mt-6 grid gap-4">
         {data.jobs.map((job) => (
-          <article
-            key={job.id}
-            className="rounded-2xl border border-white/10 bg-slate-900 p-4"
-          >
+          <article key={job.id} className="rounded-2xl border border-white/10 bg-slate-900 p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -97,19 +90,11 @@ export default async function AdminJobsPage({
 
               <div className="flex flex-wrap gap-2">
                 <Link
-                  href={`/jobs/${job.id}`}
-                  className="inline-flex min-h-10 items-center rounded-xl bg-white/10 px-4 text-sm font-semibold text-white"
+                  href={`/admin/jobs/${job.id}`}
+                  className="inline-flex min-h-10 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark"
                 >
-                  عرض
+                  مراجعة الطلب
                 </Link>
-                {job.status === "PENDING_REVIEW" || job.status === "NEEDS_EDIT" ? (
-                  <form action={approveJobFormAction}>
-                    <input type="hidden" name="jobId" value={job.id} />
-                    <button className="min-h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark">
-                      اعتماد ونشر
-                    </button>
-                  </form>
-                ) : null}
                 <form action={adminDeleteJobFormAction}>
                   <input type="hidden" name="jobId" value={job.id} />
                   <button className="min-h-10 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">
@@ -118,20 +103,6 @@ export default async function AdminJobsPage({
                 </form>
               </div>
             </div>
-
-            {job.status === "PENDING_REVIEW" || job.status === "OPEN" ? (
-              <form action={requestJobEditFormAction} className="mt-4 grid gap-2 md:grid-cols-[1fr_auto]">
-                <input type="hidden" name="jobId" value={job.id} />
-                <input
-                  name="note"
-                  placeholder="ملاحظة للعميل عند طلب التعديل، مثال: يرجى توضيح الميزانية أو وصف المهمة"
-                  className="h-11 rounded-xl border border-white/10 bg-slate-950 px-4 text-sm text-white outline-none"
-                />
-                <button className="min-h-11 rounded-xl border border-amber-400/40 px-4 text-sm font-semibold text-amber-100 hover:bg-amber-500/10">
-                  طلب تعديل
-                </button>
-              </form>
-            ) : null}
           </article>
         ))}
       </div>
