@@ -2,7 +2,7 @@ import type { JobStatus } from "@prisma/client";
 import Link from "next/link";
 
 import { adminDeleteJobFormAction } from "@/actions/admin.actions";
-import { jobStatusLabels } from "@/constants/jobs";
+import { adminJobStatusLabels } from "@/constants/jobs";
 import { regionLabels } from "@/constants/regions";
 import { getAdminJobs } from "@/services/admin.service";
 
@@ -55,7 +55,7 @@ export default async function AdminJobsPage({
           <option value="">كل الحالات</option>
           {jobStatusValues.map((value) => (
             <option key={value} value={value}>
-              {jobStatusLabels[value]}
+              {adminJobStatusLabels[value]}
             </option>
           ))}
         </select>
@@ -75,7 +75,7 @@ export default async function AdminJobsPage({
                     معرّف الطلب: {job.code}
                   </span>
                   <span className="rounded-full bg-primary/15 px-3 py-1 text-xs text-primary-light">
-                    {jobStatusLabels[job.status]}
+                    {adminJobStatusLabels[job.status]}
                   </span>
                   {job.isUrgent ? (
                     <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs text-amber-200">

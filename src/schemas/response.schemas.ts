@@ -9,7 +9,14 @@ const regionSchema = z.enum([
   "ONLINE",
 ]);
 const workModeSchema = z.enum(["ONLINE", "FIELD", "BOTH"]);
-const jobStatusSchema = z.enum(["OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"]);
+const jobStatusSchema = z.enum([
+  "PENDING_REVIEW",
+  "NEEDS_EDIT",
+  "OPEN",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+]);
 const offerStatusSchema = z.enum(["PENDING", "ACCEPTED", "REJECTED", "WITHDRAWN"]);
 
 export const providerPublicSchema = z.object({

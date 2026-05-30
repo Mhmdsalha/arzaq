@@ -21,7 +21,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { jobStatusLabels, workModeLabels } from "@/constants/jobs";
+import { workModeLabels } from "@/constants/jobs";
 import { regionLabels } from "@/constants/regions";
 import type { JobDetailsData, JobListItem } from "@/types/job";
 
@@ -173,7 +173,7 @@ function ApplyState({ job, isAuthenticated }: { job: JobDetailsData; isAuthentic
   if (job.status !== "OPEN") {
     return (
       <Button type="button" disabled className="w-full">
-        هذا الطلب {jobStatusLabels[job.status]}
+        هذا الطلب مغلق
       </Button>
     );
   }
