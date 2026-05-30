@@ -14,6 +14,11 @@ const adminLinks = [
     description: "حظر، توثيق، ومراجعة حسابات أصحاب الطلبات ومقدمي الخدمات.",
   },
   {
+    href: "/admin/verification",
+    label: "طلبات التوثيق",
+    description: "مراجعة طلبات التوثيق الرسمي لمقدمي الخدمات المؤهلين.",
+  },
+  {
     href: "/admin/jobs",
     label: "مراجعة الطلبات",
     description: "اعتماد الطلبات الجديدة أو إرجاعها للعميل للتعديل قبل النشر.",
@@ -38,6 +43,7 @@ export default async function AdminPage() {
     { label: "مقدمو الخدمات", value: overview.providerUsers },
     { label: "الطلبات المفتوحة", value: overview.openJobs },
     { label: "طلبات بانتظار المراجعة", value: overview.pendingJobs },
+    { label: "طلبات توثيق معلقة", value: overview.pendingVerificationRequests },
     { label: "بلاغات معلقة", value: overview.pendingReports },
     { label: "مقدمو خدمات موثقون", value: overview.trustedProviders },
     { label: "حسابات محظورة", value: overview.bannedUsers },

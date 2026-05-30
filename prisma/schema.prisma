@@ -70,6 +70,12 @@ enum ReportTargetType {
   JOB_POST
 }
 
+enum ProviderVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String      @id @default(cuid())
   name         String
@@ -94,6 +100,7 @@ model User {
   notifications   Notification[]
   resetTokens     PasswordResetToken[]
   emailTokens     EmailVerificationToken[]
+  verificationRequests ProviderVerificationRequest[] @relation("ProviderVerificationRequests")
 }
 
 model Profile {
@@ -274,6 +281,22 @@ model PortfolioItem {
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
+}
+
+model ProviderVerificationRequest {
+  id           String                     @id @default(cuid())
+  providerId   String
+  status       ProviderVerificationStatus @default(PENDING)
+  note         String?
+  reviewedNote String?
+  reviewedAt   DateTime?
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+
+  provider User @relation("ProviderVerificationRequests", fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, status])
+  @@index([status, createdAt])
 }
 
 model PasswordResetToken {

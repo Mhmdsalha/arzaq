@@ -16,6 +16,7 @@ export async function getAdminOverview() {
     trustedProviders,
     bannedUsers,
     pendingJobs,
+    pendingVerificationRequests,
   ] = await prisma.$transaction([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.user.count({ where: { deletedAt: null, accountType: "CLIENT" } }),
@@ -25,6 +26,7 @@ export async function getAdminOverview() {
     prisma.profile.count({ where: { isTrusted: true, user: { accountType: "PROVIDER" } } }),
     prisma.user.count({ where: { deletedAt: null, isBanned: true } }),
     prisma.jobPost.count({ where: { deletedAt: null, status: "PENDING_REVIEW" } }),
+    prisma.providerVerificationRequest.count({ where: { status: "PENDING" } }),
   ]);
 
   return {
@@ -36,6 +38,7 @@ export async function getAdminOverview() {
     trustedProviders,
     bannedUsers,
     pendingJobs,
+    pendingVerificationRequests,
   };
 }
 

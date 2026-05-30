@@ -30,6 +30,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/users">
               المستخدمون
             </Link>
+            <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/verification">
+              طلبات التوثيق
+            </Link>
             <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/admins">
               حسابات الإدارة
             </Link>
