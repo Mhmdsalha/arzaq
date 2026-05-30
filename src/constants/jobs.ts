@@ -7,8 +7,8 @@ export const workModeLabels: Record<WorkMode, string> = {
 };
 
 export const jobStatusLabels: Record<JobStatus, string> = {
-  PENDING_REVIEW: "قيد مراجعة الإدارة",
-  NEEDS_EDIT: "يحتاج تعديل",
+  PENDING_REVIEW: "قيد المراجعة",
+  NEEDS_EDIT: "يحتاج تعديلات",
   OPEN: "مفتوح",
   IN_PROGRESS: "مغلق",
   COMPLETED: "مغلق",
@@ -17,7 +17,7 @@ export const jobStatusLabels: Record<JobStatus, string> = {
 
 export const adminJobStatusLabels: Record<JobStatus, string> = {
   PENDING_REVIEW: "قيد مراجعة الإدارة",
-  NEEDS_EDIT: "يحتاج تعديل",
+  NEEDS_EDIT: "يحتاج تعديلات",
   OPEN: "مفتوح",
   IN_PROGRESS: "قيد التنفيذ",
   COMPLETED: "مكتمل",

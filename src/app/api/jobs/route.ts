@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     region: searchParams.get("region") ?? undefined,
     workMode: searchParams.get("workMode") ?? undefined,
     urgent: searchParams.get("urgent") ?? undefined,
-    status: searchParams.get("status") ?? undefined,
     page: searchParams.get("page") ?? undefined,
   });
 

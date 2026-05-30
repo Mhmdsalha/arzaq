@@ -44,7 +44,6 @@ async function JobsContent({
     region: getSingleParam(params.region),
     workMode: getSingleParam(params.workMode),
     urgent: getSingleParam(params.urgent),
-    status: getSingleParam(params.status),
     page: getSingleParam(params.page),
   });
   const filters = parsedFilters.success ? parsedFilters.data : {};
@@ -64,7 +63,6 @@ async function JobsContent({
           category: filters.category ?? "all",
           region: filters.region ?? "all",
           workMode: filters.workMode ?? "all",
-          status: filters.status ?? "OPEN",
           urgentOnly: filters.urgent ?? false,
         }}
         pagination={{

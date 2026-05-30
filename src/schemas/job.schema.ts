@@ -9,15 +9,12 @@ const regionValues = [
   "ONLINE",
 ] as const;
 const workModeValues = ["ONLINE", "FIELD", "BOTH"] as const;
-const jobStatusValues = ["OPEN", "CLOSED"] as const;
-
 export const jobFiltersSchema = z.object({
   q: z.string().trim().optional(),
   category: z.string().trim().optional(),
   region: z.enum(regionValues).optional(),
   workMode: z.enum(workModeValues).optional(),
   urgent: z.coerce.boolean().optional(),
-  status: z.enum(jobStatusValues).optional(),
   page: z.coerce.number().int().positive().optional(),
 });
 

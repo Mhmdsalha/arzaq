@@ -24,7 +24,7 @@ export type JobFiltersInput = {
   region?: Region;
   workMode?: WorkMode;
   urgent?: boolean;
-  status?: JobStatus | "CLOSED";
+  status?: JobStatus;
   page?: number;
   pageSize?: number;
 };
@@ -738,14 +738,9 @@ export async function toggleSavedJob(id: string, userId: string) {
 
 function buildJobsWhere(filters: JobFiltersInput): Prisma.JobPostWhereInput {
   const query = filters.q ? sanitizeSearchQuery(filters.q) : "";
-  const statusFilter =
-    filters.status === "CLOSED"
-      ? { in: ["IN_PROGRESS", "COMPLETED", "CANCELLED"] as JobStatus[] }
-      : filters.status ?? "OPEN";
-
   return {
     deletedAt: null,
-    status: statusFilter,
+    status: filters.status ?? "OPEN",
     ...(query
       ? {
           OR: [

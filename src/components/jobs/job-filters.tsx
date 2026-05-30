@@ -1,6 +1,6 @@
 "use client";
 
-import type { JobStatus, Region, WorkMode } from "@prisma/client";
+import type { Region, WorkMode } from "@prisma/client";
 
 import type { JobCategoryOption } from "@/types/job";
 
@@ -8,7 +8,6 @@ export type JobFilterState = {
   region: Region | "all";
   category: string;
   workMode: WorkMode | "all";
-  status: JobStatus | "CLOSED";
   urgentOnly: boolean;
 };
 
@@ -35,7 +34,6 @@ export function JobFilters({
               region: "all",
               category: "all",
               workMode: "all",
-              status: "OPEN",
               urgentOnly: false,
             })
           }
@@ -72,15 +70,6 @@ export function JobFilters({
             { value: "ONLINE", label: "أونلاين" },
             { value: "FIELD", label: "ميداني" },
             { value: "BOTH", label: "مرن" },
-          ]}
-        />
-        <FilterSelect
-          label="الحالة"
-          value={value.status}
-          onChange={(status) => onChange({ ...value, status: status as JobStatus | "CLOSED" })}
-          options={[
-            { value: "OPEN", label: "مفتوح" },
-            { value: "CLOSED", label: "مغلق" },
           ]}
         />
         <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-800">

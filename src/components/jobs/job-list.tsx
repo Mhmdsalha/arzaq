@@ -49,7 +49,7 @@ export function JobList({
       const params = new URLSearchParams(searchParams.toString());
 
       for (const [key, value] of Object.entries(updates)) {
-        if (!value || value === "all" || (key === "status" && value === "OPEN")) {
+        if (!value || value === "all") {
           params.delete(key);
           continue;
         }
@@ -80,7 +80,6 @@ export function JobList({
             category: value.category,
             region: value.region,
             workMode: value.workMode,
-            status: value.status,
             urgent: value.urgentOnly ? "true" : undefined,
           })
         }
