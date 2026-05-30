@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { signIn } from "next-auth/react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -37,7 +38,11 @@ export function AdminLoginForm() {
       }
 
       toast.success(result.message);
-      window.location.replace(result.redirectTo ?? "/admin");
+      await signIn("credentials", {
+        identifier: values.identifier,
+        password: values.password,
+        redirectTo: result.redirectTo ?? "/admin",
+      });
     });
   }
 

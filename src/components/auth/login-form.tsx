@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -56,7 +57,11 @@ export function LoginForm({
         return;
       }
 
-      window.location.replace(result.redirectTo ?? "/dashboard");
+      await signIn("credentials", {
+        identifier: values.identifier,
+        password: values.password,
+        redirectTo: result.redirectTo ?? "/dashboard",
+      });
     });
   }
 

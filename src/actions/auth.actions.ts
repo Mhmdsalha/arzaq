@@ -5,7 +5,7 @@ import type { AccountType } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { logAudit } from "@/lib/audit";
-import { signIn, signOut } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
 import { sendEmailVerificationCode } from "@/lib/email";
 import {
   clearLoginLockout,
@@ -74,20 +74,33 @@ export async function loginAction(input: LoginInput, callbackUrl?: string): Prom
       };
     }
 
-    const redirectTo = getPostLoginRedirect("CLIENT", callbackUrl);
-    const result = await signIn("credentials", {
-      identifier: cleanIdentifier,
-      password: parsed.data.password,
-      redirectTo,
-      redirect: false,
-    });
+    const user = await findUserByIdentifier(cleanIdentifier);
+    const isValidPassword = user
+      ? await validatePassword(parsed.data.password, user.passwordHash)
+      : false;
+
+    if (!user || user.isBanned || !isValidPassword) {
+      const lockMinutes = await recordFailedLogin(cleanIdentifier);
+      logAudit("LOGIN_FAILED", { metadata: { locked: Boolean(lockMinutes) } });
+
+      if (lockMinutes) {
+        return {
+          ok: false,
+          message: "تم قفل الحساب مؤقتاً بسبب محاولات دخول متعددة. حاول بعد 15 دقيقة",
+        };
+      }
+
+      return { ok: false, message: "بيانات الدخول غير صحيحة" };
+    }
+
+    const redirectTo = getPostLoginRedirect(user.accountType, callbackUrl);
     await clearLoginLockout(cleanIdentifier);
-    logAudit("LOGIN");
+    logAudit("LOGIN", { userId: user.id });
 
     return {
       ok: true,
       message: "تم تسجيل الدخول بنجاح",
-      redirectTo: typeof result === "string" ? result : redirectTo,
+      redirectTo,
     };
   } catch (error) {
     if (error instanceof AuthError) {
@@ -171,13 +184,6 @@ export async function adminLoginAction(input: LoginInput): Promise<ActionResult>
       return { ok: false, message: "هذا الدخول مخصص لحسابات الإدارة فقط" };
     }
 
-    const result = await signIn("credentials", {
-      identifier: cleanIdentifier,
-      password: parsed.data.password,
-      redirectTo: "/admin",
-      redirect: false,
-    });
-
     await clearLoginLockout(cleanIdentifier);
     logAudit("LOGIN", {
       userId: user.id,
@@ -187,7 +193,7 @@ export async function adminLoginAction(input: LoginInput): Promise<ActionResult>
     return {
       ok: true,
       message: "تم تسجيل دخول الإدارة بنجاح",
-      redirectTo: typeof result === "string" ? result : "/admin",
+      redirectTo: "/admin",
     };
   } catch (error) {
     if (error instanceof AuthError) {
