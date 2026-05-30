@@ -251,7 +251,9 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
       message: emailResult.sent
         ? "تم إنشاء الحساب وإرسال رمز التحقق إلى بريدك"
         : "تم إنشاء الحساب، لكن تعذر إرسال رمز التحقق. تأكد من إعدادات البريد ثم أعد الإرسال",
-      redirectTo: `/auth/verify-email?email=${encodeURIComponent(clean.email)}`,
+      redirectTo: `/auth/verify-email?email=${encodeURIComponent(clean.email)}&sent=${
+        emailResult.sent ? "1" : "0"
+      }`,
     };
   } catch (error) {
     return {
@@ -388,10 +390,15 @@ export async function resendEmailVerificationAction(email: string): Promise<Acti
     code: verification.code,
   });
 
+  if (!emailResult.sent) {
+    return {
+      ok: false,
+      message: "تعذر إرسال رمز التحقق حالياً. تأكد من إعدادات البريد ثم حاول مرة أخرى",
+    };
+  }
+
   return {
     ok: true,
-    message: emailResult.sent
-      ? "تم إرسال رمز تحقق جديد إلى بريدك"
-      : "تعذر إرسال رمز التحقق حالياً. تأكد من إعدادات البريد ثم حاول مرة أخرى",
+    message: "تم إرسال رمز تحقق جديد إلى بريدك",
   };
 }

@@ -48,7 +48,7 @@ export function AdminLoginForm() {
 
   return (
     <form
-      className="w-full max-w-md rounded-3xl border border-white/10 bg-white p-6 text-slate-950 shadow-2xl"
+      className="mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-white p-6 text-slate-950 shadow-2xl"
       noValidate
       onSubmit={handleSubmit(onSubmit)}
     >

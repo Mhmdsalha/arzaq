@@ -15,7 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { verifyEmailSchema, type VerifyEmailInput } from "@/schemas/auth.schema";
 
-export function VerifyEmailForm({ email }: { email: string }) {
+export function VerifyEmailForm({
+  email,
+  initialSendFailed = false,
+}: {
+  email: string;
+  initialSendFailed?: boolean;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isResending, startResendTransition] = useTransition();
@@ -77,6 +83,17 @@ export function VerifyEmailForm({ email }: { email: string }) {
           أدخل رمز التحقق المرسل إلى <span className="font-semibold text-slate-700">{email}</span>
         </p>
       </div>
+
+      {initialSendFailed ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-900">
+          لم نتمكن من إرسال رمز التحقق تلقائياً. اضغط على “إعادة إرسال الرمز”، وإذا لم يصلك
+          خلال دقيقة افحص مجلد الرسائل غير المرغوب فيها.
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-7 text-emerald-900">
+          أرسلنا رمزاً من 6 أرقام إلى بريدك. قد يحتاج الوصول من ثوانٍ إلى دقيقة.
+        </div>
+      )}
 
       <input type="hidden" {...register("email")} />
 

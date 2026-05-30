@@ -62,15 +62,15 @@ export function UserDropdown({
         <Avatar name={user.name} avatarUrl={avatarUrl} />
         {!compact ? (
           <>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1 truncate text-sm font-bold text-slate-950">
-                {user.name}
+            <span className="min-w-0 flex-1 overflow-hidden">
+              <span className="flex min-w-0 items-center gap-1 text-sm font-bold text-slate-950">
+                <span className="min-w-0 truncate">{user.name}</span>
                 {user.profile?.isTrusted ? (
                   <ShieldCheck className="size-4 shrink-0 text-primary" aria-label="موثوق" />
                 ) : null}
               </span>
-              <span className="mt-1 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
-                {roleLabels[user.role]} · {accountTypeLabels[user.accountType]}
+              <span className="mt-1 inline-flex max-w-full items-center truncate whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold leading-5 text-slate-600">
+                {accountTypeLabels[user.accountType]}
               </span>
             </span>
             <ChevronDown className="size-4 text-slate-400" />

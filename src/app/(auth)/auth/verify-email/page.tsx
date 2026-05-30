@@ -9,13 +9,13 @@ export const metadata = {
 export default async function VerifyEmailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; sent?: string }>;
 }) {
-  const { email } = await searchParams;
+  const { email, sent } = await searchParams;
 
   if (!email) {
     redirect("/auth/register");
   }
 
-  return <VerifyEmailForm email={email} />;
+  return <VerifyEmailForm email={email} initialSendFailed={sent === "0"} />;
 }
