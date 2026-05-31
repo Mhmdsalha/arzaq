@@ -12,7 +12,7 @@ import type { Category, ProviderProfile } from "@/types/marketplace";
 const initialFilters: ProviderFilterState = {
   region: "all",
   category: "all",
-  trustedOnly: true,
+  trustedOnly: false,
 };
 
 export function ProviderList({

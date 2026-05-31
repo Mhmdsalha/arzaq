@@ -20,12 +20,12 @@ export function FeaturedProvidersSection({
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <h2 className="text-3xl font-bold text-slate-950">
-              {isTrustedMode ? "مقدمو خدمات موثقون" : "مقدمو خدمات بارزون"}
+              {isTrustedMode ? "مقدمو خدمات موثقون من الإدارة" : "مقدمو خدمات بارزون"}
             </h2>
             <p className="mt-2 text-slate-600">
               {isTrustedMode
-                ? "تظهر هنا الحسابات التي تم توثيقها، لتختار مقدم الخدمة المناسب بثقة."
-                : "تظهر هنا بعض حسابات مقدمي الخدمات النشطة إلى حين تفعيل نظام التوثيق الكامل."}
+                ? "تظهر هنا الحسابات التي تم توثيقها رسمياً بعد تنفيذ عروض مقبولة."
+                : "تظهر هنا بعض حسابات مقدمي الخدمات الذين وثقوا بريدهم، مع أولوية للحسابات الموثقة من الإدارة."}
             </p>
           </div>
           <Link href="/providers" className="text-sm font-semibold text-primary-dark">

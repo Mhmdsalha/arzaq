@@ -26,7 +26,7 @@ export function ProviderFilters({
         <button
           type="button"
           className="min-h-11 rounded-xl px-3 text-sm font-medium text-primary-dark"
-          onClick={() => onChange({ region: "all", category: "all", trustedOnly: true })}
+          onClick={() => onChange({ region: "all", category: "all", trustedOnly: false })}
         >
           مسح
         </button>
@@ -54,7 +54,7 @@ export function ProviderFilters({
             onChange={(event) => onChange({ ...value, trustedOnly: event.target.checked })}
             className="size-5 rounded border-emerald-300 text-primary focus:ring-primary"
           />
-          الموثقون فقط
+          الموثقون من الإدارة فقط
         </label>
       </div>
     </aside>

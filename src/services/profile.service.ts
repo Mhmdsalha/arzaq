@@ -241,11 +241,9 @@ export const getPublicProviders = cache(async (): Promise<ProviderProfile[]> => 
     const providers = await prisma.user.findMany({
       where: {
         accountType: "PROVIDER",
+        isVerified: true,
         deletedAt: null,
         isBanned: false,
-        profile: {
-          isTrusted: true,
-        },
       },
       orderBy: {
         createdAt: "desc",
@@ -272,21 +270,19 @@ export const getFeaturedProvidersForHome = cache(async (): Promise<{
   }
 
   try {
-    const trustedProviders = await prisma.user.findMany({
+    const providers = await prisma.user.findMany({
       where: {
         accountType: "PROVIDER",
+        isVerified: true,
         deletedAt: null,
         isBanned: false,
-        profile: {
-          isTrusted: true,
-        },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ profile: { isTrusted: "desc" } }, { createdAt: "desc" }],
       take: 4,
       select: publicProviderCardSelect(),
     });
 
-    return { providers: trustedProviders.map(mapPublicProviderCard), mode: "trusted" };
+    return { providers: providers.map(mapPublicProviderCard), mode: "featured" };
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       return { providers: [], mode: "featured" };
@@ -307,11 +303,9 @@ export const getPublicProviderById = cache(
         where: {
           id: providerId,
           accountType: "PROVIDER",
+          isVerified: true,
           deletedAt: null,
           isBanned: false,
-          profile: {
-            isTrusted: true,
-          },
         },
         select: publicProviderSelect(),
       });
