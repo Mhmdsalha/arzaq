@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -16,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { loginSchema, type LoginInput } from "@/schemas/auth.schema";
 
 export function AdminLoginForm() {
-  const router = useRouter();
   const submittingRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const {
@@ -59,8 +57,7 @@ export function AdminLoginForm() {
         return;
       }
 
-      router.replace(result.redirectTo ?? "/admin");
-      router.refresh();
+      window.location.assign(result.redirectTo ?? "/admin");
     });
   }
 

@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useEffect, useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -26,7 +25,6 @@ export function LoginForm({
   verifiedSuccess?: boolean;
   callbackUrl?: string;
 }) {
-  const router = useRouter();
   const submittingRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const {
@@ -78,8 +76,7 @@ export function LoginForm({
         return;
       }
 
-      router.replace(result.redirectTo ?? "/dashboard");
-      router.refresh();
+      window.location.assign(result.redirectTo ?? "/dashboard");
     });
   }
 
