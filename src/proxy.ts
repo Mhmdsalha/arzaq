@@ -2,19 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { getAuthenticatedRedirect, getAuthRedirect } from "@/lib/redirects";
+import { getAuthRedirect } from "@/lib/redirects";
 
 type SessionToken = {
   role?: "USER" | "ADMIN";
   accountType?: "CLIENT" | "PROVIDER";
 };
-
-const authRoutes = [
-  "/auth/login",
-  "/auth/register",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-];
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -35,10 +28,6 @@ export default async function proxy(request: NextRequest) {
     }
 
     return NextResponse.next();
-  }
-
-  if (authRoutes.some((route) => pathname.startsWith(route)) && isAuthenticated) {
-    return NextResponse.redirect(new URL(getAuthenticatedRedirect(accountType), request.url));
   }
 
   if (pathname.startsWith("/admin")) {

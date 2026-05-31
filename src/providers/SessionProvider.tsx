@@ -11,7 +11,7 @@ export function AuthSessionProvider({
   session: Session | null;
 }) {
   return (
-    <SessionProvider session={session} refetchInterval={5 * 60}>
+    <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus>
       {children}
     </SessionProvider>
   );
