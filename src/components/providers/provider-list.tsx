@@ -15,6 +15,8 @@ const initialFilters: ProviderFilterState = {
   trustedOnly: false,
 };
 
+const PROVIDERS_PER_PAGE = 10;
+
 export function ProviderList({
   providers,
   categories,
@@ -26,6 +28,7 @@ export function ProviderList({
 }) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState(initialFilters);
+  const [page, setPage] = useState(1);
 
   const filteredProviders = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -45,30 +48,53 @@ export function ProviderList({
     });
   }, [filters, providers, query]);
 
+  const totalPages = Math.max(Math.ceil(filteredProviders.length / PROVIDERS_PER_PAGE), 1);
+  const visibleProviders = filteredProviders.slice(
+    (page - 1) * PROVIDERS_PER_PAGE,
+    page * PROVIDERS_PER_PAGE,
+  );
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    document.getElementById("providers-results")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <div className="grid gap-5 lg:grid-cols-[280px_1fr] lg:gap-6">
-      <ProviderFilters
-        categories={categories}
-        regions={regions}
-        value={filters}
-        onChange={setFilters}
-      />
+        <ProviderFilters
+          categories={categories}
+          regions={regions}
+          value={filters}
+          onChange={(nextFilters) => {
+            setFilters(nextFilters);
+            setPage(1);
+          }}
+        />
 
-      <section className="space-y-5">
+      <section id="providers-results" className="scroll-mt-24 space-y-5">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <SearchInput
             value={query}
-            onChange={setQuery}
+            onChange={(nextQuery) => {
+              setQuery(nextQuery);
+              setPage(1);
+            }}
             placeholder="ابحث بالاسم، المهارة أو المجال..."
           />
           <p className="mt-3 text-xs leading-relaxed text-slate-500 sm:text-sm">
             تم العثور على {filteredProviders.length} مقدم خدمة.
+            {filteredProviders.length > PROVIDERS_PER_PAGE
+              ? ` تظهر الصفحة ${page} من ${totalPages}.`
+              : ""}
           </p>
         </div>
 
         {filteredProviders.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2">
-            {filteredProviders.map((provider) => (
+            {visibleProviders.map((provider) => (
               <ProviderCard key={provider.id} provider={provider} />
             ))}
           </div>
@@ -76,7 +102,9 @@ export function ProviderList({
           <EmptyState title="لا يوجد أي مقدم خدمة مطابق للبحث" />
         )}
 
-        {filteredProviders.length > 0 ? <Pagination currentPage={1} totalPages={2} /> : null}
+        {filteredProviders.length > PROVIDERS_PER_PAGE ? (
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+        ) : null}
       </section>
     </div>
   );

@@ -58,11 +58,11 @@ export function ProviderCard({ provider }: { provider: ProviderProfile }) {
 
       <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <StarRating value={provider.rating} showValue />
-        <div className="grid grid-cols-2 gap-2 sm:flex">
+        <div className="grid grid-cols-1 gap-2 sm:flex">
           <Button asChild variant="secondary">
             <Link href={`/providers/${provider.id}`}>الملف</Link>
           </Button>
-          <WhatsAppButton phone={provider.whatsapp} label="واتساب" />
+          {provider.whatsapp ? <WhatsAppButton phone={provider.whatsapp} label="واتساب" /> : null}
         </div>
       </div>
     </article>

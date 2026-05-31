@@ -334,6 +334,7 @@ function publicProviderSelect() {
         region: true,
         whatsapp: true,
         showWhatsapp: true,
+        portfolioUrls: true,
         avgRating: true,
         totalReviews: true,
         isTrusted: true,
@@ -401,6 +402,7 @@ function publicProviderCardSelect() {
         region: true,
         whatsapp: true,
         showWhatsapp: true,
+        portfolioUrls: true,
         avgRating: true,
         totalReviews: true,
         isTrusted: true,
@@ -452,6 +454,7 @@ function mapPublicProvider(provider: PublicProviderPayload): ProviderProfile {
     completedJobs: provider.offers.length,
     isTrusted: profile?.isTrusted ?? false,
     whatsapp: profile?.showWhatsapp ? (profile.whatsapp ?? "") : "",
+    portfolioUrls: profile?.portfolioUrls ?? [],
     portfolio:
       profile?.portfolioItems.map((item) => ({
         id: item.id,
@@ -486,6 +489,7 @@ function mapPublicProviderCard(provider: PublicProviderCardPayload): ProviderPro
     completedJobs: provider.offers.length,
     isTrusted: profile?.isTrusted ?? false,
     whatsapp: profile?.showWhatsapp ? (profile.whatsapp ?? "") : "",
+    portfolioUrls: profile?.portfolioUrls ?? [],
     portfolio: [],
     reviews: [],
   };

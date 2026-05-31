@@ -7,10 +7,14 @@ export function WhatsAppButton({
   label = "تواصل عبر واتساب",
   className,
 }: {
-  phone: string;
+  phone?: string | null;
   label?: string;
   className?: string;
 }) {
+  if (!phone) {
+    return null;
+  }
+
   return (
     <Button asChild className={className}>
       <a href={`https://wa.me/${phone}`} target="_blank" rel="noreferrer">

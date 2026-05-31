@@ -51,7 +51,7 @@ export function ProviderProfile({ provider }: { provider: ProviderProfileType })
           </CardContent>
         </Card>
 
-        <ProviderPortfolio items={provider.portfolio} />
+        <ProviderPortfolio items={provider.portfolio} links={provider.portfolioUrls ?? []} />
         <ProviderReviews reviews={provider.reviews} />
       </article>
 
