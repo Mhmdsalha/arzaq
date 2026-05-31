@@ -18,7 +18,7 @@ function createPrismaClient() {
       db: {
         url:
           process.env.NODE_ENV === "development"
-            ? env.DATABASE_URL_UNPOOLED
+            ? (env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL)
             : env.DATABASE_URL,
       },
     },

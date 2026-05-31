@@ -95,8 +95,8 @@ Then fill in the required values. The most important variables are:
 
 ```env
 DATABASE_URL=""
-DATABASE_URL_UNPOOLED=""
-NEXTAUTH_SECRET=""
+DATABASE_URL_UNPOOLED="" # optional for app runtime, recommended for migrations
+NEXTAUTH_SECRET=""       # or AUTH_SECRET
 NEXTAUTH_URL="http://localhost:3000"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 
@@ -120,6 +120,26 @@ EMAIL_FROM="Arzaq <your-email@gmail.com>"
 ```
 
 Do not use a normal Gmail password. Use a Gmail App Password for SMTP during development.
+
+### Required Vercel environment variables
+
+Vercel builds will fail if the required production variables are missing. Add these in **Project Settings -> Environment Variables**:
+
+```env
+DATABASE_URL=""
+NEXTAUTH_SECRET="" # or AUTH_SECRET
+NEXTAUTH_URL=""
+NEXT_PUBLIC_SITE_URL=""
+
+CLOUDFLARE_ACCOUNT_ID=""
+CLOUDFLARE_R2_ACCESS_KEY_ID=""
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=""
+CLOUDFLARE_R2_BUCKET_NAME=""
+CLOUDFLARE_R2_PUBLIC_URL=""
+NEXT_PUBLIC_R2_PUBLIC_URL=""
+```
+
+`DATABASE_URL_UNPOOLED` is optional for the running Vercel app, but should be configured wherever Prisma migrations are executed.
 
 ### 3. Prepare the database
 
