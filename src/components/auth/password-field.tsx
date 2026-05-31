@@ -30,7 +30,8 @@ export function PasswordField({
           type={isVisible ? "text" : "password"}
           autoComplete={autoComplete}
           aria-invalid={Boolean(error)}
-          className="h-12 rounded-xl border-slate-200 px-4 pl-11 text-right text-base focus:border-primary focus-visible:ring-primary/20"
+          dir="ltr"
+          className="h-12 rounded-xl border-slate-200 px-4 pl-11 text-left text-base focus:border-primary focus-visible:ring-primary/20"
           {...props}
         />
         <button

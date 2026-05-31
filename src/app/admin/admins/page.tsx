@@ -57,7 +57,8 @@ export default async function AdminAccountsPage() {
                 name="password"
                 type="password"
                 minLength={8}
-                className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-white outline-none focus:border-primary"
+                dir="ltr"
+                className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-left text-white outline-none focus:border-primary"
               />
             </label>
             <button className="mt-2 min-h-11 rounded-xl bg-primary px-5 font-semibold text-white hover:bg-primary-dark">
