@@ -3,13 +3,17 @@ import { Suspense } from "react";
 import { ProviderList } from "@/components/providers/provider-list";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { PageHeader } from "@/components/shared/page-header";
+import { createPageMetadata } from "@/lib/seo";
 import { categories } from "@/mock/categories";
 import { regions } from "@/mock/regions";
 import { getPublicProviders } from "@/services/profile.service";
 
-export const metadata = {
-  title: "مقدمو الخدمات",
-};
+export const metadata = createPageMetadata({
+  title: "مقدمو الخدمات في غزة",
+  description:
+    "ابحث عن مقدمي خدمات في غزة حسب المهارة والمنطقة: تصميم، برمجة، تدريس، إدخال بيانات، صيانة وخدمات ميدانية.",
+  path: "/providers",
+});
 
 export const dynamic = "force-dynamic";
 

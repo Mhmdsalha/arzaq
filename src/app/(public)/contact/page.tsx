@@ -4,10 +4,13 @@ import { PageHeader } from "@/components/shared/page-header";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: "تواصل معنا",
-};
+  description: "تواصل مع فريق أرزاق للاقتراحات، الشراكات، الدعم، أو المساعدة في إطلاق المنصة.",
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

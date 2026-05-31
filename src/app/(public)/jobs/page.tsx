@@ -4,12 +4,16 @@ import { JobList } from "@/components/jobs/job-list";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { regionLabels } from "@/constants/regions";
+import { createPageMetadata } from "@/lib/seo";
 import { jobFiltersSchema } from "@/schemas/job.schema";
 import { getCachedJobFilterOptions, getCachedJobsWithFilters } from "@/services/job.service";
 
-export const metadata = {
-  title: "طلبات العمل والخدمات",
-};
+export const metadata = createPageMetadata({
+  title: "طلبات العمل والخدمات في غزة",
+  description:
+    "تصفح أحدث طلبات العمل والخدمات المفتوحة في غزة، وفرز الفرص حسب المنطقة، المجال، طريقة العمل والطلبات العاجلة.",
+  path: "/jobs",
+});
 
 export const revalidate = 60;
 

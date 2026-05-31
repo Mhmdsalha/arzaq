@@ -1,8 +1,12 @@
 import { PageHeader } from "@/components/shared/page-header";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: "إرشادات السلامة",
-};
+  description:
+    "إرشادات لحماية المستخدمين عند نشر الطلبات، تقديم العروض، التواصل عبر واتساب، الاتفاق المالي والإبلاغ عن المخالفات.",
+  path: "/safety",
+});
 
 export default function SafetyPage() {
   return (
@@ -28,7 +32,10 @@ export default function SafetyPage() {
               body: "لا تشارك كلمات المرور أو رموز التوثيق أو معلومات شخصية غير ضرورية.",
             },
           ].map((item) => (
-            <article key={item.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <article
+              key={item.title}
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
               <h2 className="text-xl font-bold text-slate-950">{item.title}</h2>
               <p className="mt-3 leading-8 text-slate-600">{item.body}</p>
             </article>

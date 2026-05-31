@@ -1,5 +1,13 @@
+import { createPageMetadata } from "@/lib/seo";
 import { AuthFormWrapper } from "@/components/auth/AuthFormWrapper";
 import { GreenMarketingPanel } from "@/components/auth/GreenMarketingPanel";
+
+export const metadata = createPageMetadata({
+  title: "الدخول إلى أرزاق",
+  description: "صفحات تسجيل الدخول وإنشاء الحساب في منصة أرزاق.",
+  path: "/auth/login",
+  noIndex: true,
+});
 
 export default function AuthLayout({
   children,

@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { CTASection } from "@/components/home/cta-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { PageHeader } from "@/components/shared/page-header";
+import { createPageMetadata } from "@/lib/seo";
 
 const principles = [
   "لا توجد مدفوعات داخل المنصة في المرحلة الحالية.",
@@ -11,9 +12,12 @@ const principles = [
   "الواجهة مصممة لتكون عربية، خفيفة، ومناسبة للجوال أولًا.",
 ];
 
-export const metadata = {
-  title: "كيف تعمل أرزاق",
-};
+export const metadata = createPageMetadata({
+  title: "كيف يعمل أرزاق",
+  description:
+    "تعرف على طريقة استخدام أرزاق: نشر طلب، مراجعة الإدارة، استقبال العروض، قبول مقدم الخدمة والتواصل بأمان.",
+  path: "/how-it-works",
+});
 
 export default function HowItWorksPage() {
   return (

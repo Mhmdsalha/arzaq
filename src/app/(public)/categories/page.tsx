@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { createPageMetadata } from "@/lib/seo";
 import { categories } from "@/mock/categories";
 
 const iconMap = {
@@ -20,9 +21,12 @@ const iconMap = {
   Palette,
 };
 
-export const metadata = {
-  title: "التصنيفات",
-};
+export const metadata = createPageMetadata({
+  title: "تصنيفات الخدمات",
+  description:
+    "استعرض تصنيفات الخدمات في أرزاق: الخدمات الرقمية، التعليمية، الميدانية، الفرص اليومية والعمل من البيت.",
+  path: "/categories",
+});
 
 export default function CategoriesPage() {
   return (

@@ -1,6 +1,7 @@
 import { HeartHandshake, ShieldCheck, Smartphone } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { createPageMetadata } from "@/lib/seo";
 
 const values = [
   {
@@ -20,9 +21,12 @@ const values = [
   },
 ];
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: "عن أرزاق",
-};
+  description:
+    "تعرف على أرزاق، منصة سوق العمل والخدمات المحلية في غزة التي تربط أصحاب الطلبات بمقدمي الخدمات بطريقة منظمة وموثوقة.",
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (
@@ -39,7 +43,8 @@ export default function AboutPage() {
           </h2>
           <p className="leading-8 text-slate-600">
             كثير من الفرص المحلية تبدأ برسالة واتساب أو توصية شخصية. أرزاق ينظم هذه التجربة: طلبات
-            واضحة، ملفات مقدمي الخدمات، تقييمات، وتصنيفات تساعد الجميع في العثور على الشخص المناسب بسرعة.
+            واضحة، ملفات مقدمي الخدمات، تقييمات، وتصنيفات تساعد الجميع في العثور على الشخص المناسب
+            بسرعة.
           </p>
         </div>
         <div className="grid gap-4">
