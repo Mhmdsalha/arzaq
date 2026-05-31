@@ -4,6 +4,7 @@ import Link from "next/link";
 import { adminDeleteJobFormAction } from "@/actions/admin.actions";
 import { adminJobStatusLabels } from "@/constants/jobs";
 import { regionLabels } from "@/constants/regions";
+import { getAdminHref } from "@/lib/admin-path";
 import { getAdminJobs } from "@/services/admin.service";
 
 const jobStatusValues: JobStatus[] = [
@@ -35,7 +36,7 @@ export default async function AdminJobsPage({
             افتح صفحة المراجعة الداخلية لكل طلب لاعتماده أو إرجاعه للعميل للتعديل.
           </p>
         </div>
-        <Link href="/admin" className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">
+        <Link href={getAdminHref()} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">
           رجوع
         </Link>
       </div>
@@ -93,7 +94,7 @@ export default async function AdminJobsPage({
 
               <div className="flex flex-wrap gap-2">
                 <Link
-                  href={`/admin/jobs/${job.id}`}
+                  href={getAdminHref(`/jobs/${job.id}`)}
                   className="inline-flex min-h-10 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark"
                 >
                   مراجعة الطلب

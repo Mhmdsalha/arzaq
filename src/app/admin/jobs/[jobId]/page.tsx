@@ -8,6 +8,7 @@ import {
 } from "@/actions/admin.actions";
 import { adminJobStatusLabels, workModeLabels } from "@/constants/jobs";
 import { regionLabels } from "@/constants/regions";
+import { getAdminHref } from "@/lib/admin-path";
 import { getAdminJobById } from "@/services/admin.service";
 
 export const metadata = {
@@ -42,7 +43,7 @@ export default async function AdminJobReviewPage({
           </p>
         </div>
         <Link
-          href="/admin/jobs"
+          href={getAdminHref("/jobs")}
           className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200"
         >
           رجوع للطلبات

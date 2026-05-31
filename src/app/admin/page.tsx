@@ -1,35 +1,36 @@
 import Link from "next/link";
 
+import { getAdminHref } from "@/lib/admin-path";
 import { getAdminOverview, getAdminQueueSnapshot } from "@/services/admin.service";
 
 const adminLinks = [
   {
-    href: "/admin/admins",
+    href: getAdminHref("/admins"),
     label: "حسابات الإدارة",
     description: "إضافة حسابات أدمن جديدة وإدارة دخول الفريق.",
   },
   {
-    href: "/admin/users",
+    href: getAdminHref("/users"),
     label: "إدارة المستخدمين",
     description: "حظر، توثيق، ومراجعة حسابات أصحاب الطلبات ومقدمي الخدمات.",
   },
   {
-    href: "/admin/verification",
+    href: getAdminHref("/verification"),
     label: "طلبات التوثيق",
     description: "مراجعة طلبات التوثيق الرسمي لمقدمي الخدمات المؤهلين.",
   },
   {
-    href: "/admin/jobs",
+    href: getAdminHref("/jobs"),
     label: "مراجعة الطلبات",
     description: "اعتماد الطلبات الجديدة أو إرجاعها للعميل للتعديل قبل النشر.",
   },
   {
-    href: "/admin/reports",
+    href: getAdminHref("/reports"),
     label: "البلاغات",
     description: "متابعة بلاغات المستخدمين والتعامل مع المحتوى المخالف.",
   },
   {
-    href: "/admin/audit",
+    href: getAdminHref("/audit"),
     label: "سجل التدقيق",
     description: "تتبع العمليات الحساسة داخل المنصة.",
   },
@@ -94,18 +95,18 @@ export default async function AdminPage() {
       <div className="mt-6 grid gap-4 xl:grid-cols-3">
         <QueueCard
           title="طلبات بانتظار المراجعة"
-          href="/admin/jobs?status=PENDING_REVIEW"
+          href={getAdminHref("/jobs?status=PENDING_REVIEW")}
           empty="لا توجد طلبات جديدة."
           items={queue.pendingJobs.map((job) => ({
             id: job.id,
             title: job.title,
             meta: `${job.code} · ${job.author.name}`,
-            href: `/admin/jobs/${job.id}`,
+            href: getAdminHref(`/jobs/${job.id}`),
           }))}
         />
         <QueueCard
           title="طلبات توثيق معلقة"
-          href="/admin/verification?status=PENDING"
+          href={getAdminHref("/verification?status=PENDING")}
           empty="لا توجد طلبات توثيق."
           items={queue.verificationRequests.map((request) => ({
             id: request.id,
@@ -113,18 +114,18 @@ export default async function AdminPage() {
             meta: `${request.provider.profile?.avgRating.toFixed(1) ?? "0.0"} تقييم · ${
               request.provider.profile?.totalReviews ?? 0
             } مراجعة`,
-            href: "/admin/verification?status=PENDING",
+            href: getAdminHref("/verification?status=PENDING"),
           }))}
         />
         <QueueCard
           title="بلاغات معلقة"
-          href="/admin/reports?status=PENDING"
+          href={getAdminHref("/reports?status=PENDING")}
           empty="لا توجد بلاغات معلقة."
           items={queue.pendingReports.map((report) => ({
             id: report.id,
             title: report.reason,
             meta: `${report.reporter.name} · ${report.targetType}`,
-            href: "/admin/reports?status=PENDING",
+            href: getAdminHref("/reports?status=PENDING"),
           }))}
         />
       </div>

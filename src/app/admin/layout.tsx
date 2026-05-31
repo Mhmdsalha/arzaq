@@ -1,4 +1,8 @@
+import { notFound } from "next/navigation";
+
 import { AdminShell } from "@/components/admin/admin-shell";
+import { getAdminBasePath } from "@/lib/admin-path";
+import { auth } from "@/lib/auth";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -8,10 +12,16 @@ export const metadata = createPageMetadata({
   noIndex: true,
 });
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AdminShell>{children}</AdminShell>;
+  const session = await auth();
+
+  if (session?.user?.role !== "ADMIN") {
+    notFound();
+  }
+
+  return <AdminShell basePath={getAdminBasePath()}>{children}</AdminShell>;
 }

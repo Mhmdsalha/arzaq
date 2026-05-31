@@ -66,6 +66,9 @@ const envSchema = z
     TWILIO_VERIFY_SERVICE_SID: optionalString,
 
     SENTRY_DSN: optionalUrl,
+
+    ADMIN_ALLOWED_IPS: optionalString,
+    ADMIN_SECRET_PATH: optionalString,
   })
   .superRefine((value, ctx) => {
     const authSecret = value.NEXTAUTH_SECRET ?? value.AUTH_SECRET;
