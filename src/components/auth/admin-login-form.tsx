@@ -2,8 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useTransition } from "react";
+import { useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -15,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { loginSchema, type LoginInput } from "@/schemas/auth.schema";
 
 export function AdminLoginForm() {
+  const router = useRouter();
+  const submittingRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -29,20 +32,35 @@ export function AdminLoginForm() {
   });
 
   function onSubmit(values: LoginInput) {
+    if (submittingRef.current) {
+      return;
+    }
+
+    submittingRef.current = true;
     startTransition(async () => {
       const result = await adminLoginAction(values);
 
       if (!result.ok) {
+        submittingRef.current = false;
         toast.error(result.message);
         return;
       }
 
       toast.success(result.message);
-      await signIn("credentials", {
+      const signInResult = await signIn("credentials", {
         identifier: values.identifier,
         password: values.password,
-        redirectTo: result.redirectTo ?? "/admin",
+        redirect: false,
       });
+
+      if (signInResult?.error) {
+        submittingRef.current = false;
+        toast.error(result.message);
+        return;
+      }
+
+      router.replace(result.redirectTo ?? "/admin");
+      router.refresh();
     });
   }
 

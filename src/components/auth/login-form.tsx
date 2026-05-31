@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useEffect, useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -25,6 +26,8 @@ export function LoginForm({
   verifiedSuccess?: boolean;
   callbackUrl?: string;
 }) {
+  const router = useRouter();
+  const submittingRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -49,19 +52,34 @@ export function LoginForm({
   }, [resetSuccess, verifiedSuccess]);
 
   function onSubmit(values: LoginInput) {
+    if (submittingRef.current) {
+      return;
+    }
+
+    submittingRef.current = true;
     startTransition(async () => {
       const result = await loginAction(values, callbackUrl);
 
       if (!result.ok) {
+        submittingRef.current = false;
         toast.error(result.message);
         return;
       }
 
-      await signIn("credentials", {
+      const signInResult = await signIn("credentials", {
         identifier: values.identifier,
         password: values.password,
-        redirectTo: result.redirectTo ?? "/dashboard",
+        redirect: false,
       });
+
+      if (signInResult?.error) {
+        submittingRef.current = false;
+        toast.error(result.message);
+        return;
+      }
+
+      router.replace(result.redirectTo ?? "/dashboard");
+      router.refresh();
     });
   }
 
