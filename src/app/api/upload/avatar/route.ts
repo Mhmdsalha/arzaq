@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { validateCSRFToken } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { rateLimiters } from "@/lib/rateLimit";
-import { generateFileKey, getPublicUrl, uploadToR2 } from "@/lib/uploadImage";
+import { getPublicUrl, uploadToR2 } from "@/lib/uploadImage";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const MAX_AVATAR_BYTES = 450 * 1024;
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const key = generateFileKey("avatars", session.user.id, file.name);
+    const key = generateAvatarKey(session.user.id, file.type);
     const buffer = Buffer.from(await file.arrayBuffer());
 
     await uploadToR2({
@@ -86,4 +86,15 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "تعذر رفع الصورة، حاول مرة أخرى" }, { status: 500 });
   }
+}
+
+function generateAvatarKey(userId: string, contentType: string) {
+  const extensionByType: Record<(typeof ALLOWED_TYPES)[number], string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const extension = extensionByType[contentType as (typeof ALLOWED_TYPES)[number]];
+
+  return `avatars/${userId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
 }

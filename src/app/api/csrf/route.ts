@@ -3,5 +3,12 @@ import { NextResponse } from "next/server";
 import { generateCSRFToken } from "@/lib/csrf";
 
 export function GET() {
-  return NextResponse.json({ token: generateCSRFToken() });
+  return NextResponse.json(
+    { token: generateCSRFToken() },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
 }

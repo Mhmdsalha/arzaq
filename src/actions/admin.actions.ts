@@ -254,6 +254,10 @@ export async function updateReportStatusAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    if (!["PENDING", "REVIEWED", "RESOLVED", "DISMISSED"].includes(status)) {
+      return { ok: false, message: "حالة البلاغ غير صحيحة" };
+    }
+
     const report = await updateReportReview(
       sanitizeText(reportId),
       status,

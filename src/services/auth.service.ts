@@ -297,7 +297,7 @@ export async function createPasswordResetCode(identifier: string) {
 
   const resetToken = await prisma.passwordResetToken.create({
     data: {
-      token: hashVerificationCode(code),
+      token: hashPasswordResetCode(user.id, code),
       userId: user.id,
       expiresAt,
     },
@@ -342,7 +342,7 @@ export async function resetPassword(input: { email: string; code: string; passwo
     },
   });
 
-  if (!resetToken || !safeCompare(resetToken.token, hashVerificationCode(input.code))) {
+  if (!resetToken || !safeCompare(resetToken.token, hashPasswordResetCode(user.id, input.code))) {
     throw new Error("رمز إعادة التعيين غير صحيح أو منتهي");
   }
 
@@ -401,6 +401,11 @@ function phoneToWhatsApp(phone: string) {
 function hashVerificationCode(code: string) {
   const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "arzaq-dev-secret";
   return createHash("sha256").update(`${code}:${secret}`).digest("hex");
+}
+
+function hashPasswordResetCode(userId: string, code: string) {
+  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "arzaq-dev-secret";
+  return createHash("sha256").update(`${userId}:${code}:${secret}`).digest("hex");
 }
 
 function safeCompare(a: string, b: string) {

@@ -102,6 +102,22 @@ export async function updateAccountSettings(
   const phone = normalizePhone(input.phone);
   const email = input.email ? input.email.toLowerCase() : null;
 
+  const currentUser = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      deletedAt: null,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  if (!currentUser) {
+    throw new Error("الحساب غير موجود");
+  }
+
+  const emailChanged = email !== currentUser.email;
+
   const existingUser = await prisma.user.findFirst({
     where: {
       id: {
@@ -130,8 +146,11 @@ export async function updateAccountSettings(
     data: {
       phone,
       email,
+      ...(emailChanged ? { isVerified: false } : {}),
     },
   });
+
+  return { emailChanged, email };
 }
 
 export async function changeUserPassword(

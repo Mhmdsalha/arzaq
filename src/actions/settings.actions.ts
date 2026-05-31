@@ -6,6 +6,7 @@ import type { ActionResult } from "@/actions/auth.actions";
 import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { requireNotBanned } from "@/lib/authGuards";
+import { sendEmailVerificationCode } from "@/lib/email";
 import { sanitizePhone, sanitizeText } from "@/lib/sanitize";
 import {
   accountSettingsSchema,
@@ -15,6 +16,7 @@ import {
 } from "@/schemas/settings.schema";
 import { changeUserPassword, updateAccountSettings } from "@/services/settings.service";
 import { switchAccountType } from "@/services/settings.service";
+import { createEmailVerificationCode } from "@/services/auth.service";
 import type { AccountType } from "@prisma/client";
 
 export async function updateAccountSettingsAction(
@@ -37,10 +39,19 @@ export async function updateAccountSettingsAction(
 
   try {
     await requireNotBanned();
-    await updateAccountSettings(session.user.id, {
+    const result = await updateAccountSettings(session.user.id, {
       phone: sanitizePhone(parsed.data.phone),
       email: parsed.data.email ? sanitizeText(parsed.data.email).toLowerCase() : undefined,
     });
+
+    if (result.emailChanged && result.email) {
+      const verification = await createEmailVerificationCode(session.user.id, result.email);
+      await sendEmailVerificationCode({
+        to: result.email,
+        name: session.user.name ?? "مستخدم أرزاق",
+        code: verification.code,
+      });
+    }
   } catch (error) {
     return {
       ok: false,
@@ -50,7 +61,10 @@ export async function updateAccountSettingsAction(
 
   revalidatePath("/dashboard/settings");
 
-  return { ok: true, message: "تم تحديث بيانات الحساب" };
+  return {
+    ok: true,
+    message: "تم تحديث بيانات الحساب. إذا غيّرت البريد، أرسلنا رمز تحقق للبريد الجديد",
+  };
 }
 
 export async function changePasswordAction(input: ChangePasswordInput): Promise<ActionResult> {
@@ -100,6 +114,10 @@ export async function switchAccountTypeAction(
   }
 
   try {
+    if (!["CLIENT", "PROVIDER"].includes(targetAccountType)) {
+      return { ok: false, message: "نوع الحساب غير صحيح" };
+    }
+
     await requireNotBanned();
     const result = await switchAccountType(session.user.id, targetAccountType);
 

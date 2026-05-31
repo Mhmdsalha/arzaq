@@ -419,6 +419,7 @@ export async function createJob(data: CreateJobInput, userId: string) {
   }
 
   assertClient(user.accountType);
+  await assertCategoryExists(data.categoryId);
 
   const job = await prisma.jobPost.create({
     data: {
@@ -448,6 +449,8 @@ export async function createJob(data: CreateJobInput, userId: string) {
 }
 
 export async function updateJob(id: string, data: CreateJobInput, userId: string) {
+  await assertCategoryExists(data.categoryId);
+
   const result = await prisma.jobPost.updateMany({
     where: {
       id,
@@ -475,6 +478,21 @@ export async function updateJob(id: string, data: CreateJobInput, userId: string
     throw new Error("لا يمكن تعديل هذا الطلب");
   }
   await notifyAdminsForJobReview(id, data.title);
+}
+
+async function assertCategoryExists(categoryId: string) {
+  const category = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!category) {
+    throw new Error("التصنيف غير صحيح");
+  }
 }
 
 export async function closeJob(id: string, userId: string) {
