@@ -1,24 +1,32 @@
-import DOMPurify from "isomorphic-dompurify";
+const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+const HTML_TAGS = /<[^>]*>/g;
+const HTML_ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": "\"",
+  "&#39;": "'",
+  "&nbsp;": " ",
+};
+
+function decodeBasicEntities(input: string): string {
+  return input.replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (entity) => HTML_ENTITIES[entity] ?? "");
+}
 
 export function sanitizeText(input: string): string {
   if (!input) {
     return "";
   }
 
-  return DOMPurify.sanitize(input, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+  return decodeBasicEntities(input)
+    .replace(HTML_TAGS, "")
+    .replace(CONTROL_CHARS, "")
     .trim()
     .replace(/\s+/g, " ");
 }
 
 export function sanitizeHTML(input: string): string {
-  if (!input) {
-    return "";
-  }
-
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ["b", "i", "br", "p"],
-    ALLOWED_ATTR: [],
-  }).trim();
+  return sanitizeText(input);
 }
 
 export function sanitizeUrl(url: string): string {
