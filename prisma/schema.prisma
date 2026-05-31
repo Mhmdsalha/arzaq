@@ -219,6 +219,7 @@ model Review {
   receiver User     @relation("ReviewsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
   jobPost  JobPost? @relation(fields: [jobPostId], references: [id], onDelete: SetNull)
 
+  @@unique([giverId, jobPostId])
   @@index([giverId])
   @@index([receiverId])
   @@index([receiverId, createdAt])

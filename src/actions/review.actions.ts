@@ -46,7 +46,9 @@ export async function createReviewAction(input: CreateReviewInput): Promise<Revi
 
     revalidatePath("/dashboard/offers");
     revalidatePath(`/dashboard/jobs/${parsed.data.jobPostId}/offers`);
+    revalidatePath("/providers");
     revalidatePath(`/providers/${parsed.data.receiverId}`);
+    revalidatePath("/");
     logAudit("CREATE_REVIEW", {
       userId: session.user.id,
       entityType: "Review",

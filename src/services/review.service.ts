@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import type { CreateReviewInput } from "@/schemas/review.schema";
 
@@ -53,53 +55,61 @@ export async function createReview(data: CreateReviewInput, giverId: string) {
     throw new Error("قيّمت هذا الطلب مسبقاً");
   }
 
-  const review = await prisma.$transaction(async (tx) => {
-    const createdReview = await tx.review.create({
-      data: {
-        rating: data.rating,
-        comment: data.comment?.trim() || null,
-        giverId,
-        receiverId: data.receiverId,
-        jobPostId: job.id,
-      },
-      select: {
-        id: true,
-      },
-    });
+  const review = await prisma
+    .$transaction(async (tx) => {
+      const createdReview = await tx.review.create({
+        data: {
+          rating: data.rating,
+          comment: data.comment?.trim() || null,
+          giverId,
+          receiverId: data.receiverId,
+          jobPostId: job.id,
+        },
+        select: {
+          id: true,
+        },
+      });
 
-    const ratingStats = await tx.review.aggregate({
-      where: {
-        receiverId: data.receiverId,
-      },
-      _avg: {
-        rating: true,
-      },
-      _count: {
-        rating: true,
-      },
-    });
+      const ratingStats = await tx.review.aggregate({
+        where: {
+          receiverId: data.receiverId,
+        },
+        _avg: {
+          rating: true,
+        },
+        _count: {
+          rating: true,
+        },
+      });
 
-    await tx.profile.update({
-      where: {
-        userId: data.receiverId,
-      },
-      data: {
-        avgRating: ratingStats._avg.rating ?? data.rating,
-        totalReviews: ratingStats._count.rating,
-      },
-    });
+      await tx.profile.update({
+        where: {
+          userId: data.receiverId,
+        },
+        data: {
+          avgRating: ratingStats._avg.rating ?? data.rating,
+          totalReviews: ratingStats._count.rating,
+        },
+      });
 
-    await tx.notification.create({
-      data: {
-        userId: data.receiverId,
-        type: "NEW_REVIEW",
-        message: `وصلك تقييم جديد على: ${job.title}`,
-        link: "/dashboard",
-      },
-    });
+      await tx.notification.create({
+        data: {
+          userId: data.receiverId,
+          type: "NEW_REVIEW",
+          message: `وصلك تقييم جديد على: ${job.title}`,
+          link: "/dashboard",
+        },
+      });
 
-    return createdReview;
-  });
+      return createdReview;
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new Error("قيّمت هذا الطلب مسبقاً");
+      }
+
+      throw error;
+    });
 
   return review;
 }
