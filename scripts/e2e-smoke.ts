@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 
 import { approveJobPost } from "../src/services/admin.service";
-import { createJob, getJobsWithFilters } from "../src/services/job.service";
+import { createJob, getJobById, getJobsWithFilters } from "../src/services/job.service";
 import { acceptOffer, createOffer, getJobOffers } from "../src/services/offer.service";
 import { getProviderVerificationSummary } from "../src/services/provider-verification.service";
 import { createReview } from "../src/services/review.service";
@@ -122,6 +122,12 @@ async function main() {
   );
   record("تقديم عرض من مقدم الخدمة", Boolean(offer.id), offer.id);
 
+  const providerJobBeforeAccept = await getJobById(job.id, provider.id);
+  record(
+    "إخفاء واتساب صاحب الطلب قبل قبول العرض",
+    providerJobBeforeAccept?.author.whatsapp === null,
+  );
+
   const jobOffers = await getJobOffers(job.id, client.id);
   record(
     "ظهور العرض لصاحب الطلب",
@@ -138,6 +144,13 @@ async function main() {
     "قبول العرض وإغلاق الطلب",
     acceptedState?.status === "ACCEPTED" && acceptedState.jobPost.status === "IN_PROGRESS",
     `${acceptedState?.status}/${acceptedState?.jobPost.status}`,
+  );
+
+  const providerJobAfterAccept = await getJobById(job.id, provider.id);
+  const guestJobAfterAccept = await getJobById(job.id);
+  record(
+    "إظهار واتساب صاحب الطلب للمقدم المقبول فقط",
+    providerJobAfterAccept?.author.whatsapp === "+970599000000" && guestJobAfterAccept === null,
   );
 
   const providerSummaryAfterAccept = await getNavigationSummaryFresh(provider.id);
@@ -261,6 +274,7 @@ async function createTestUser({
           region: "GAZA_CITY",
           bio: kind === "provider" ? "مقدم خدمة لاختبار السيناريو الكامل." : "حساب اختبار.",
           whatsapp: "+970599000000",
+          showWhatsapp: kind === "provider",
           isTrusted: kind === "provider",
         },
       },

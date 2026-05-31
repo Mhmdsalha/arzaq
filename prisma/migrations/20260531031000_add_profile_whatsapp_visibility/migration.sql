@@ -1,0 +1,1 @@
+ALTER TABLE "Profile" ADD COLUMN "showWhatsapp" BOOLEAN NOT NULL DEFAULT false;

@@ -36,6 +36,7 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
       region: data.profile.region,
       workMode: data.profile.workMode,
       isAvailable: data.profile.isAvailable,
+      showWhatsapp: data.profile.showWhatsapp,
       skills: data.profile.skillIds,
       whatsapp: data.profile.whatsapp,
       avatarUrl: data.profile.avatarUrl,
@@ -138,6 +139,20 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
                   type="checkbox"
                   className="size-5 accent-primary"
                   {...register("isAvailable")}
+                />
+              </label>
+
+              <label className="flex min-h-11 items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <span className="space-y-1">
+                  <span className="block font-semibold">إظهار زر واتساب في حسابي العام</span>
+                  <span className="block text-xs leading-6 text-slate-500">
+                    إذا أوقفته سيبقى الرقم محفوظاً لديك، لكن لن يظهر للزوار أو أصحاب الطلبات.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  className="mt-1 size-5 shrink-0 accent-primary"
+                  {...register("showWhatsapp")}
                 />
               </label>
 

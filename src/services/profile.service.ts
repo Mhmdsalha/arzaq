@@ -13,6 +13,7 @@ type UpdateProfileInput = {
   workMode: WorkMode;
   skills: string[];
   whatsapp?: string;
+  showWhatsapp: boolean;
   avatarUrl?: string;
   portfolioUrls: string[];
   isAvailable: boolean;
@@ -42,6 +43,7 @@ export async function getProfileByUserId(userId: string): Promise<ProfileEditorD
             workMode: true,
             avatarUrl: true,
             whatsapp: true,
+            showWhatsapp: true,
             portfolioUrls: true,
             isAvailable: true,
             skills: {
@@ -83,6 +85,7 @@ export async function getProfileByUserId(userId: string): Promise<ProfileEditorD
         workMode: true,
         avatarUrl: true,
         whatsapp: true,
+        showWhatsapp: true,
         portfolioUrls: true,
         isAvailable: true,
         skills: {
@@ -106,6 +109,7 @@ export async function getProfileByUserId(userId: string): Promise<ProfileEditorD
       workMode: profile.workMode,
       avatarUrl: profile.avatarUrl ?? "",
       whatsapp: profile.whatsapp ?? "",
+      showWhatsapp: profile.showWhatsapp,
       portfolioUrls: profile.portfolioUrls,
       skillIds: profile.skills.map((skill) => skill.skillId),
       isAvailable: profile.isAvailable,
@@ -120,6 +124,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
   const bio = input.bio?.trim() || null;
   const avatarUrl = input.avatarUrl?.trim() || null;
   const whatsapp = input.whatsapp?.trim() || null;
+  const showWhatsapp = Boolean(whatsapp && input.showWhatsapp);
   const portfolioUrls = input.portfolioUrls
     .map((url) => url.trim())
     .filter((url) => url.length > 0);
@@ -159,6 +164,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
           bio,
           workMode: input.workMode,
           isAvailable: input.isAvailable,
+          showWhatsapp,
           portfolioUrls,
           skills: {
             deleteMany: {},
@@ -177,6 +183,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
     region: input.region,
     avatarUrl,
     whatsapp,
+    showWhatsapp: user.accountType === "PROVIDER" ? showWhatsapp : false,
     ...providerProfileData,
   };
 
@@ -201,6 +208,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
         workMode: user.accountType === "PROVIDER" ? input.workMode : "BOTH",
         avatarUrl,
         whatsapp,
+        showWhatsapp: user.accountType === "PROVIDER" ? showWhatsapp : false,
         ...(user.accountType === "PROVIDER"
           ? {
               title,
@@ -331,6 +339,7 @@ function publicProviderSelect() {
         avatarUrl: true,
         region: true,
         whatsapp: true,
+        showWhatsapp: true,
         avgRating: true,
         totalReviews: true,
         isTrusted: true,
@@ -397,6 +406,7 @@ function publicProviderCardSelect() {
         avatarUrl: true,
         region: true,
         whatsapp: true,
+        showWhatsapp: true,
         avgRating: true,
         totalReviews: true,
         isTrusted: true,
@@ -447,7 +457,7 @@ function mapPublicProvider(provider: PublicProviderPayload): ProviderProfile {
     reviewsCount: profile?.totalReviews ?? 0,
     completedJobs: provider.offers.length,
     isTrusted: profile?.isTrusted ?? false,
-    whatsapp: profile?.whatsapp ?? "",
+    whatsapp: profile?.showWhatsapp ? (profile.whatsapp ?? "") : "",
     portfolio:
       profile?.portfolioItems.map((item) => ({
         id: item.id,
@@ -481,7 +491,7 @@ function mapPublicProviderCard(provider: PublicProviderCardPayload): ProviderPro
     reviewsCount: profile?.totalReviews ?? 0,
     completedJobs: provider.offers.length,
     isTrusted: profile?.isTrusted ?? false,
-    whatsapp: profile?.whatsapp ?? "",
+    whatsapp: profile?.showWhatsapp ? (profile.whatsapp ?? "") : "",
     portfolio: [],
     reviews: [],
   };

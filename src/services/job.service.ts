@@ -177,7 +177,18 @@ export const getJobById = cache(
           deletedAt: null,
           ...(userId
             ? {
-                OR: [{ status: "OPEN" }, { authorId: userId }],
+                OR: [
+                  { status: "OPEN" },
+                  { authorId: userId },
+                  {
+                    offers: {
+                      some: {
+                        providerId: userId,
+                        status: "ACCEPTED",
+                      },
+                    },
+                  },
+                ],
               }
             : { status: "OPEN" }),
         },
@@ -206,6 +217,7 @@ export const getJobById = cache(
                 },
                 select: {
                   id: true,
+                  status: true,
                 },
                 take: 1,
               }
@@ -225,12 +237,14 @@ export const getJobById = cache(
     }
 
     const listItem = mapJobListItem(job, userId);
+    const currentUserOffer = userId ? job.offers[0] : null;
+    const canContactAuthor = currentUserOffer?.status === "ACCEPTED";
 
     return {
       ...listItem,
       author: {
         ...listItem.author,
-        whatsapp: job.author.profile?.whatsapp ?? null,
+        whatsapp: canContactAuthor ? (job.author.profile?.whatsapp ?? null) : null,
         avgRating: job.author.profile?.avgRating ?? 0,
         totalReviews: job.author.profile?.totalReviews ?? 0,
         region: job.author.profile?.region ?? null,

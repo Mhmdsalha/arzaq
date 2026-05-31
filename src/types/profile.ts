@@ -18,6 +18,7 @@ export type EditableProfile = {
   workMode: WorkMode;
   avatarUrl: string;
   whatsapp: string;
+  showWhatsapp: boolean;
   portfolioUrls: string[];
   skillIds: string[];
   isAvailable: boolean;

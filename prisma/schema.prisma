@@ -112,6 +112,7 @@ model Profile {
   workMode      WorkMode @default(BOTH)
   avatarUrl     String?
   whatsapp      String?
+  showWhatsapp  Boolean  @default(false)
   portfolioUrls String[] @default([])
   avgRating     Float    @default(0)
   totalReviews  Int      @default(0)

@@ -21,6 +21,7 @@ export const profileSchema = z.object({
   region: z.enum(regionValues, { error: "يجب اختيار منطقة" }),
   workMode: z.enum(workModeValues, { error: "يجب اختيار طريقة العمل" }),
   isAvailable: z.boolean(),
+  showWhatsapp: z.boolean(),
   skills: z.array(z.string().cuid("مهارة غير صحيحة")).max(20, "عدد المهارات كبير جدًا"),
   whatsapp: z
     .string()

@@ -390,6 +390,7 @@ export async function getJobOffers(jobId: string, userId: string): Promise<JobOf
                   totalReviews: true,
                   isTrusted: true,
                   whatsapp: true,
+                  showWhatsapp: true,
                 },
               },
               reviewsReceived: {
@@ -463,7 +464,8 @@ function mapUserOffer(
       region: offer.jobPost.region,
       workMode: offer.jobPost.workMode,
       status: offer.jobPost.status,
-      ownerWhatsapp: offer.jobPost.author.profile?.whatsapp ?? null,
+      ownerWhatsapp:
+        offer.status === "ACCEPTED" ? (offer.jobPost.author.profile?.whatsapp ?? null) : null,
     },
     reviewedByCurrentUser: offer.jobPost.reviews.length > 0,
   };
@@ -490,6 +492,7 @@ function mapReceivedOffer(
               totalReviews: true;
               isTrusted: true;
               whatsapp: true;
+              showWhatsapp: true;
             };
           };
           reviewsReceived: { select: { id: true } };
@@ -513,7 +516,9 @@ function mapReceivedOffer(
       avgRating: offer.provider.profile?.avgRating ?? 0,
       totalReviews: offer.provider.profile?.totalReviews ?? 0,
       isTrusted: offer.provider.profile?.isTrusted ?? false,
-      whatsapp: offer.provider.profile?.whatsapp ?? null,
+      whatsapp: offer.provider.profile?.showWhatsapp
+        ? (offer.provider.profile.whatsapp ?? null)
+        : null,
     },
     reviewedByCurrentUser: offer.provider.reviewsReceived.length > 0,
   };
