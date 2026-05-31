@@ -10,9 +10,9 @@ const chips = [
 ];
 
 const stats = [
-  { number: "200+", label: "طلب نشط" },
-  { number: "150+", label: "مقدم خدمة" },
-  { number: "5", label: "مناطق في غزة" },
+  { number: "200+", label: "طلب نشط", prefix: "نهدف إلى" },
+  { number: "150+", label: "مقدم خدمة", prefix: "نهدف إلى" },
+  { number: "5", label: "مناطق في غزة", prefix: "نغطي" },
 ];
 
 export function HeroSection() {
@@ -100,6 +100,9 @@ export function HeroSection() {
                   key={stat.label}
                   className={`px-2 py-2.5 sm:px-3 sm:py-3 ${index === 0 ? "" : "sm:border-r sm:border-white/15"}`}
                 >
+                  <p className="text-[10px] font-medium text-white/65 sm:text-[11px]">
+                    {stat.prefix}
+                  </p>
                   <p
                     dir="ltr"
                     className="font-cairo text-lg font-bold tracking-wide text-white sm:text-xl md:text-2xl"
