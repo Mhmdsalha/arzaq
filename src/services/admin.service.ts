@@ -42,6 +42,82 @@ export async function getAdminOverview() {
   };
 }
 
+export async function getAdminQueueSnapshot() {
+  const [pendingJobs, verificationRequests, pendingReports] = await prisma.$transaction([
+    prisma.jobPost.findMany({
+      where: {
+        deletedAt: null,
+        status: "PENDING_REVIEW",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        createdAt: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
+    prisma.providerVerificationRequest.findMany({
+      where: {
+        status: "PENDING",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        createdAt: true,
+        provider: {
+          select: {
+            name: true,
+            profile: {
+              select: {
+                avgRating: true,
+                totalReviews: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.report.findMany({
+      where: {
+        status: "PENDING",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        reason: true,
+        targetType: true,
+        createdAt: true,
+        reporter: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    pendingJobs,
+    verificationRequests,
+    pendingReports,
+  };
+}
+
 export async function getAdminAccounts() {
   return prisma.user.findMany({
     where: {

@@ -21,26 +21,55 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             أرزاق
           </Link>
           <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
-            <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin">
+            <AdminNavLink href="/admin" pathname={pathname}>
               الرئيسية
-            </Link>
-            <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/jobs">
+            </AdminNavLink>
+            <AdminNavLink href="/admin/jobs" pathname={pathname}>
               الطلبات
-            </Link>
-            <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/users">
+            </AdminNavLink>
+            <AdminNavLink href="/admin/users" pathname={pathname}>
               المستخدمون
-            </Link>
-            <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/verification">
+            </AdminNavLink>
+            <AdminNavLink href="/admin/verification" pathname={pathname}>
               طلبات التوثيق
-            </Link>
-            <Link className="rounded-xl px-3 py-2 hover:bg-white/10" href="/admin/admins">
+            </AdminNavLink>
+            <AdminNavLink href="/admin/reports" pathname={pathname}>
+              البلاغات
+            </AdminNavLink>
+            <AdminNavLink href="/admin/audit" pathname={pathname}>
+              التدقيق
+            </AdminNavLink>
+            <AdminNavLink href="/admin/admins" pathname={pathname}>
               حسابات الإدارة
-            </Link>
+            </AdminNavLink>
           </nav>
           <AdminLogoutButton />
         </div>
       </header>
       {children}
     </div>
+  );
+}
+
+function AdminNavLink({
+  href,
+  pathname,
+  children,
+}: {
+  href: string;
+  pathname: string;
+  children: React.ReactNode;
+}) {
+  const active = href === "/admin" ? pathname === href : pathname.startsWith(href);
+
+  return (
+    <Link
+      className={`rounded-xl px-3 py-2 transition hover:bg-white/10 ${
+        active ? "bg-primary/20 font-bold text-primary-light" : ""
+      }`}
+      href={href}
+    >
+      {children}
+    </Link>
   );
 }

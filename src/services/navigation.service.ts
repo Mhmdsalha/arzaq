@@ -147,27 +147,54 @@ export async function getNavigationSummaryFresh(userId: string): Promise<Navigat
   };
 }
 
-export async function getUserNotifications(userId: string) {
-  return prisma.notification.findMany({
-    where: {
-      userId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 30,
-    select: {
-      id: true,
-      message: true,
-      link: true,
-      isRead: true,
-      createdAt: true,
-    },
-  });
+export type NotificationFilter = "all" | "unread";
+
+export async function getUserNotifications(
+  userId: string,
+  filter: NotificationFilter = "all",
+) {
+  const where = {
+    userId,
+    ...(filter === "unread" ? { isRead: false } : {}),
+  };
+
+  const [items, unreadCount, totalCount] = await prisma.$transaction([
+    prisma.notification.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 50,
+      select: {
+        id: true,
+        message: true,
+        link: true,
+        isRead: true,
+        createdAt: true,
+      },
+    }),
+    prisma.notification.count({
+      where: {
+        userId,
+        isRead: false,
+      },
+    }),
+    prisma.notification.count({
+      where: {
+        userId,
+      },
+    }),
+  ]);
+
+  return {
+    items,
+    unreadCount,
+    totalCount,
+  };
 }
 
 export async function markUserNotificationsAsRead(userId: string) {
-  await prisma.notification.updateMany({
+  const result = await prisma.notification.updateMany({
     where: {
       userId,
       isRead: false,
@@ -176,4 +203,6 @@ export async function markUserNotificationsAsRead(userId: string) {
       isRead: true,
     },
   });
+
+  return result.count;
 }
