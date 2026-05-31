@@ -21,7 +21,8 @@
     "security:audit": "npm audit --audit-level=moderate",
     "security:check": "better-npm-audit audit",
     "security:update": "npx npm-check-updates -u",
-    "email:test": "node --env-file=.env --import tsx scripts/test-email.ts"
+    "email:test": "node --env-file=.env --import tsx scripts/test-email.ts",
+    "test:e2e:smoke": "node --env-file=.env --import tsx scripts/e2e-smoke.ts"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
