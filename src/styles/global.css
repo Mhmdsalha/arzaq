@@ -3,9 +3,33 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "Palestine";
-  src: url("/fonts/Palestine/Palestine.otf") format("opentype");
-  font-weight: 400 700;
+  font-family: "Thmanyah Serif Display";
+  src: url("/fonts/Thmanyah/thmanyahserifdisplay-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Thmanyah Serif Display";
+  src: url("/fonts/Thmanyah/thmanyahserifdisplay-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Thmanyah Serif Display";
+  src: url("/fonts/Thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Thmanyah Serif Display";
+  src: url("/fonts/Thmanyah/thmanyahserifdisplay-Black.woff2") format("woff2");
+  font-weight: 900;
   font-style: normal;
   font-display: swap;
 }

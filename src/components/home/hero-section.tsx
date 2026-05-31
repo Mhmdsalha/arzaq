@@ -42,7 +42,7 @@ export function HeroSection() {
                 معاً
               </span>
               <span className="-mt-1 text-[2.65rem] sm:text-[3.1rem] md:mt-0 md:text-5xl lg:text-6xl">
-                نبني الفرص
+                نبـــــني الفرص
               </span>
             </span>
           </h1>

@@ -74,7 +74,7 @@ export function GreenMarketingPanel() {
       >
         <div className="mb-14">
           <p className="font-palestine text-5xl font-bold leading-snug text-white drop-shadow-sm xl:text-6xl">
-            معاً نبني الفرص
+            معاً نبـــــني الفرص
           </p>
         </div>
 
