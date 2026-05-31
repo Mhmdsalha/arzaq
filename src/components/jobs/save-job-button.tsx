@@ -2,7 +2,7 @@
 
 import { Heart, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { toggleSaveJobAction } from "@/actions/job.actions";
@@ -22,7 +22,8 @@ export function SaveJobButton({
   const router = useRouter();
   const { isAuth, isLoading } = useCurrentUser();
   const [isPending, startTransition] = useTransition();
-  const [optimisticSaved, toggleOptimisticSaved] = useOptimistic(isSaved, (state) => !state);
+  const [savedState, setSavedState] = useState(isSaved);
+  const [optimisticSaved, toggleOptimisticSaved] = useOptimistic(savedState, (state) => !state);
 
   function handleSave() {
     if (!isAuth) {
@@ -36,6 +37,7 @@ export function SaveJobButton({
       const result = await toggleSaveJobAction(jobId);
 
       if (result.ok) {
+        setSavedState(Boolean(result.isSaved));
         toast.success(result.message);
         return;
       }

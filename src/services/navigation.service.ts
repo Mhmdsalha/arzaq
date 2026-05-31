@@ -14,6 +14,12 @@ export type NavigationSummary = {
   avatarUrl: string | null;
   profileCompletion: number;
   unreadCount: number;
+  latestUnreadNotification: {
+    id: string;
+    message: string;
+    link: string | null;
+    createdAt: Date;
+  } | null;
   stats: {
     postedJobs: number;
     receivedOffers: number;
@@ -27,8 +33,16 @@ export const getNavigationSummary = cache(async (userId: string): Promise<Naviga
 });
 
 export async function getNavigationSummaryFresh(userId: string): Promise<NavigationSummary> {
-  const [user, profile, unreadCount, postedJobs, receivedOffers, sentOffers, acceptedOffers] =
-    await prisma.$transaction([
+  const [
+    user,
+    profile,
+    unreadCount,
+    latestUnreadNotification,
+    postedJobs,
+    receivedOffers,
+    sentOffers,
+    acceptedOffers,
+  ] = await prisma.$transaction([
       prisma.user.findFirst({
         where: {
           id: userId,
@@ -62,6 +76,21 @@ export async function getNavigationSummaryFresh(userId: string): Promise<Navigat
         where: {
           userId,
           isRead: false,
+        },
+      }),
+      prisma.notification.findFirst({
+        where: {
+          userId,
+          isRead: false,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          message: true,
+          link: true,
+          createdAt: true,
         },
       }),
       prisma.jobPost.count({
@@ -108,6 +137,7 @@ export async function getNavigationSummaryFresh(userId: string): Promise<Navigat
     avatarUrl: profile?.avatarUrl ?? null,
     profileCompletion: checks.filter(Boolean).length * 20,
     unreadCount,
+    latestUnreadNotification,
     stats: {
       postedJobs,
       receivedOffers,

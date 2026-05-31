@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type NavigationSummaryResponse = {
   user: {
@@ -13,6 +14,12 @@ type NavigationSummaryResponse = {
   unreadCount: number;
   avatarUrl: string | null;
   profileCompletion: number;
+  latestUnreadNotification: {
+    id: string;
+    message: string;
+    link: string | null;
+    createdAt: string;
+  } | null;
   stats: {
     postedJobs: number;
     receivedOffers: number;
@@ -28,6 +35,7 @@ const SUMMARY_REFRESH_EVENT = "arzaq:navigation-summary-refresh";
 let cachedSummary: NavigationSummaryResponse | null = null;
 let cachedAt = 0;
 let pendingSummary: Promise<NavigationSummaryResponse | null> | null = null;
+let lastNotifiedUnreadId: string | null = null;
 
 export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDER") {
   const [summary, setSummary] = useState<NavigationSummaryResponse | null>(null);
@@ -40,6 +48,7 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
 
     let isMounted = true;
     let eventSource: EventSource | null = null;
+    let hasReceivedInitialRealtimeSummary = false;
 
     async function fetchSummary(force = false) {
       if (document.visibilityState === "hidden") {
@@ -84,6 +93,12 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
         const data = JSON.parse((event as MessageEvent).data) as NavigationSummaryResponse;
         cachedSummary = data;
         cachedAt = Date.now();
+        if (hasReceivedInitialRealtimeSummary) {
+          notifyForRealtimeUnread(data);
+        } else {
+          lastNotifiedUnreadId = data.latestUnreadNotification?.id ?? null;
+          hasReceivedInitialRealtimeSummary = true;
+        }
         setSummary(data);
         setIsLoading(false);
       });
@@ -112,6 +127,27 @@ export function useUnreadCount(enabled = true, accountType?: "CLIENT" | "PROVIDE
     summary: enabled ? syncedSummary : null,
     isLoading: enabled ? isLoading : false,
   };
+}
+
+function notifyForRealtimeUnread(data: NavigationSummaryResponse) {
+  const notification = data.latestUnreadNotification;
+
+  if (!notification || notification.id === lastNotifiedUnreadId) {
+    return;
+  }
+
+  lastNotifiedUnreadId = notification.id;
+
+  toast.info(notification.message, {
+    action: notification.link
+      ? {
+          label: "فتح",
+          onClick: () => {
+            window.location.href = notification.link ?? "/dashboard/notifications";
+          },
+        }
+      : undefined,
+  });
 }
 
 export function refreshNavigationSummary() {

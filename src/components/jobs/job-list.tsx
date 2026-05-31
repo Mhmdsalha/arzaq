@@ -114,6 +114,7 @@ function InfiniteJobResults({
 }) {
   const searchParams = useSearchParams();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const [visibleJobs, setVisibleJobs] = useState(jobs);
   const [currentPage, setCurrentPage] = useState(pagination.page);
   const [totalPages, setTotalPages] = useState(pagination.totalPages);
@@ -128,12 +129,18 @@ function InfiniteJobResults({
 
     setIsLoadingMore(true);
     setLoadMoreError(null);
+    abortRef.current?.abort();
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(currentPage + 1));
 
     try {
-      const response = await fetch(`/api/jobs?${params.toString()}`);
+      const response = await fetch(`/api/jobs?${params.toString()}`, {
+        signal: controller.signal,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to load more jobs");
@@ -141,13 +148,19 @@ function InfiniteJobResults({
 
       const data = (await response.json()) as JobsApiResponse;
 
-      setVisibleJobs((previousJobs) => [
-        ...previousJobs,
-        ...data.items.map(normalizeJobDates),
-      ]);
+      setVisibleJobs((previousJobs) => {
+        const existingIds = new Set(previousJobs.map((job) => job.id));
+        const nextJobs = data.items.map(normalizeJobDates).filter((job) => !existingIds.has(job.id));
+
+        return [...previousJobs, ...nextJobs];
+      });
       setCurrentPage(data.page);
       setTotalPages(data.totalPages);
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
       setLoadMoreError("تعذر تحميل المزيد من الطلبات، حاول مرة أخرى");
     } finally {
       setIsLoadingMore(false);
@@ -172,7 +185,10 @@ function InfiniteJobResults({
 
     observer.observe(sentinel);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      abortRef.current?.abort();
+    };
   }, [hasMore, loadNextPage]);
 
   return (
