@@ -94,11 +94,28 @@ function isAllowedApiOrigin(request: NextRequest) {
 }
 
 async function getSessionToken(request: NextRequest) {
+  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const cookieNames = [
+    "__Secure-authjs.session-token",
+    "authjs.session-token",
+    "__Secure-next-auth.session-token",
+    "next-auth.session-token",
+  ];
+
   try {
-    return (await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    })) as SessionToken | null;
+    for (const cookieName of cookieNames) {
+      const token = (await getToken({
+        req: request,
+        secret,
+        cookieName,
+      })) as SessionToken | null;
+
+      if (token) {
+        return token;
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
