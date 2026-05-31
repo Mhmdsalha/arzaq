@@ -53,6 +53,7 @@ export function HeroSection() {
 
           <div className="hero-enter-scale hero-delay-400 mt-4 w-full max-w-3xl rounded-[1.75rem] bg-white/[0.14] p-2.5 ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:bg-white/[0.17] hover:ring-white/30 md:backdrop-blur-md sm:mt-5 sm:rounded-[2rem] sm:p-4">
             <form
+              suppressHydrationWarning
               action="/jobs"
               className="flex min-h-12 w-full items-center gap-2 rounded-[1.25rem] bg-white p-1.5 text-slate-950 ring-1 ring-white/70 transition duration-300 focus-within:ring-2 focus-within:ring-emerald-200/80 sm:min-h-14 sm:p-2"
             >
@@ -60,6 +61,7 @@ export function HeroSection() {
                 <Search className="size-5" />
               </div>
               <input
+                suppressHydrationWarning
                 type="search"
                 name="q"
                 placeholder="ابحث عن خدمة أو طلب عمل..."

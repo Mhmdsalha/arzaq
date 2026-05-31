@@ -14,7 +14,10 @@ export function SearchSection() {
             <Search className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
             <Input placeholder="ما الخدمة أو المهارة التي تبحث عنها؟" className="h-12 pr-11 text-base" />
           </div>
-          <select className="h-12 rounded-xl border-slate-200 text-base focus:border-primary focus:ring-primary">
+          <select
+            suppressHydrationWarning
+            className="h-12 rounded-xl border-slate-200 text-base focus:border-primary focus:ring-primary"
+          >
             <option>كل المناطق</option>
             {regions.map((region) => (
               <option key={region.value}>{region.label}</option>
