@@ -105,13 +105,18 @@ export function PublicNavbar() {
           : "border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur-md",
       )}
     >
-      <div className="container-responsive flex h-20 items-center justify-between gap-4 lg:h-20 lg:pt-3">
+      <div className="container-responsive relative flex h-20 items-center justify-between gap-4 lg:h-20 lg:pt-3">
         <Logo
           className={cn(isTransparent && "text-white")}
-          textClassName={cn(!isTransparent && "translate-y-0 pt-2 lg:-translate-y-2 lg:pt-0")}
+          textClassName={cn(
+            !isTransparent && "translate-y-0 pt-2 sm:translate-y-0 sm:pt-2 lg:-translate-y-1 lg:pt-1",
+          )}
         />
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="التنقل الرئيسي">
+        <nav
+          className="hidden items-center gap-1 lg:absolute lg:left-1/2 lg:flex lg:-translate-x-1/2"
+          aria-label="التنقل الرئيسي"
+        >
           {navLinks.map((link) => {
             const active = link.active(pathname);
 
