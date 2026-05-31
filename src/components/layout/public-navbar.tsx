@@ -106,7 +106,10 @@ export function PublicNavbar() {
       )}
     >
       <div className="container-responsive flex h-20 items-center justify-between gap-4 lg:h-20 lg:pt-3">
-        <Logo className={cn(isTransparent && "text-white")} />
+        <Logo
+          className={cn(isTransparent && "text-white")}
+          textClassName={cn(!isTransparent && "translate-y-0 pt-2 lg:-translate-y-2 lg:pt-0")}
+        />
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="التنقل الرئيسي">
           {navLinks.map((link) => {
