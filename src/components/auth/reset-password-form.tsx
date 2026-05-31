@@ -9,9 +9,11 @@ import { toast } from "sonner";
 import { resetPasswordAction } from "@/actions/auth.actions";
 import { PasswordField } from "@/components/auth/password-field";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/schemas/auth.schema";
 
-export function ResetPasswordForm({ token }: { token: string }) {
+export function ResetPasswordForm({ email }: { email: string }) {
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -20,7 +22,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
   } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      token,
+      email,
+      code: "",
       password: "",
       confirmPassword: "",
     },
@@ -36,26 +39,44 @@ export function ResetPasswordForm({ token }: { token: string }) {
     });
   }
 
-  if (!token) {
-    return (
-      <div className="space-y-4 text-center">
-        <h1 className="text-2xl font-bold text-slate-950">رابط غير صالح</h1>
-        <p className="text-sm leading-6 text-slate-600">
-          رابط إعادة التعيين غير مكتمل. اطلب رابطًا جديدًا.
-        </p>
-        <Button asChild className="w-full">
-          <Link href="/auth/forgot-password">طلب رابط جديد</Link>
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-      <input type="hidden" {...register("token")} />
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-bold text-slate-950">تعيين كلمة مرور جديدة</h1>
-        <p className="text-sm text-slate-600">اختر كلمة مرور قوية لحسابك.</p>
+        <p className="text-sm leading-6 text-slate-600">
+          أدخل الرمز المرسل إلى بريدك ثم اختر كلمة مرور قوية لحسابك.
+        </p>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="email">البريد الإلكتروني</Label>
+        <Input
+          id="email"
+          type="email"
+          dir="ltr"
+          className="text-left"
+          placeholder="example@email.com"
+          autoComplete="email"
+          aria-invalid={Boolean(errors.email)}
+          {...register("email")}
+        />
+        {errors.email ? <p className="text-sm text-red-600">{errors.email.message}</p> : null}
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="code">رمز إعادة التعيين</Label>
+        <Input
+          id="code"
+          inputMode="numeric"
+          dir="ltr"
+          className="text-center tracking-[0.35em]"
+          maxLength={6}
+          autoComplete="one-time-code"
+          placeholder="000000"
+          aria-invalid={Boolean(errors.code)}
+          {...register("code")}
+        />
+        {errors.code ? <p className="text-sm text-red-600">{errors.code.message}</p> : null}
       </div>
 
       <PasswordField
@@ -76,6 +97,13 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? "جاري التحديث..." : "تحديث كلمة المرور"}
       </Button>
+
+      <p className="text-center text-sm text-slate-600">
+        لم يصلك الرمز؟{" "}
+        <Link href="/auth/forgot-password" className="font-semibold text-primary-dark">
+          اطلب رمزاً جديداً
+        </Link>
+      </p>
     </form>
   );
 }

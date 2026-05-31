@@ -25,7 +25,7 @@
     "test:e2e:smoke": "node --env-file=.env --import tsx scripts/e2e-smoke.ts"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "node --env-file=.env --import tsx prisma/seed.ts"
   },
   "overrides": {
     "postcss": "$postcss"

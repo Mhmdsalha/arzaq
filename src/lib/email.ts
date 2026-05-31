@@ -21,14 +21,20 @@ export async function sendEmailVerificationCode({
   name: string;
   code: string;
 }): Promise<EmailSendResult> {
+  const message = {
+    subject: "رمز توثيق بريدك في أرزاق",
+    html: buildVerificationEmailHtml({ name, code }),
+    text: `مرحباً ${name}، رمز توثيق بريدك في أرزاق هو: ${code}. ينتهي خلال 15 دقيقة.`,
+  };
+
   if (emailProvider === "resend") {
-    return sendWithResend({ to, name, code });
+    return sendWithResend({ to, ...message });
   }
 
-  return sendWithSmtp({ to, name, code });
+  return sendWithSmtp({ to, ...message });
 }
 
-async function sendWithSmtp({
+export async function sendPasswordResetCode({
   to,
   name,
   code,
@@ -36,6 +42,30 @@ async function sendWithSmtp({
   to: string;
   name: string;
   code: string;
+}): Promise<EmailSendResult> {
+  const message = {
+    subject: "رمز إعادة تعيين كلمة المرور في أرزاق",
+    html: buildPasswordResetEmailHtml({ name, code }),
+    text: `مرحباً ${name}، رمز إعادة تعيين كلمة المرور في أرزاق هو: ${code}. ينتهي خلال 15 دقيقة.`,
+  };
+
+  if (emailProvider === "resend") {
+    return sendWithResend({ to, ...message });
+  }
+
+  return sendWithSmtp({ to, ...message });
+}
+
+async function sendWithSmtp({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
 }): Promise<EmailSendResult> {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT || 465);
@@ -61,9 +91,9 @@ async function sendWithSmtp({
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || `Arzaq <${user}>`,
       to,
-      subject: "رمز توثيق بريدك في أرزاق",
-      html: buildVerificationEmailHtml({ name, code }),
-      text: `مرحباً ${name}، رمز توثيق بريدك في أرزاق هو: ${code}. ينتهي خلال 15 دقيقة.`,
+      subject,
+      html,
+      text,
     });
 
     return { sent: true, devOnly: false };
@@ -75,12 +105,14 @@ async function sendWithSmtp({
 
 async function sendWithResend({
   to,
-  name,
-  code,
+  subject,
+  html,
+  text,
 }: {
   to: string;
-  name: string;
-  code: string;
+  subject: string;
+  html: string;
+  text: string;
 }): Promise<EmailSendResult> {
   if (!resend) {
     return { sent: false, devOnly: false, reason: "missing-api-key" };
@@ -89,9 +121,9 @@ async function sendWithResend({
   const { error } = await resend.emails.send({
     from: process.env.EMAIL_FROM || "Arzaq <onboarding@resend.dev>",
     to,
-    subject: "رمز توثيق بريدك في أرزاق",
-    html: buildVerificationEmailHtml({ name, code }),
-    text: `مرحباً ${name}، رمز توثيق بريدك في أرزاق هو: ${code}. ينتهي خلال 15 دقيقة.`,
+    subject,
+    html,
+    text,
   });
 
   if (error) {
@@ -116,6 +148,26 @@ function buildVerificationEmailHtml({ name, code }: { name: string; code: string
         </div>
         <p style="margin:20px 0 0; color:#64748b; font-size:14px;">
           ينتهي هذا الرمز خلال 15 دقيقة. إذا لم تطلب إنشاء حساب في أرزاق، تجاهل هذه الرسالة.
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+function buildPasswordResetEmailHtml({ name, code }: { name: string; code: string }) {
+  return `
+    <div dir="rtl" lang="ar" style="font-family: Arial, sans-serif; background:#f8fafc; padding:32px;">
+      <div style="max-width:520px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:20px; padding:28px;">
+        <h1 style="margin:0 0 12px; color:#15803d; font-size:28px;">أرزاق</h1>
+        <p style="margin:0 0 16px; color:#0f172a; font-size:18px;">مرحباً ${escapeHtml(name)}</p>
+        <p style="margin:0 0 20px; color:#475569; line-height:1.8;">
+          وصلنا طلب لإعادة تعيين كلمة مرور حسابك. استخدم الرمز التالي لإكمال العملية.
+        </p>
+        <div style="direction:ltr; letter-spacing:8px; text-align:center; font-size:36px; font-weight:700; color:#16a34a; background:#f0fdf4; border-radius:16px; padding:18px;">
+          ${code}
+        </div>
+        <p style="margin:20px 0 0; color:#64748b; font-size:14px;">
+          ينتهي هذا الرمز خلال 15 دقيقة. إذا لم تطلب إعادة التعيين، تجاهل هذه الرسالة.
         </p>
       </div>
     </div>

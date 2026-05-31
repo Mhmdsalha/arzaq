@@ -7,6 +7,11 @@ import { getProviderVerificationSummary } from "../src/services/provider-verific
 import { createReview } from "../src/services/review.service";
 import { getNavigationSummaryFresh, getUserNotifications } from "../src/services/navigation.service";
 import { prisma } from "../src/lib/prisma";
+import {
+  createPasswordResetCode,
+  resetPassword,
+  validatePassword,
+} from "../src/services/auth.service";
 
 const password = "Test@1234";
 
@@ -216,6 +221,31 @@ async function main() {
     providerNotifications.totalCount >= 2,
     `${providerNotifications.totalCount} إشعارات`,
   );
+
+  const clientEmail = client.email;
+  if (!clientEmail) {
+    record("إنشاء رمز إعادة تعيين كلمة المرور", false);
+  } else {
+    const resetCode = await createPasswordResetCode(clientEmail);
+    if (!resetCode) {
+      record("إنشاء رمز إعادة تعيين كلمة المرور", false);
+    } else {
+      const newPassword = "Changed@1234";
+      await resetPassword({
+        email: clientEmail,
+        code: resetCode.code,
+        password: newPassword,
+      });
+      const updatedClient = await prisma.user.findUnique({
+        where: { id: client.id },
+        select: { passwordHash: true },
+      });
+      record(
+        "إعادة تعيين كلمة المرور عبر رمز البريد",
+        Boolean(updatedClient && (await validatePassword(newPassword, updatedClient.passwordHash))),
+      );
+    }
+  }
 
   const failed = results.filter((item) => !item.ok);
 

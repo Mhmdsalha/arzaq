@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { logAudit } from "@/lib/audit";
 import { signOut } from "@/lib/auth";
-import { sendEmailVerificationCode } from "@/lib/email";
+import { sendEmailVerificationCode, sendPasswordResetCode } from "@/lib/email";
 import {
   clearLoginLockout,
   getLoginLockoutMinutes,
@@ -30,7 +30,7 @@ import {
 } from "@/schemas/auth.schema";
 import {
   createEmailVerificationCode,
-  createPasswordResetToken,
+  createPasswordResetCode,
   createUser,
   findUserByIdentifier,
   resendEmailVerificationCode,
@@ -42,7 +42,6 @@ import {
 export type ActionResult = {
   ok: boolean;
   message: string;
-  resetUrl?: string;
   accountType?: AccountType;
   redirectTo?: string;
 };
@@ -297,19 +296,32 @@ export async function forgotPasswordAction(input: ForgotPasswordInput): Promise<
     };
   }
 
-  const token = await createPasswordResetToken(cleanIdentifier);
+  const resetCode = await createPasswordResetCode(cleanIdentifier);
 
-  if (!token) {
+  if (!resetCode) {
     return {
       ok: true,
-      message: "إذا كان الحساب موجودًا، سيتم تجهيز رابط إعادة التعيين.",
+      message: "إذا كان الحساب موجوداً، سيتم إرسال رمز إعادة التعيين إلى بريده الإلكتروني.",
+    };
+  }
+
+  const emailResult = await sendPasswordResetCode({
+    to: resetCode.email,
+    name: resetCode.name,
+    code: resetCode.code,
+  });
+
+  if (!emailResult.sent) {
+    return {
+      ok: false,
+      message: "تعذر إرسال رمز إعادة التعيين حالياً. تأكد من إعدادات البريد ثم حاول مرة أخرى",
     };
   }
 
   return {
     ok: true,
-    message: "تم تجهيز رابط إعادة التعيين التجريبي. سنربطه بالإرسال لاحقًا.",
-    resetUrl: `/auth/reset-password?token=${token.token}`,
+    message: "تم إرسال رمز إعادة التعيين إلى بريدك الإلكتروني",
+    redirectTo: `/auth/reset-password?email=${encodeURIComponent(resetCode.email)}`,
   };
 }
 
@@ -322,7 +334,8 @@ export async function resetPasswordAction(input: ResetPasswordInput): Promise<Ac
 
   try {
     await resetPassword({
-      token: parsed.data.token,
+      email: parsed.data.email,
+      code: parsed.data.code,
       password: parsed.data.password,
     });
   } catch (error) {

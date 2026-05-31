@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomInt, timingSafeEqual } from "crypto";
+import { createHash, randomInt, timingSafeEqual } from "crypto";
 import type { AccountType, Prisma, Region, User, UserRole } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
 import { cache } from "react";
@@ -272,10 +272,10 @@ export const getRegistrationSkills = cache(async () => {
   }
 });
 
-export async function createPasswordResetToken(identifier: string) {
+export async function createPasswordResetCode(identifier: string) {
   const user = await findUserByIdentifier(identifier);
 
-  if (!user || user.isBanned) {
+  if (!user || user.isBanned || !user.email) {
     return null;
   }
 
@@ -292,40 +292,65 @@ export async function createPasswordResetToken(identifier: string) {
     },
   });
 
-  const token = randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
+  const code = String(randomInt(100000, 1000000));
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 15);
 
   const resetToken = await prisma.passwordResetToken.create({
     data: {
-      token,
+      token: hashVerificationCode(code),
       userId: user.id,
       expiresAt,
     },
   });
 
-  return resetToken;
+  return {
+    id: resetToken.id,
+    code,
+    email: user.email,
+    name: user.name,
+    expiresAt,
+  };
 }
 
-export async function resetPassword(input: { token: string; password: string }) {
-  const resetToken = await prisma.passwordResetToken.findUnique({
-    where: { token: input.token },
-    include: { user: true },
+export async function resetPassword(input: { email: string; code: string; password: string }) {
+  const email = input.email.toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: {
+      email,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      isBanned: true,
+    },
   });
 
-  if (
-    !resetToken ||
-    resetToken.usedAt ||
-    resetToken.expiresAt < new Date() ||
-    resetToken.user.deletedAt
-  ) {
-    throw new Error("رابط إعادة التعيين غير صالح أو منتهي");
+  if (!user || user.isBanned) {
+    throw new Error("رمز إعادة التعيين غير صحيح أو منتهي");
+  }
+
+  const resetToken = await prisma.passwordResetToken.findFirst({
+    where: {
+      userId: user.id,
+      usedAt: null,
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (!resetToken || !safeCompare(resetToken.token, hashVerificationCode(input.code))) {
+    throw new Error("رمز إعادة التعيين غير صحيح أو منتهي");
   }
 
   const passwordHash = await hash(input.password, 12);
 
   await prisma.$transaction([
     prisma.user.update({
-      where: { id: resetToken.userId },
+      where: { id: user.id },
       data: { passwordHash },
     }),
     prisma.passwordResetToken.update({

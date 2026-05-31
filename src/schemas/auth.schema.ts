@@ -4,8 +4,6 @@ import { passwordSchema } from "@/schemas/password.schema";
 
 export { registerSchema, type RegisterInput } from "@/schemas/register.schema";
 
-const requiredText = "هذا الحقل مطلوب";
-
 export const loginSchema = z.object({
   identifier: z.string().trim().min(1, "البريد الإلكتروني أو رقم الجوال مطلوب"),
   password: z.string().min(1, "كلمة المرور مطلوبة"),
@@ -17,7 +15,11 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
-    token: z.string().trim().min(1, requiredText),
+    email: z.string().trim().toLowerCase().email("البريد الإلكتروني غير صحيح"),
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, "رمز إعادة التعيين يجب أن يتكون من 6 أرقام"),
     password: passwordSchema,
     confirmPassword: z.string().min(1, "تأكيد كلمة المرور مطلوب"),
   })

@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ import { forgotPasswordSchema, type ForgotPasswordInput } from "@/schemas/auth.s
 
 export function ForgotPasswordForm() {
   const [isPending, startTransition] = useTransition();
-  const [resetUrl, setResetUrl] = useState<string | null>(null);
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -27,13 +28,14 @@ export function ForgotPasswordForm() {
   });
 
   function onSubmit(values: ForgotPasswordInput) {
-    setResetUrl(null);
     startTransition(async () => {
       const result = await forgotPasswordAction(values);
 
       if (result.ok) {
         toast.success(result.message);
-        setResetUrl(result.resetUrl ?? null);
+        if (result.redirectTo) {
+          router.push(result.redirectTo);
+        }
         return;
       }
 
@@ -46,7 +48,7 @@ export function ForgotPasswordForm() {
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-bold text-slate-950">استعادة كلمة المرور</h1>
         <p className="text-sm leading-6 text-slate-600">
-          أدخل بريدك أو رقم جوالك. في هذه المرحلة يظهر رابط تجريبي بدل الإرسال الفعلي.
+          أدخل بريدك أو رقم جوالك وسنرسل رمزاً إلى البريد الإلكتروني المرتبط بحسابك.
         </p>
       </div>
 
@@ -65,17 +67,8 @@ export function ForgotPasswordForm() {
       </div>
 
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "جاري التجهيز..." : "تجهيز رابط إعادة التعيين"}
+        {isPending ? "جاري الإرسال..." : "إرسال رمز إعادة التعيين"}
       </Button>
-
-      {resetUrl ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-900">
-          رابط تجريبي:{" "}
-          <Link href={resetUrl} className="font-semibold text-primary-dark underline">
-            افتح صفحة إعادة التعيين
-          </Link>
-        </div>
-      ) : null}
 
       <p className="text-center text-sm text-slate-600">
         تذكرت كلمة المرور؟{" "}
