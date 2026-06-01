@@ -2,8 +2,12 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
 
-export function CTASection() {
+export async function CTASection() {
+  const session = await auth();
+  const isAuthenticated = Boolean(session?.user?.id);
+
   return (
     <section className="bg-white py-14">
       <div className="container">
@@ -16,9 +20,11 @@ export function CTASection() {
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="secondary">
-                <Link href="/auth/register">أنشئ حساب</Link>
-              </Button>
+              {!isAuthenticated ? (
+                <Button asChild size="lg" variant="secondary">
+                  <Link href="/auth/register">أنشئ حساب</Link>
+                </Button>
+              ) : null}
               <Button asChild size="lg" className="bg-white/10 text-white hover:bg-white/20">
                 <Link href="/how-it-works">
                   اعرف أكثر

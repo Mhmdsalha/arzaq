@@ -9,14 +9,14 @@ import { cn } from "@/lib/utils";
 const slides = [
   {
     icon: Briefcase,
-    title: "انشر طلبك في ثوانٍ",
+    title: "انشر طلبك في ثوان",
     description: "صف ما تحتاجه وحدد ميزانيتك واستقبل العروض من مقدمي الخدمات.",
     mock: <JobPostMock />,
   },
   {
     icon: Star,
-    title: "مقدمو الخدمات الموثوقون",
-    description: "كل مقدم خدمة يملك بروفايلاً كاملاً بتقييمات حقيقية من عملاء سابقين.",
+    title: "مقدمو خدمات موثوقون",
+    description: "كل مقدم خدمة يملك بروفايلا واضحا وتقييمات تساعدك على اتخاذ قرار أفضل.",
     mock: <ProviderMock />,
   },
   {
@@ -28,7 +28,7 @@ const slides = [
   {
     icon: Zap,
     title: "طلبات عاجلة؟ لا مشكلة",
-    description: "ميّز طلبك كعاجل وستصله العروض بشكل أسرع.",
+    description: "ميز طلبك كعاجل لتصل العروض بشكل أسرع.",
     mock: <UrgentMock />,
   },
   {
@@ -74,7 +74,7 @@ export function GreenMarketingPanel() {
       >
         <div className="mb-14">
           <p className="font-palestine text-5xl font-bold leading-snug text-white drop-shadow-sm xl:text-6xl">
-            معاً نبـــــني الفرص
+            معا نبني الفرص
           </p>
         </div>
 
@@ -123,8 +123,13 @@ export function GreenMarketingPanel() {
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-0 right-0 z-10 text-center font-cairo text-sm text-white/70">
-        ٢٠٠+ طلب <span className="mx-3">·</span> ١٥٠+ مقدم خدمة <span className="mx-3">·</span> ٥ مناطق
+      <div className="absolute bottom-8 left-0 right-0 z-10 flex items-center justify-center gap-3 font-cairo text-sm text-white/75">
+        <span>نهدف إلى</span>
+        <span>200+ طلب</span>
+        <span className="text-white/40">·</span>
+        <span>150+ مقدم خدمة</span>
+        <span className="text-white/40">·</span>
+        <span>5 مناطق</span>
       </div>
     </aside>
   );
@@ -155,7 +160,7 @@ function JobPostMock() {
       <p className="font-cairo text-sm font-bold text-slate-900">تصميم هوية لمشروع صغير</p>
       <div className="mt-4 flex items-center justify-between text-xs">
         <span className="font-semibold text-green-700">80 شيكل</span>
-        <span className="text-slate-500">٣ عروض وردت</span>
+        <span className="text-slate-500">3 عروض وردت</span>
       </div>
     </MockCard>
   );
@@ -179,7 +184,7 @@ function ProviderMock() {
         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">شعارات</span>
       </div>
       <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="font-semibold text-green-700">موثّقة ✓</span>
+        <span className="font-semibold text-green-700">موثقة</span>
         <span className="text-slate-500">18 عمل مكتمل</span>
       </div>
     </MockCard>
@@ -209,7 +214,7 @@ function UrgentMock() {
         عاجل
       </div>
       <p className="font-cairo text-sm font-bold text-slate-900">مساعدة ميدانية اليوم</p>
-      <p className="mt-2 text-xs text-slate-500">وصلت ٥ عروض خلال ساعة</p>
+      <p className="mt-2 text-xs text-slate-500">وصلت 5 عروض خلال ساعة</p>
     </MockCard>
   );
 }
@@ -218,8 +223,8 @@ function TrustMock() {
   return (
     <MockCard>
       <div className="flex items-center justify-center gap-3 text-sm font-semibold text-slate-700">
-        <span>✓ موثّق</span>
-        <span>⭐ ٤.٩</span>
+        <span>موثق</span>
+        <span>⭐ 4.9</span>
         <span>آمن</span>
       </div>
     </MockCard>

@@ -26,10 +26,12 @@ export function UserDropdown({
   user,
   compact = false,
   placement = "bottom",
+  align = "right",
 }: {
   user: DashboardShellUser;
   compact?: boolean;
   placement?: "top" | "bottom";
+  align?: "right" | "left";
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [openPathname, setOpenPathname] = useState<string | null>(null);
@@ -81,7 +83,8 @@ export function UserDropdown({
       {isMenuVisible ? (
         <div
           className={cn(
-            "absolute right-0 z-50 max-h-[min(420px,70vh)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl",
+            "absolute z-50 max-h-[min(420px,70vh)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl",
+            align === "left" ? "left-0" : "right-0",
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2",
           )}
         >

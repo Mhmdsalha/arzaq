@@ -27,7 +27,7 @@ export function DashboardTopbar({
           <Menu className="size-5" />
         </Button>
         <span className="min-w-0 flex-1" aria-hidden="true" />
-        <UserDropdown user={user} compact />
+        <UserDropdown user={user} compact align="left" />
       </div>
     </header>
   );
