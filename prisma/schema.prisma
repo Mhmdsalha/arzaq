@@ -76,6 +76,34 @@ enum ProviderVerificationStatus {
   REJECTED
 }
 
+enum ListingType {
+  SERVICE
+  PHYSICAL
+}
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  SOLD_OUT
+  DELETED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum DeliveryMethod {
+  IN_PERSON
+  DELIVERY
+  ONLINE
+  WHATSAPP
+}
+
 model User {
   id           String      @id @default(cuid())
   name         String
@@ -90,17 +118,22 @@ model User {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  profile         Profile?
-  jobPosts        JobPost[]
-  offers          Offer[]
-  reviewsGiven    Review[]             @relation("ReviewsGiven")
-  reviewsReceived Review[]             @relation("ReviewsReceived")
-  reports         Report[]
-  savedJobs       SavedJob[]
-  notifications   Notification[]
-  resetTokens     PasswordResetToken[]
-  emailTokens     EmailVerificationToken[]
+  profile              Profile?
+  jobPosts             JobPost[]
+  offers               Offer[]
+  reviewsGiven         Review[]                      @relation("ReviewsGiven")
+  reviewsReceived      Review[]                      @relation("ReviewsReceived")
+  reports              Report[]
+  savedJobs            SavedJob[]
+  notifications        Notification[]
+  resetTokens          PasswordResetToken[]
+  emailTokens          EmailVerificationToken[]
   verificationRequests ProviderVerificationRequest[] @relation("ProviderVerificationRequests")
+  listings             Listing[]
+  orders               Order[]                       @relation("OrderBuyer")
+  savedListings        SavedListing[]
+  listingReviews       ListingReview[]
+  listingReports       ListingReport[]
 }
 
 model Profile {
@@ -133,6 +166,7 @@ model Category {
   color String?
 
   jobPosts JobPost[]
+  listings Listing[]
 }
 
 model Skill {
@@ -237,6 +271,114 @@ model SavedJob {
 
   @@id([userId, jobPostId])
   @@index([jobPostId])
+}
+
+model Listing {
+  id             String         @id @default(cuid())
+  title          String
+  description    String         @db.Text
+  type           ListingType
+  price          Float
+  priceLabel     String?
+  deliveryMethod DeliveryMethod
+  deliveryTime   String?
+  region         Region
+  quantity       Int?
+  images         String[]       @default([])
+  tags           String[]       @default([])
+  status         ListingStatus  @default(ACTIVE)
+  viewCount      Int            @default(0)
+  shareCount     Int            @default(0)
+  avgRating      Float          @default(0)
+  totalReviews   Int            @default(0)
+  isFeatured     Boolean        @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  sellerId       String
+  categoryId     String
+
+  seller   User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  orders   Order[]
+  reviews  ListingReview[]
+  savedBy  SavedListing[]
+  reports  ListingReport[]
+
+  @@index([status, type, region, categoryId])
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([isFeatured, createdAt])
+  @@index([deletedAt])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  quantity      Int         @default(1)
+  totalPrice    Float
+  note          String?
+  status        OrderStatus @default(PENDING)
+  contactMethod String?
+  address       String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  listingId     String
+  buyerId       String
+
+  listing Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User           @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  review  ListingReview?
+
+  @@index([buyerId, status])
+  @@index([listingId, status])
+}
+
+model ListingReview {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  listingId  String
+  orderId    String   @unique
+  reviewerId String
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewer User    @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, listingId])
+  @@index([listingId])
+  @@index([reviewerId])
+}
+
+model SavedListing {
+  userId    String
+  listingId String
+  savedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@id([userId, listingId])
+  @@index([listingId])
+}
+
+model ListingReport {
+  id         String       @id @default(cuid())
+  reason     String
+  details    String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  listingId  String
+  reporterId String
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporter User    @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, listingId])
+  @@index([listingId])
+  @@index([reporterId])
+  @@index([status])
 }
 
 model Report {
