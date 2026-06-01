@@ -38,6 +38,9 @@ export function AdminShell({
             <AdminNavLink href={href("/reports")} pathname={pathname}>
               البلاغات
             </AdminNavLink>
+            <AdminNavLink href={href("/store")} pathname={pathname}>
+              المتجر
+            </AdminNavLink>
             <AdminNavLink href={href("/audit")} pathname={pathname}>
               التدقيق
             </AdminNavLink>
