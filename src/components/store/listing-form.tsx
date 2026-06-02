@@ -1,9 +1,10 @@
 "use client";
 
 import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
-import { Loader2, Save, ShoppingBag } from "lucide-react";
+import Image from "next/image";
+import { Loader2, Save, ShoppingBag, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState, useTransition } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { createListingAction, updateListingAction } from "@/actions/listing.actions";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deliveryMethodLabels, listingTypeLabels } from "@/constants/store";
 import { regionLabels } from "@/constants/regions";
+import { uploadListingImage } from "@/lib/upload-image";
 import type { CreateListingInput, UpdateListingInput } from "@/schemas/listing.schema";
 import type { ListingCategoryOption, ListingFormData } from "@/types/store";
 
@@ -26,14 +28,55 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [type, setType] = useState<ListingType>(initialData?.type ?? "SERVICE");
+  const [imageUrls, setImageUrls] = useState<string[]>(initialData?.images ?? []);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const imageText = useMemo(() => initialData?.images.join("\n") ?? "", [initialData]);
   const tagsText = useMemo(() => initialData?.tags.join(", ") ?? "", [initialData]);
+
+  async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+
+    if (files.length === 0) {
+      return;
+    }
+
+    const remainingSlots = 5 - imageUrls.length;
+    if (remainingSlots <= 0) {
+      toast.error("يمكن إضافة 5 صور كحد أقصى");
+      return;
+    }
+
+    const filesToUpload = files.slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      toast.info(`تم اختيار أول ${remainingSlots} صورة فقط`);
+    }
+
+    setIsUploading(true);
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of filesToUpload) {
+        uploadedUrls.push(await uploadListingImage(file));
+      }
+
+      setImageUrls((current) => [...current, ...uploadedUrls].slice(0, 5));
+      toast.success("تم رفع الصور بنجاح");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر رفع الصور، حاول مرة أخرى");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  function removeImage(url: string) {
+    setImageUrls((current) => current.filter((item) => item !== url));
+  }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const payload = buildPayload(formData, type);
+    const payload = buildPayload(formData, type, imageUrls);
 
     startTransition(async () => {
       const result =
@@ -172,13 +215,65 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
             />
           ) : null}
 
-          <TextAreaField
-            name="images"
-            label="روابط الصور"
-            placeholder="ضع كل رابط صورة في سطر منفصل. يمكن إضافة 5 صور كحد أقصى."
-            defaultValue={imageText}
-            rows={4}
-          />
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="listing-images">صور العنصر</Label>
+              <span className="text-xs text-slate-500">{imageUrls.length}/5</span>
+            </div>
+            <label
+              htmlFor="listing-images"
+              className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition hover:border-primary/60 hover:bg-primary/5"
+            >
+              {isUploading ? (
+                <Loader2 className="size-6 animate-spin text-primary" />
+              ) : (
+                <Upload className="size-6 text-primary" />
+              )}
+              <div>
+                <p className="text-sm font-bold text-slate-800">
+                  {isUploading ? "جاري رفع الصور..." : "اضغط لرفع صور العنصر"}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  JPG أو PNG أو WebP، حتى 5 صور. يتم ضغط الصور تلقائياً قبل الرفع.
+                </p>
+              </div>
+            </label>
+            <input
+              id="listing-images"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              className="sr-only"
+              disabled={isUploading || imageUrls.length >= 5}
+              onChange={handleImageUpload}
+            />
+            {imageUrls.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                {imageUrls.map((url, index) => (
+                  <div
+                    key={`${url}-${index}`}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                  >
+                    <Image
+                      src={url}
+                      alt={`صورة العنصر ${index + 1}`}
+                      width={240}
+                      height={180}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(url)}
+                      className="absolute left-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+                      aria-label="حذف الصورة"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
 
           <TextField
             name="tags"
@@ -203,12 +298,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
   );
 }
 
-function buildPayload(formData: FormData, type: ListingType) {
-  const images = String(formData.get("images") ?? "")
-    .split(/\r?\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
+function buildPayload(formData: FormData, type: ListingType, images: string[]) {
   const tags = String(formData.get("tags") ?? "")
     .split(",")
     .map((item) => item.trim())

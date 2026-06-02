@@ -12,7 +12,7 @@ import {
 } from "@/lib/uploadImage";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const ALLOWED_FOLDERS: UploadFolder[] = ["avatars", "portfolio"];
+const ALLOWED_FOLDERS: UploadFolder[] = ["avatars", "portfolio", "listings"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 type PresignRequestBody = {

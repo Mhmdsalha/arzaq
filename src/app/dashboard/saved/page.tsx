@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 
 import { JobCard } from "@/components/jobs/job-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ListingCard } from "@/components/store/listing-card";
 import { auth } from "@/lib/auth";
 import { getSavedJobs } from "@/services/job.service";
+import { getSavedListings } from "@/services/listing.service";
 
 export const metadata = {
   title: "المحفوظات",
@@ -16,7 +18,10 @@ export default async function DashboardSavedPage() {
     redirect("/auth/login");
   }
 
-  const jobs = await getSavedJobs(session.user.id);
+  const [jobs, listings] = await Promise.all([
+    getSavedJobs(session.user.id),
+    getSavedListings(session.user.id),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -26,11 +31,29 @@ export default async function DashboardSavedPage() {
         <p className="mt-2 text-sm text-slate-600">الطلبات التي حفظتها للعودة إليها لاحقًا.</p>
       </div>
 
-      {jobs.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
-          ))}
+      {jobs.length > 0 || listings.length > 0 ? (
+        <div className="space-y-8">
+          {jobs.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-xl font-bold text-slate-950">الطلبات المحفوظة</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {jobs.map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {listings.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-xl font-bold text-slate-950">عناصر المتجر المحفوظة</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {listings.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       ) : (
         <EmptyState

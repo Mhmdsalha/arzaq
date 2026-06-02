@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { SaveListingButton } from "@/components/store/save-listing-button";
 import { Button } from "@/components/ui/button";
 import { deliveryMethodLabels, listingTypeLabels } from "@/constants/store";
 import { regionLabels } from "@/constants/regions";
@@ -16,8 +17,9 @@ export function ListingCard({ listing }: { listing: ListingListItem }) {
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      <Link href={`/store/${listing.id}`} className="block">
-        <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+      <div className="relative">
+        <Link href={`/store/${listing.id}`} className="block">
+          <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
           {mainImage ? (
             <Image
               src={mainImage}
@@ -50,8 +52,14 @@ export function ListingCard({ listing }: { listing: ListingListItem }) {
               </span>
             ) : null}
           </div>
-        </div>
-      </Link>
+          </div>
+        </Link>
+        <SaveListingButton
+          listingId={listing.id}
+          isSaved={listing.isSaved}
+          className="absolute left-3 top-3 bg-white/90 shadow-sm backdrop-blur-sm"
+        />
+      </div>
 
       <div className="space-y-3 p-4">
         <div>

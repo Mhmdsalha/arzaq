@@ -20,6 +20,7 @@ import { ListingCard } from "@/components/store/listing-card";
 import { ListingGallery } from "@/components/store/listing-gallery";
 import { ListingReportButton } from "@/components/store/listing-report-button";
 import { OrderSheet } from "@/components/store/order-sheet";
+import { SaveListingButton } from "@/components/store/save-listing-button";
 import { StarRating } from "@/components/shared/star-rating";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
@@ -163,6 +164,13 @@ export function ListingDetails({
             </div>
 
             <OrderAction listing={listing} isAuthenticated={isAuthenticated} />
+
+            <SaveListingButton
+              listingId={listing.id}
+              isSaved={listing.isSaved}
+              className="w-full"
+              showLabel
+            />
 
             {listing.seller.whatsapp ? (
               <WhatsAppButton

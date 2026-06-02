@@ -511,6 +511,83 @@ export async function softDeleteListing(id: string, sellerId: string) {
   }
 }
 
+export const getSavedListings = cache(async (userId: string): Promise<ListingListItem[]> => {
+  if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
+    return [];
+  }
+
+  const savedListings = await prisma.savedListing.findMany({
+    where: {
+      userId,
+      listing: {
+        deletedAt: null,
+        status: "ACTIVE",
+      },
+    },
+    orderBy: {
+      savedAt: "desc",
+    },
+    select: {
+      listing: {
+        select: listingListSelect(userId),
+      },
+    },
+  });
+
+  return savedListings.map((savedListing) => mapListingListItem(savedListing.listing, userId));
+});
+
+export async function toggleSavedListing(id: string, userId: string) {
+  const listing = await prisma.listing.findFirst({
+    where: {
+      id,
+      deletedAt: null,
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!listing) {
+    throw new Error("العنصر غير موجود أو غير متاح");
+  }
+
+  const savedListing = await prisma.savedListing.findUnique({
+    where: {
+      userId_listingId: {
+        userId,
+        listingId: id,
+      },
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  if (savedListing) {
+    await prisma.savedListing.delete({
+      where: {
+        userId_listingId: {
+          userId,
+          listingId: id,
+        },
+      },
+    });
+
+    return false;
+  }
+
+  await prisma.savedListing.create({
+    data: {
+      userId,
+      listingId: id,
+    },
+  });
+
+  return true;
+}
+
 async function updateSellerListingStatus(
   id: string,
   sellerId: string,

@@ -21,6 +21,7 @@ import {
   createListing,
   pauseListing,
   softDeleteListing,
+  toggleSavedListing,
   updateListing,
 } from "@/services/listing.service";
 
@@ -129,6 +130,42 @@ export async function activateListingAction(input: ListingIdInput): Promise<List
 
 export async function deleteListingAction(input: ListingIdInput): Promise<ListingActionResult> {
   return changeListingState(input, "delete");
+}
+
+export async function toggleSaveListingAction(listingId: string): Promise<ListingActionResult & { isSaved?: boolean }> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { ok: false, message: "يجب تسجيل الدخول أولاً" };
+  }
+
+  const parsed = listingIdSchema.safeParse({ listingId });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "العنصر غير صحيح",
+    };
+  }
+
+  try {
+    await requireNotBanned();
+    const isSaved = await toggleSavedListing(parsed.data.listingId, session.user.id);
+    revalidatePath("/store");
+    revalidatePath(`/store/${parsed.data.listingId}`);
+    revalidatePath("/dashboard/saved");
+
+    return {
+      ok: true,
+      message: isSaved ? "تم حفظ العنصر" : "تم إزالة العنصر من المحفوظات",
+      isSaved,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ، حاول مرة أخرى",
+    };
+  }
 }
 
 async function changeListingState(

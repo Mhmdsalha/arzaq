@@ -3,6 +3,8 @@ import imageCompression from "browser-image-compression";
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_ORIGINAL_AVATAR_BYTES = 6 * 1024 * 1024;
 const MAX_COMPRESSED_AVATAR_BYTES = 450 * 1024;
+const MAX_ORIGINAL_LISTING_BYTES = 8 * 1024 * 1024;
+const MAX_COMPRESSED_LISTING_BYTES = 1024 * 1024;
 const MIN_AVATAR_DIMENSION = 200;
 const MAX_AVATAR_DIMENSION = 4000;
 
@@ -55,6 +57,59 @@ export async function uploadAvatarImage(file: File) {
   return data.publicUrl;
 }
 
+export async function uploadListingImage(file: File) {
+  await validateListingFile(file);
+  const compressedFile = await imageCompression(file, {
+    maxSizeMB: 0.95,
+    maxWidthOrHeight: 1600,
+    useWebWorker: true,
+    fileType: file.type === "image/png" ? "image/png" : "image/webp",
+  });
+
+  if (compressedFile.size > MAX_COMPRESSED_LISTING_BYTES) {
+    throw new Error("حجم الصورة بعد الضغط يجب ألا يتجاوز 1MB");
+  }
+
+  const csrfToken = await getCsrfToken();
+  const presignResponse = await fetch("/api/upload/presign", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-csrf-token": csrfToken,
+    },
+    body: JSON.stringify({
+      fileName: normalizedFileName(compressedFile),
+      contentType: compressedFile.type,
+      fileSize: compressedFile.size,
+      folder: "listings",
+    }),
+  });
+
+  const presignData = (await presignResponse.json()) as Partial<{
+    presignedUrl: string;
+    publicUrl: string;
+    error: string;
+  }>;
+
+  if (!presignResponse.ok || !presignData.presignedUrl || !presignData.publicUrl) {
+    throw new Error(presignData.error ?? "تعذر تجهيز رفع الصورة، حاول مرة أخرى");
+  }
+
+  const uploadResponse = await fetch(presignData.presignedUrl, {
+    method: "PUT",
+    headers: {
+      "content-type": compressedFile.type,
+    },
+    body: compressedFile,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error("تعذر رفع الصورة، حاول مرة أخرى");
+  }
+
+  return presignData.publicUrl;
+}
+
 async function getCsrfToken() {
   const response = await fetch("/api/csrf", {
     method: "GET",
@@ -86,6 +141,26 @@ async function validateAvatarFile(file: File) {
 
   if (width > MAX_AVATAR_DIMENSION || height > MAX_AVATAR_DIMENSION) {
     throw new Error("أبعاد الصورة كبيرة جداً، الحد الأعلى 4000×4000 بكسل");
+  }
+}
+
+async function validateListingFile(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("نوع الصورة غير مدعوم، يُسمح بـ JPG و PNG و WebP فقط");
+  }
+
+  if (file.size > MAX_ORIGINAL_LISTING_BYTES) {
+    throw new Error("حجم الصورة الأصلي يجب ألا يتجاوز 8MB");
+  }
+
+  const { width, height } = await readImageDimensions(file);
+
+  if (width < 300 || height < 220) {
+    throw new Error("أبعاد الصورة صغيرة جداً، الحد الأدنى 300×220 بكسل");
+  }
+
+  if (width > 5000 || height > 5000) {
+    throw new Error("أبعاد الصورة كبيرة جداً، الحد الأعلى 5000×5000 بكسل");
   }
 }
 

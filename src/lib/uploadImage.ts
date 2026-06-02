@@ -3,7 +3,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { R2_BUCKET, R2_PUBLIC_URL, r2Client } from "@/lib/r2";
 
-export type UploadFolder = "avatars" | "portfolio";
+export type UploadFolder = "avatars" | "portfolio" | "listings";
 
 export async function getPresignedUploadUrl(key: string, contentType: string): Promise<string> {
   const command = new PutObjectCommand({
