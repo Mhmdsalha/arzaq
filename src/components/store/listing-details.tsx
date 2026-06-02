@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import { ListingCard } from "@/components/store/listing-card";
 import { ListingGallery } from "@/components/store/listing-gallery";
+import { OrderSheet } from "@/components/store/order-sheet";
 import { StarRating } from "@/components/shared/star-rating";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
@@ -263,9 +264,16 @@ function OrderAction({
   }
 
   return (
-    <Button type="button" className="w-full" disabled>
-      الطلب عبر المنصة قريباً
-    </Button>
+    <OrderSheet
+      listing={{
+        id: listing.id,
+        title: listing.title,
+        type: listing.type,
+        price: listing.price,
+        quantity: listing.quantity,
+        deliveryMethod: listing.deliveryMethod,
+      }}
+    />
   );
 }
 
