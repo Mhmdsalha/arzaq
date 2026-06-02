@@ -34,6 +34,10 @@ export type DashboardOrderItem = {
     id: string;
     name: string;
   };
+  review: {
+    id: string;
+    rating: number;
+  } | null;
 };
 
 const sellerTransitions: Record<OrderStatus, OrderStatus[]> = {
@@ -198,6 +202,12 @@ export async function updateOrderStatus(
           title: true,
         },
       },
+      review: {
+        select: {
+          id: true,
+          rating: true,
+        },
+      },
     },
   });
 
@@ -328,6 +338,12 @@ export const getBuyerOrders = cache(async (buyerId: string): Promise<DashboardOr
           },
         },
       },
+      review: {
+        select: {
+          id: true,
+          rating: true,
+        },
+      },
     },
   });
 
@@ -354,6 +370,7 @@ export const getBuyerOrders = cache(async (buyerId: string): Promise<DashboardOr
           : null,
       },
     },
+    review: order.review,
   }));
 });
 
@@ -393,6 +410,12 @@ export const getReceivedOrders = cache(
             name: true,
           },
         },
+        review: {
+          select: {
+            id: true,
+            rating: true,
+          },
+        },
       },
     });
 
@@ -413,6 +436,7 @@ export const getReceivedOrders = cache(
         image: order.listing.images[0] ?? null,
       },
       buyer: order.buyer,
+      review: order.review,
     }));
   },
 );

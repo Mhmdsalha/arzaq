@@ -44,6 +44,17 @@ export type ListingDetailsData = ListingListItem & {
     createdAt: Date;
     isVerified: boolean;
   };
+  reviews: Array<{
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: Date;
+    reviewer: {
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+  }>;
   isOwner: boolean;
 };
 

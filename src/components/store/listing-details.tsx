@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+﻿import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 import {
   BadgeCheck,
@@ -59,7 +59,7 @@ export function ListingDetails({
               </span>
               {listing.isFeatured ? (
                 <span className="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">
-                  مميز
+                  Ù…Ù…ÙŠØ²
                 </span>
               ) : null}
             </div>
@@ -67,7 +67,7 @@ export function ListingDetails({
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="rounded-2xl border border-primary/10 bg-primary/5 p-5">
-              <p className="text-sm text-slate-600">السعر</p>
+              <p className="text-sm text-slate-600">Ø§Ù„Ø³Ø¹Ø±</p>
               <p className="mt-1 text-3xl font-extrabold text-primary-dark">
                 {formatPrice(listing.price)}
               </p>
@@ -81,17 +81,17 @@ export function ListingDetails({
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <DetailItem icon={Truck} label="طريقة التسليم" value={deliveryMethodLabels[listing.deliveryMethod]} />
-              <DetailItem icon={CalendarDays} label="مدة التسليم" value={listing.deliveryTime ?? "حسب الاتفاق"} />
-              <DetailItem icon={MapPin} label="المنطقة" value={regionLabels[listing.region]} />
-              <DetailItem icon={Eye} label="المشاهدات" value={String(listing.viewCount)} />
+              <DetailItem icon={Truck} label="Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„ØªØ³Ù„ÙŠÙ…" value={deliveryMethodLabels[listing.deliveryMethod]} />
+              <DetailItem icon={CalendarDays} label="Ù…Ø¯Ø© Ø§Ù„ØªØ³Ù„ÙŠÙ…" value={listing.deliveryTime ?? "Ø­Ø³Ø¨ Ø§Ù„Ø§ØªÙØ§Ù‚"} />
+              <DetailItem icon={MapPin} label="Ø§Ù„Ù…Ù†Ø·Ù‚Ø©" value={regionLabels[listing.region]} />
+              <DetailItem icon={Eye} label="Ø§Ù„Ù…Ø´Ø§Ù‡Ø¯Ø§Øª" value={String(listing.viewCount)} />
             </div>
 
             {listing.tags.length > 0 ? (
               <div>
                 <div className="mb-3 flex items-center gap-2 font-bold text-slate-950">
                   <Tags className="size-4 text-primary" />
-                  الكلمات المفتاحية
+                  Ø§Ù„ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ù…ÙØªØ§Ø­ÙŠØ©
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {listing.tags.map((tag) => (
@@ -111,7 +111,7 @@ export function ListingDetails({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">التقييمات</CardTitle>
+            <CardTitle className="text-xl">Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -120,16 +120,18 @@ export function ListingDetails({
                 <StarRating value={listing.avgRating} showValue={false} size="md" />
               </div>
               <p className="text-sm text-slate-600">
-                بناءً على {listing.totalReviews} تقييم. سيتم عرض قائمة التقييمات في مرحلة نظام الطلبات والمراجعات.
+                Ø¨Ù†Ø§Ø¡Ù‹ Ø¹Ù„Ù‰ {listing.totalReviews} ØªÙ‚ÙŠÙŠÙ…. Ø³ÙŠØªÙ… Ø¹Ø±Ø¶ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª ÙÙŠ Ù…Ø±Ø­Ù„Ø© Ù†Ø¸Ø§Ù… Ø§Ù„Ø·Ù„Ø¨Ø§Øª ÙˆØ§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø§Øª.
               </p>
             </div>
           </CardContent>
         </Card>
 
+        <ListingReviews reviews={listing.reviews} />
+
         {similarListings.length > 0 ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">عناصر مشابهة</CardTitle>
+              <CardTitle className="text-xl">Ø¹Ù†Ø§ØµØ± Ù…Ø´Ø§Ø¨Ù‡Ø©</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -145,18 +147,18 @@ export function ListingDetails({
       <aside className="space-y-4">
         <Card className="sticky top-24">
           <CardHeader>
-            <CardTitle className="text-xl">ملخص الطلب</CardTitle>
+            <CardTitle className="text-xl">Ù…Ù„Ø®Øµ Ø§Ù„Ø·Ù„Ø¨</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <SellerCard listing={listing} />
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm text-slate-500">الإجمالي التقريبي</p>
+              <p className="text-sm text-slate-500">Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠ</p>
               <p className="mt-1 text-2xl font-extrabold text-primary-dark">
                 {formatPrice(listing.price)}
               </p>
               <p className="mt-2 text-xs leading-6 text-slate-500">
-                الدفع يتم خارج المنصة عند الاستلام أو حسب الاتفاق مع البائع.
+                Ø§Ù„Ø¯ÙØ¹ ÙŠØªÙ… Ø®Ø§Ø±Ø¬ Ø§Ù„Ù…Ù†ØµØ© Ø¹Ù†Ø¯ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… Ø£Ùˆ Ø­Ø³Ø¨ Ø§Ù„Ø§ØªÙØ§Ù‚ Ù…Ø¹ Ø§Ù„Ø¨Ø§Ø¦Ø¹.
               </p>
             </div>
 
@@ -166,14 +168,14 @@ export function ListingDetails({
               <WhatsAppButton
                 phone={listing.seller.whatsapp}
                 className="w-full"
-                label="تواصل عبر واتساب"
+                label="ØªÙˆØ§ØµÙ„ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨"
               />
             ) : null}
 
             <ListingReportAction listing={listing} isAuthenticated={isAuthenticated} />
 
             <div className="rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800">
-              تأكد من تفاصيل المنتج أو الخدمة قبل الدفع. أرزاق لا يعالج المدفوعات حالياً.
+              ØªØ£ÙƒØ¯ Ù…Ù† ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…Ù†ØªØ¬ Ø£Ùˆ Ø§Ù„Ø®Ø¯Ù…Ø© Ù‚Ø¨Ù„ Ø§Ù„Ø¯ÙØ¹. Ø£Ø±Ø²Ø§Ù‚ Ù„Ø§ ÙŠØ¹Ø§Ù„Ø¬ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹.
             </div>
           </CardContent>
         </Card>
@@ -208,22 +210,22 @@ function SellerCard({ listing }: { listing: ListingDetailsData }) {
           </p>
           <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
             <Star className="size-3.5 fill-amber-400 text-amber-400" />
-            {listing.seller.avgRating.toFixed(1)} من {listing.seller.totalReviews} تقييم
+            {listing.seller.avgRating.toFixed(1)} Ù…Ù† {listing.seller.totalReviews} ØªÙ‚ÙŠÙŠÙ…
           </p>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <Metric icon={UserRound} label="عضو منذ" value={formatDistanceToNow(listing.seller.createdAt, { locale: ar })} />
+        <Metric icon={UserRound} label="Ø¹Ø¶Ùˆ Ù…Ù†Ø°" value={formatDistanceToNow(listing.seller.createdAt, { locale: ar })} />
         <Metric
           icon={MapPin}
-          label="المنطقة"
-          value={listing.seller.region ? regionLabels[listing.seller.region] : "غير محددة"}
+          label="Ø§Ù„Ù…Ù†Ø·Ù‚Ø©"
+          value={listing.seller.region ? regionLabels[listing.seller.region] : "ØºÙŠØ± Ù…Ø­Ø¯Ø¯Ø©"}
         />
       </div>
 
       <Button asChild variant="secondary" className="mt-4 w-full">
-        <Link href={`/providers/${listing.seller.id}`}>عرض بروفايله</Link>
+        <Link href={`/providers/${listing.seller.id}`}>Ø¹Ø±Ø¶ Ø¨Ø±ÙˆÙØ§ÙŠÙ„Ù‡</Link>
       </Button>
     </div>
   );
@@ -240,7 +242,7 @@ function OrderAction({
     return (
       <Button asChild className="w-full">
         <Link href={`/auth/login?callbackUrl=${encodeURIComponent(`/store/${listing.id}`)}`}>
-          سجّل دخولك للطلب
+          Ø³Ø¬Ù‘Ù„ Ø¯Ø®ÙˆÙ„Ùƒ Ù„Ù„Ø·Ù„Ø¨
         </Link>
       </Button>
     );
@@ -249,7 +251,7 @@ function OrderAction({
   if (listing.isOwner) {
     return (
       <p className="rounded-xl bg-slate-100 p-3 text-center text-sm text-slate-600">
-        هذا العنصر منشور من حسابك.
+        Ù‡Ø°Ø§ Ø§Ù„Ø¹Ù†ØµØ± Ù…Ù†Ø´ÙˆØ± Ù…Ù† Ø­Ø³Ø§Ø¨Ùƒ.
       </p>
     );
   }
@@ -257,7 +259,7 @@ function OrderAction({
   if (listing.status !== "ACTIVE") {
     return (
       <Button type="button" disabled className="w-full">
-        هذا العنصر غير متاح
+        Ù‡Ø°Ø§ Ø§Ù„Ø¹Ù†ØµØ± ØºÙŠØ± Ù…ØªØ§Ø­
       </Button>
     );
   }
@@ -291,13 +293,46 @@ function ListingReportAction({
     return (
       <Button asChild variant="secondary" className="w-full">
         <Link href={`/auth/login?callbackUrl=${encodeURIComponent(`/store/${listing.id}`)}`}>
-          سجل دخولك للإبلاغ
+          Ø³Ø¬Ù„ Ø¯Ø®ÙˆÙ„Ùƒ Ù„Ù„Ø¥Ø¨Ù„Ø§Øº
         </Link>
       </Button>
     );
   }
 
   return <ListingReportButton listingId={listing.id} className="w-full" />;
+}
+
+function ListingReviews({
+  reviews,
+}: {
+  reviews: ListingDetailsData["reviews"];
+}) {
+  if (reviews.length === 0) {
+    return (
+      <p className="mt-4 rounded-2xl border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">
+        لا توجد تقييمات لهذا العنصر بعد.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 grid gap-3">
+      {reviews.map((review) => (
+        <div key={review.id} className="rounded-2xl border border-slate-200 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-bold text-slate-950">{review.reviewer.name}</p>
+              <p className="mt-1 text-xs text-slate-500">{formatDate(review.createdAt)}</p>
+            </div>
+            <StarRating value={review.rating} showValue={false} />
+          </div>
+          {review.comment ? (
+            <p className="mt-3 text-sm leading-7 text-slate-600">{review.comment}</p>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function DetailItem({
@@ -342,6 +377,11 @@ function formatPrice(price: number) {
   return (
     new Intl.NumberFormat("ar", {
       maximumFractionDigits: 0,
-    }).format(price) + " شيكل"
+    }).format(price) + " Ø´ÙŠÙƒÙ„"
   );
+}
+
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("ar", { dateStyle: "medium" }).format(date);
 }

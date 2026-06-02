@@ -161,6 +161,29 @@ export const getListingById = cache(
               },
             },
           },
+          reviews: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 8,
+            select: {
+              id: true,
+              rating: true,
+              comment: true,
+              createdAt: true,
+              reviewer: {
+                select: {
+                  id: true,
+                  name: true,
+                  profile: {
+                    select: {
+                      avatarUrl: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       })
       .catch((error: unknown) => {
@@ -187,6 +210,17 @@ export const getListingById = cache(
         createdAt: listing.seller.createdAt,
         isVerified: listing.seller.isVerified,
       },
+      reviews: listing.reviews.map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+        reviewer: {
+          id: review.reviewer.id,
+          name: review.reviewer.name,
+          avatarUrl: review.reviewer.profile?.avatarUrl ?? null,
+        },
+      })),
       isOwner: listing.seller.id === userId,
     };
   },

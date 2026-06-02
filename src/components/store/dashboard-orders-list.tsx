@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { OrderStatus } from "@prisma/client";
 import { Loader2, MessageCircle, PackageCheck, XCircle } from "lucide-react";
@@ -7,17 +7,18 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 
 import { cancelOrderAction, updateOrderStatusAction } from "@/actions/order.actions";
+import { ListingReviewButton } from "@/components/store/listing-review-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DashboardOrderItem } from "@/services/order.service";
 
 const orderStatusLabels: Record<OrderStatus, string> = {
-  PENDING: "بانتظار التأكيد",
-  CONFIRMED: "مؤكد",
-  IN_PROGRESS: "قيد التنفيذ",
-  COMPLETED: "مكتمل",
-  CANCELLED: "ملغي",
-  DISPUTED: "قيد المراجعة",
+  PENDING: "Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„ØªØ£ÙƒÙŠØ¯",
+  CONFIRMED: "Ù…Ø¤ÙƒØ¯",
+  IN_PROGRESS: "Ù‚ÙŠØ¯ Ø§Ù„ØªÙ†ÙÙŠØ°",
+  COMPLETED: "Ù…ÙƒØªÙ…Ù„",
+  CANCELLED: "Ù…Ù„ØºÙŠ",
+  DISPUTED: "Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©",
 };
 
 type DashboardOrdersListProps = {
@@ -32,16 +33,16 @@ export function DashboardOrdersList({ orders, mode }: DashboardOrdersListProps) 
     return (
       <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center">
         <h2 className="text-lg font-bold text-slate-950">
-          {mode === "buyer" ? "لا توجد طلبات مرسلة بعد" : "لا توجد طلبات واردة بعد"}
+          {mode === "buyer" ? "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ù…Ø±Ø³Ù„Ø© Ø¨Ø¹Ø¯" : "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª ÙˆØ§Ø±Ø¯Ø© Ø¨Ø¹Ø¯"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           {mode === "buyer"
-            ? "تصفح المتجر واطلب خدمة أو منتجاً مناسباً."
-            : "عندما يطلب العملاء عناصر من متجرك ستظهر هنا."}
+            ? "ØªØµÙØ­ Ø§Ù„Ù…ØªØ¬Ø± ÙˆØ§Ø·Ù„Ø¨ Ø®Ø¯Ù…Ø© Ø£Ùˆ Ù…Ù†ØªØ¬Ø§Ù‹ Ù…Ù†Ø§Ø³Ø¨Ø§Ù‹."
+            : "Ø¹Ù†Ø¯Ù…Ø§ ÙŠØ·Ù„Ø¨ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø¹Ù†Ø§ØµØ± Ù…Ù† Ù…ØªØ¬Ø±Ùƒ Ø³ØªØ¸Ù‡Ø± Ù‡Ù†Ø§."}
         </p>
         <Button asChild className="mt-5 h-11">
           <Link href={mode === "buyer" ? "/store" : "/dashboard/store"}>
-            {mode === "buyer" ? "تصفح المتجر" : "إدارة متجري"}
+            {mode === "buyer" ? "ØªØµÙØ­ Ø§Ù„Ù…ØªØ¬Ø±" : "Ø¥Ø¯Ø§Ø±Ø© Ù…ØªØ¬Ø±ÙŠ"}
           </Link>
         </Button>
       </div>
@@ -61,7 +62,7 @@ function OrderCard({ order, mode }: { order: DashboardOrderItem; mode: "buyer" |
   const [isPending, startTransition] = useTransition();
 
   function cancel() {
-    if (!window.confirm("هل تريد إلغاء هذا الطلب؟")) {
+    if (!window.confirm("Ù‡Ù„ ØªØ±ÙŠØ¯ Ø¥Ù„ØºØ§Ø¡ Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ØŸ")) {
       return;
     }
 
@@ -87,7 +88,7 @@ function OrderCard({ order, mode }: { order: DashboardOrderItem; mode: "buyer" |
               {orderStatusLabels[order.status]}
             </span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
-              رقم الطلب: {order.id.slice(-8).toUpperCase()}
+              Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨: {order.id.slice(-8).toUpperCase()}
             </span>
           </div>
           <Link href={`/store/${order.listing.id}`}>
@@ -96,11 +97,11 @@ function OrderCard({ order, mode }: { order: DashboardOrderItem; mode: "buyer" |
             </h2>
           </Link>
           <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-600">
-            <span>الكمية: {order.quantity}</span>
-            <span>الإجمالي: {formatPrice(order.totalPrice)}</span>
+            <span>Ø§Ù„ÙƒÙ…ÙŠØ©: {order.quantity}</span>
+            <span>Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ: {formatPrice(order.totalPrice)}</span>
             <span>{formatDate(order.createdAt)}</span>
-            {mode === "seller" && order.buyer ? <span>العميل: {order.buyer.name}</span> : null}
-            {mode === "buyer" && order.listing.seller ? <span>البائع: {order.listing.seller.name}</span> : null}
+            {mode === "seller" && order.buyer ? <span>Ø§Ù„Ø¹Ù…ÙŠÙ„: {order.buyer.name}</span> : null}
+            {mode === "buyer" && order.listing.seller ? <span>Ø§Ù„Ø¨Ø§Ø¦Ø¹: {order.listing.seller.name}</span> : null}
           </div>
           {order.note ? (
             <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-600">
@@ -108,7 +109,7 @@ function OrderCard({ order, mode }: { order: DashboardOrderItem; mode: "buyer" |
             </p>
           ) : null}
           {order.address ? (
-            <p className="mt-2 text-sm leading-6 text-slate-500">العنوان: {order.address}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Ø§Ù„Ø¹Ù†ÙˆØ§Ù†: {order.address}</p>
           ) : null}
         </div>
 
@@ -116,7 +117,7 @@ function OrderCard({ order, mode }: { order: DashboardOrderItem; mode: "buyer" |
           {mode === "buyer" && order.status === "PENDING" ? (
             <Button type="button" variant="secondary" className="h-10 text-red-600" disabled={isPending} onClick={cancel}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <XCircle className="size-4" />}
-              إلغاء الطلب
+              Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨
             </Button>
           ) : null}
 
@@ -124,11 +125,20 @@ function OrderCard({ order, mode }: { order: DashboardOrderItem; mode: "buyer" |
             <Button asChild variant="secondary" className="h-10 text-primary-dark">
               <a href={buildWhatsappUrl(order.listing.seller.whatsapp, order)} target="_blank" rel="noreferrer">
                 <MessageCircle className="size-4" />
-                واتساب
+                ÙˆØ§ØªØ³Ø§Ø¨
               </a>
             </Button>
           ) : null}
 
+          {mode === "buyer" && order.status === "COMPLETED" ? (
+            order.review ? (
+              <div className="rounded-xl bg-amber-50 px-3 py-2 text-center text-sm font-bold text-amber-700">
+                تم التقييم: {order.review.rating}/5
+              </div>
+            ) : (
+              <ListingReviewButton orderId={order.id} />
+            )
+          ) : null}
           {mode === "seller" ? (
             <SellerActions order={order} isPending={isPending} onUpdate={update} />
           ) : null}
@@ -152,10 +162,10 @@ function SellerActions({
       <>
         <Button type="button" className="h-10" disabled={isPending} onClick={() => onUpdate("CONFIRMED")}>
           {isPending ? <Loader2 className="size-4 animate-spin" /> : <PackageCheck className="size-4" />}
-          تأكيد الطلب
+          ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø·Ù„Ø¨
         </Button>
         <Button type="button" variant="secondary" className="h-10 text-red-600" disabled={isPending} onClick={() => onUpdate("CANCELLED")}>
-          رفض الطلب
+          Ø±ÙØ¶ Ø§Ù„Ø·Ù„Ø¨
         </Button>
       </>
     );
@@ -165,10 +175,10 @@ function SellerActions({
     return (
       <>
         <Button type="button" className="h-10" disabled={isPending} onClick={() => onUpdate("IN_PROGRESS")}>
-          بدء التنفيذ
+          Ø¨Ø¯Ø¡ Ø§Ù„ØªÙ†ÙÙŠØ°
         </Button>
         <Button type="button" variant="secondary" className="h-10 text-red-600" disabled={isPending} onClick={() => onUpdate("CANCELLED")}>
-          إلغاء
+          Ø¥Ù„ØºØ§Ø¡
         </Button>
       </>
     );
@@ -177,7 +187,7 @@ function SellerActions({
   if (order.status === "IN_PROGRESS") {
     return (
       <Button type="button" className="h-10" disabled={isPending} onClick={() => onUpdate("COMPLETED")}>
-        تم الإنجاز
+        ØªÙ… Ø§Ù„Ø¥Ù†Ø¬Ø§Ø²
       </Button>
     );
   }
@@ -202,7 +212,7 @@ function statusClassName(status: OrderStatus) {
 }
 
 function formatPrice(price: number) {
-  return `${new Intl.NumberFormat("ar").format(price)} شيكل`;
+  return `${new Intl.NumberFormat("ar").format(price)} Ø´ÙŠÙƒÙ„`;
 }
 
 function formatDate(date: Date) {
@@ -212,6 +222,7 @@ function formatDate(date: Date) {
 }
 
 function buildWhatsappUrl(phone: string, order: DashboardOrderItem) {
-  const text = `مرحباً، أتابع طلبي على ${order.listing.title}. رقم الطلب: ${order.id}`;
+  const text = `Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ Ø£ØªØ§Ø¨Ø¹ Ø·Ù„Ø¨ÙŠ Ø¹Ù„Ù‰ ${order.listing.title}. Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨: ${order.id}`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
+
