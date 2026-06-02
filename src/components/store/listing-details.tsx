@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import { ListingCard } from "@/components/store/listing-card";
 import { ListingGallery } from "@/components/store/listing-gallery";
+import { ListingReportButton } from "@/components/store/listing-report-button";
 import { OrderSheet } from "@/components/store/order-sheet";
 import { StarRating } from "@/components/shared/star-rating";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
@@ -169,9 +170,7 @@ export function ListingDetails({
               />
             ) : null}
 
-            <Button type="button" variant="secondary" className="w-full" disabled>
-              الإبلاغ عن هذا العنصر قريباً
-            </Button>
+            <ListingReportAction listing={listing} isAuthenticated={isAuthenticated} />
 
             <div className="rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800">
               تأكد من تفاصيل المنتج أو الخدمة قبل الدفع. أرزاق لا يعالج المدفوعات حالياً.
@@ -275,6 +274,30 @@ function OrderAction({
       }}
     />
   );
+}
+
+function ListingReportAction({
+  listing,
+  isAuthenticated,
+}: {
+  listing: ListingDetailsData;
+  isAuthenticated: boolean;
+}) {
+  if (listing.isOwner) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Button asChild variant="secondary" className="w-full">
+        <Link href={`/auth/login?callbackUrl=${encodeURIComponent(`/store/${listing.id}`)}`}>
+          سجل دخولك للإبلاغ
+        </Link>
+      </Button>
+    );
+  }
+
+  return <ListingReportButton listingId={listing.id} className="w-full" />;
 }
 
 function DetailItem({
