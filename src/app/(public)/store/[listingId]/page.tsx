@@ -1,5 +1,13 @@
-import { StoreRouteShell } from "@/components/store/store-route-shell";
+import { notFound } from "next/navigation";
+
+import { ListingDetails } from "@/components/store/listing-details";
+import { auth } from "@/lib/auth";
 import { createPageMetadata } from "@/lib/seo";
+import {
+  getListingById,
+  getSimilarListings,
+  incrementListingViews,
+} from "@/services/listing.service";
 
 export const revalidate = 60;
 
@@ -15,20 +23,26 @@ export default async function ListingDetailsPage({
   params: Promise<{ listingId: string }>;
 }) {
   const { listingId } = await params;
+  const session = await auth();
+  const userId = session?.user?.id;
+  const listing = await getListingById(listingId, userId);
+
+  if (!listing) {
+    notFound();
+  }
+
+  const [similarListings] = await Promise.all([
+    getSimilarListings(listing.category.id, listing.id, userId),
+    incrementListingViews(listing.id, userId),
+  ]);
 
   return (
     <main className="container-responsive pb-16 pt-28">
-      <StoreRouteShell
-        eyebrow="تفاصيل المتجر"
-        title="تفاصيل المنتج أو الخدمة"
-        description="سيتم في المرحلة القادمة تحميل بيانات المنتج، معرض الصور، البائع، نموذج الطلب، والتقييمات من قاعدة البيانات."
-        backHref="/store"
-        backLabel="العودة للمتجر"
-      >
-        <p>
-          معرّف العنصر الحالي: <span className="font-mono font-bold text-primary-dark">{listingId}</span>
-        </p>
-      </StoreRouteShell>
+      <ListingDetails
+        listing={listing}
+        similarListings={similarListings}
+        isAuthenticated={Boolean(userId)}
+      />
     </main>
   );
 }

@@ -36,6 +36,17 @@ export type ListingListItem = {
   isSaved: boolean;
 };
 
+export type ListingDetailsData = ListingListItem & {
+  seller: ListingListItem["seller"] & {
+    avgRating: number;
+    totalReviews: number;
+    region: Region | null;
+    createdAt: Date;
+    isVerified: boolean;
+  };
+  isOwner: boolean;
+};
+
 export type PaginatedListings<T> = {
   items: T[];
   total: number;

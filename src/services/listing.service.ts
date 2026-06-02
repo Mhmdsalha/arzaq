@@ -6,6 +6,7 @@ import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } f
 import { sanitizeSearchQuery } from "@/lib/sanitize";
 import type {
   ListingCategoryOption,
+  ListingDetailsData,
   ListingListItem,
   PaginatedListings,
 } from "@/types/store";
@@ -121,6 +122,126 @@ export async function getListingsWithFilters(
 
     throw error;
   }
+}
+
+export const getListingById = cache(
+  async (id: string, userId?: string): Promise<ListingDetailsData | null> => {
+    if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
+      return null;
+    }
+
+    const listing = await prisma.listing
+      .findFirst({
+        where: {
+          id,
+          deletedAt: null,
+          status: "ACTIVE",
+        },
+        select: {
+          ...listingListSelect(userId),
+          seller: {
+            select: {
+              id: true,
+              name: true,
+              isVerified: true,
+              createdAt: true,
+              profile: {
+                select: {
+                  avatarUrl: true,
+                  whatsapp: true,
+                  showWhatsapp: true,
+                  isTrusted: true,
+                  avgRating: true,
+                  totalReviews: true,
+                  region: true,
+                },
+              },
+            },
+          },
+        },
+      })
+      .catch((error: unknown) => {
+        if (isDatabaseConnectionError(error)) {
+          return null;
+        }
+
+        throw error;
+      });
+
+    if (!listing) {
+      return null;
+    }
+
+    const listItem = mapListingListItem(listing, userId);
+
+    return {
+      ...listItem,
+      seller: {
+        ...listItem.seller,
+        avgRating: listing.seller.profile?.avgRating ?? 0,
+        totalReviews: listing.seller.profile?.totalReviews ?? 0,
+        region: listing.seller.profile?.region ?? null,
+        createdAt: listing.seller.createdAt,
+        isVerified: listing.seller.isVerified,
+      },
+      isOwner: listing.seller.id === userId,
+    };
+  },
+);
+
+export const getSimilarListings = cache(
+  async (
+    categoryId: string,
+    excludeId: string,
+    userId?: string,
+  ): Promise<ListingListItem[]> => {
+    if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
+      return [];
+    }
+
+    const listings = await prisma.listing
+      .findMany({
+        where: {
+          categoryId,
+          id: {
+            not: excludeId,
+          },
+          deletedAt: null,
+          status: "ACTIVE",
+        },
+        orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+        take: 4,
+        select: listingListSelect(userId),
+      })
+      .catch((error: unknown) => {
+        if (isDatabaseConnectionError(error)) {
+          return [];
+        }
+
+        throw error;
+      });
+
+    return listings.map((listing) => mapListingListItem(listing, userId));
+  },
+);
+
+export async function incrementListingViews(id: string, viewerId?: string) {
+  if (!hasDatabaseUrl()) {
+    return;
+  }
+
+  await prisma.listing.updateMany({
+    where: {
+      id,
+      deletedAt: null,
+      ...(viewerId ? { sellerId: { not: viewerId } } : {}),
+    },
+    data: {
+      viewCount: {
+        increment: 1,
+      },
+    },
+  });
 }
 
 function serializeListingFilters(filters: ListingFiltersInput): string {
