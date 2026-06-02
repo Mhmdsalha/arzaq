@@ -1,4 +1,5 @@
 import type { OrderStatus } from "@prisma/client";
+import { cache } from "react";
 
 import { prisma } from "@/lib/prisma";
 import type { CreateOrderInput } from "@/schemas/order.schema";
@@ -6,6 +7,33 @@ import type { CreateOrderInput } from "@/schemas/order.schema";
 export type CreatedOrderResult = {
   id: string;
   whatsappUrl: string | null;
+};
+
+export type DashboardOrderItem = {
+  id: string;
+  quantity: number;
+  totalPrice: number;
+  note: string | null;
+  status: OrderStatus;
+  contactMethod: string | null;
+  address: string | null;
+  createdAt: Date;
+  listing: {
+    id: string;
+    title: string;
+    type: "SERVICE" | "PHYSICAL";
+    price: number;
+    image: string | null;
+    seller?: {
+      id: string;
+      name: string;
+      whatsapp: string | null;
+    };
+  };
+  buyer?: {
+    id: string;
+    name: string;
+  };
 };
 
 const sellerTransitions: Record<OrderStatus, OrderStatus[]> = {
@@ -261,6 +289,133 @@ export async function cancelOrder(orderId: string, buyerId: string) {
     });
   });
 }
+
+export const getBuyerOrders = cache(async (buyerId: string): Promise<DashboardOrderItem[]> => {
+  const orders = await prisma.order.findMany({
+    where: {
+      buyerId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      quantity: true,
+      totalPrice: true,
+      note: true,
+      status: true,
+      contactMethod: true,
+      address: true,
+      createdAt: true,
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          price: true,
+          images: true,
+          seller: {
+            select: {
+              id: true,
+              name: true,
+              profile: {
+                select: {
+                  whatsapp: true,
+                  showWhatsapp: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return orders.map((order) => ({
+    id: order.id,
+    quantity: order.quantity,
+    totalPrice: order.totalPrice,
+    note: order.note,
+    status: order.status,
+    contactMethod: order.contactMethod,
+    address: order.address,
+    createdAt: order.createdAt,
+    listing: {
+      id: order.listing.id,
+      title: order.listing.title,
+      type: order.listing.type,
+      price: order.listing.price,
+      image: order.listing.images[0] ?? null,
+      seller: {
+        id: order.listing.seller.id,
+        name: order.listing.seller.name,
+        whatsapp: order.listing.seller.profile?.showWhatsapp
+          ? (order.listing.seller.profile.whatsapp ?? null)
+          : null,
+      },
+    },
+  }));
+});
+
+export const getReceivedOrders = cache(
+  async (sellerId: string): Promise<DashboardOrderItem[]> => {
+    const orders = await prisma.order.findMany({
+      where: {
+        listing: {
+          sellerId,
+          deletedAt: null,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        quantity: true,
+        totalPrice: true,
+        note: true,
+        status: true,
+        contactMethod: true,
+        address: true,
+        createdAt: true,
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            price: true,
+            images: true,
+          },
+        },
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return orders.map((order) => ({
+      id: order.id,
+      quantity: order.quantity,
+      totalPrice: order.totalPrice,
+      note: order.note,
+      status: order.status,
+      contactMethod: order.contactMethod,
+      address: order.address,
+      createdAt: order.createdAt,
+      listing: {
+        id: order.listing.id,
+        title: order.listing.title,
+        type: order.listing.type,
+        price: order.listing.price,
+        image: order.listing.images[0] ?? null,
+      },
+      buyer: order.buyer,
+    }));
+  },
+);
 
 function buildOrderStatusMessage(title: string, status: OrderStatus) {
   if (status === "CONFIRMED") {

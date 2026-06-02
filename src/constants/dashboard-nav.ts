@@ -2,11 +2,15 @@ import {
   Bookmark,
   BriefcaseBusiness,
   Home,
+  Inbox,
   LayoutDashboard,
   PlusCircle,
+  Search,
   Send,
   Settings,
-  Search,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
   UserRound,
 } from "lucide-react";
 import type { AccountType } from "@prisma/client";
@@ -54,6 +58,27 @@ export const dashboardNavLinks = [
     label: "عروضي",
     icon: Send,
     accountTypes: ["PROVIDER"],
+  },
+  {
+    href: "/store",
+    label: "المتجر",
+    icon: Store,
+    exact: true,
+  },
+  {
+    href: "/dashboard/store",
+    label: "متجري",
+    icon: ShoppingBag,
+  },
+  {
+    href: "/dashboard/orders",
+    label: "طلباتي من المتجر",
+    icon: ShoppingCart,
+  },
+  {
+    href: "/dashboard/orders/received",
+    label: "طلبات المتجر الواردة",
+    icon: Inbox,
   },
   {
     href: "/dashboard/saved",

@@ -4,10 +4,13 @@ import { cache } from "react";
 
 import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 import { sanitizeSearchQuery } from "@/lib/sanitize";
+import type { CreateListingInput, UpdateListingInput } from "@/schemas/listing.schema";
 import type {
   ListingCategoryOption,
   ListingDetailsData,
   ListingListItem,
+  ListingFormData,
+  SellerStoreStats,
   PaginatedListings,
 } from "@/types/store";
 
@@ -242,6 +245,275 @@ export async function incrementListingViews(id: string, viewerId?: string) {
       },
     },
   });
+}
+
+export const getSellerStoreStats = cache(async (sellerId: string): Promise<SellerStoreStats> => {
+  if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
+    return {
+      activeListings: 0,
+      totalListings: 0,
+      receivedOrders: 0,
+      completedOrders: 0,
+      totalViews: 0,
+    };
+  }
+
+  const [activeListings, totalListings, receivedOrders, completedOrders, views] =
+    await Promise.all([
+      prisma.listing.count({
+        where: {
+          sellerId,
+          deletedAt: null,
+          status: "ACTIVE",
+        },
+      }),
+      prisma.listing.count({
+        where: {
+          sellerId,
+          deletedAt: null,
+        },
+      }),
+      prisma.order.count({
+        where: {
+          listing: {
+            sellerId,
+            deletedAt: null,
+          },
+        },
+      }),
+      prisma.order.count({
+        where: {
+          status: "COMPLETED",
+          listing: {
+            sellerId,
+            deletedAt: null,
+          },
+        },
+      }),
+      prisma.listing.aggregate({
+        where: {
+          sellerId,
+          deletedAt: null,
+        },
+        _sum: {
+          viewCount: true,
+        },
+      }),
+    ]);
+
+  return {
+    activeListings,
+    totalListings,
+    receivedOrders,
+    completedOrders,
+    totalViews: views._sum.viewCount ?? 0,
+  };
+});
+
+export const getSellerListings = cache(async (sellerId: string): Promise<ListingListItem[]> => {
+  if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
+    return [];
+  }
+
+  const listings = await prisma.listing.findMany({
+    where: {
+      sellerId,
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: listingListSelect(sellerId),
+  });
+
+  return listings.map((listing) => mapListingListItem(listing, sellerId));
+});
+
+export const getListingForEdit = cache(
+  async (id: string, sellerId: string): Promise<ListingFormData | null> => {
+    if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
+      return null;
+    }
+
+    return prisma.listing.findFirst({
+      where: {
+        id,
+        sellerId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        type: true,
+        categoryId: true,
+        region: true,
+        price: true,
+        priceLabel: true,
+        deliveryMethod: true,
+        deliveryTime: true,
+        quantity: true,
+        images: true,
+        tags: true,
+        status: true,
+      },
+    });
+  },
+);
+
+export async function createListing(input: CreateListingInput, sellerId: string) {
+  await assertCategoryExists(input.categoryId);
+
+  return prisma.listing.create({
+    data: {
+      title: input.title,
+      description: input.description,
+      type: input.type,
+      categoryId: input.categoryId,
+      region: input.region,
+      price: input.price,
+      priceLabel: input.priceLabel || null,
+      deliveryMethod: input.deliveryMethod,
+      deliveryTime: input.deliveryTime || null,
+      quantity: input.type === "PHYSICAL" ? input.quantity ?? 0 : null,
+      images: input.images,
+      tags: input.tags,
+      sellerId,
+      status: input.type === "PHYSICAL" && (input.quantity ?? 0) === 0 ? "SOLD_OUT" : "ACTIVE",
+    },
+    select: {
+      id: true,
+    },
+  });
+}
+
+export async function updateListing(id: string, input: UpdateListingInput, sellerId: string) {
+  const listing = await prisma.listing.findFirst({
+    where: {
+      id,
+      sellerId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      type: true,
+    },
+  });
+
+  if (!listing) {
+    throw new Error("ليس لديك صلاحية لتعديل هذا العنصر");
+  }
+
+  await assertCategoryExists(input.categoryId);
+
+  return prisma.listing.update({
+    where: {
+      id: listing.id,
+    },
+    data: {
+      title: input.title,
+      description: input.description,
+      categoryId: input.categoryId,
+      region: input.region,
+      price: input.price,
+      priceLabel: input.priceLabel || null,
+      deliveryMethod: input.deliveryMethod,
+      deliveryTime: input.deliveryTime || null,
+      quantity: listing.type === "PHYSICAL" ? input.quantity ?? 0 : null,
+      images: input.images,
+      tags: input.tags,
+      status: listing.type === "PHYSICAL" && (input.quantity ?? 0) === 0 ? "SOLD_OUT" : "ACTIVE",
+    },
+    select: {
+      id: true,
+    },
+  });
+}
+
+export async function pauseListing(id: string, sellerId: string) {
+  return updateSellerListingStatus(id, sellerId, "PAUSED");
+}
+
+export async function activateListing(id: string, sellerId: string) {
+  const listing = await prisma.listing.findFirst({
+    where: {
+      id,
+      sellerId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      type: true,
+      quantity: true,
+    },
+  });
+
+  if (!listing) {
+    throw new Error("ليس لديك صلاحية لتعديل هذا العنصر");
+  }
+
+  if (listing.type === "PHYSICAL" && (listing.quantity ?? 0) === 0) {
+    throw new Error("لا يمكن تفعيل المنتج قبل إضافة كمية متاحة");
+  }
+
+  return updateSellerListingStatus(id, sellerId, "ACTIVE");
+}
+
+export async function softDeleteListing(id: string, sellerId: string) {
+  const result = await prisma.listing.updateMany({
+    where: {
+      id,
+      sellerId,
+      deletedAt: null,
+    },
+    data: {
+      deletedAt: new Date(),
+      status: "DELETED",
+    },
+  });
+
+  if (result.count === 0) {
+    throw new Error("ليس لديك صلاحية لحذف هذا العنصر");
+  }
+}
+
+async function updateSellerListingStatus(
+  id: string,
+  sellerId: string,
+  status: "ACTIVE" | "PAUSED",
+) {
+  const result = await prisma.listing.updateMany({
+    where: {
+      id,
+      sellerId,
+      deletedAt: null,
+      status: {
+        not: "DELETED",
+      },
+    },
+    data: {
+      status,
+    },
+  });
+
+  if (result.count === 0) {
+    throw new Error("ليس لديك صلاحية لتعديل هذا العنصر");
+  }
+}
+
+async function assertCategoryExists(categoryId: string) {
+  const category = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!category) {
+    throw new Error("التصنيف غير صحيح");
+  }
 }
 
 function serializeListingFilters(filters: ListingFiltersInput): string {

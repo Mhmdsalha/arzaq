@@ -19,6 +19,8 @@ export const rateLimiters = {
   createJob: (userId: string) => rateLimit(`create-job:${userId}`, { limit: 10, windowSeconds: 60 * 60 }),
   createOffer: (userId: string) =>
     rateLimit(`create-offer:${userId}`, { limit: 30, windowSeconds: 60 * 60 }),
+  createListing: (userId: string) =>
+    rateLimit(`create-listing:${userId}`, { limit: 12, windowSeconds: 60 * 60 }),
   createOrder: (userId: string) =>
     rateLimit(`create-order:${userId}`, { limit: 10, windowSeconds: 60 * 60 }),
   createReview: (userId: string) =>

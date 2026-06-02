@@ -47,6 +47,31 @@ export type ListingDetailsData = ListingListItem & {
   isOwner: boolean;
 };
 
+export type ListingFormData = {
+  id: string;
+  title: string;
+  description: string;
+  type: ListingType;
+  categoryId: string;
+  region: Region;
+  price: number;
+  priceLabel: string | null;
+  deliveryMethod: DeliveryMethod;
+  deliveryTime: string | null;
+  quantity: number | null;
+  images: string[];
+  tags: string[];
+  status: ListingStatus;
+};
+
+export type SellerStoreStats = {
+  activeListings: number;
+  totalListings: number;
+  receivedOrders: number;
+  completedOrders: number;
+  totalViews: number;
+};
+
 export type PaginatedListings<T> = {
   items: T[];
   total: number;
