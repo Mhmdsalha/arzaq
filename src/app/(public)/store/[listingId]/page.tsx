@@ -37,7 +37,7 @@ export default async function ListingDetailsPage({
   ]);
 
   return (
-    <main className="container-responsive pb-16 pt-28">
+    <main className="container-responsive pb-28 pt-28 lg:pb-16">
       <ListingDetails
         listing={listing}
         similarListings={similarListings}

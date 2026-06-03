@@ -22,10 +22,11 @@ export const metadata = createPageMetadata({
 });
 
 export default async function HomePage() {
-  const [featuredProviders, latestJobs, latestListings] = await Promise.all([
+  const [featuredProviders, latestJobs, latestServices, latestProducts] = await Promise.all([
     getFeaturedProvidersForHome(),
     getJobsWithFilters({ status: "OPEN", pageSize: 6 }),
-    getListingsWithFilters({ pageSize: 3, sort: "newest" }),
+    getListingsWithFilters({ type: "SERVICE", pageSize: 4, sort: "newest" }),
+    getListingsWithFilters({ type: "PHYSICAL", pageSize: 4, sort: "newest" }),
   ]);
 
   return (
@@ -34,7 +35,7 @@ export default async function HomePage() {
       <SearchSection />
       <CategoriesGrid categories={categories} />
       <LatestJobsSection jobs={latestJobs.items} />
-      <LatestStoreSection listings={latestListings.items} />
+      <LatestStoreSection services={latestServices.items} products={latestProducts.items} />
       <FeaturedProvidersSection
         providers={featuredProviders.providers}
         mode={featuredProviders.mode}

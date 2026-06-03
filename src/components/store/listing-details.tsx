@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Eye,
   MapPin,
+  MessageCircle,
   Package,
   ShieldCheck,
   Star,
@@ -41,11 +42,12 @@ export function ListingDetails({
   const TypeIcon = listing.type === "SERVICE" ? Zap : Package;
 
   return (
+    <>
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <article className="space-y-6">
         <ListingGallery images={listing.images} title={listing.title} />
 
-        <Card>
+        <Card className="-mt-2 rounded-t-3xl lg:mt-0 lg:rounded-2xl">
           <CardHeader>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-dark">
@@ -145,7 +147,7 @@ export function ListingDetails({
         ) : null}
       </article>
 
-      <aside className="space-y-4">
+      <aside className="hidden space-y-4 lg:block">
         <Card className="sticky top-24">
           <CardHeader>
             <CardTitle className="text-xl">ملخص الطلب</CardTitle>
@@ -189,6 +191,28 @@ export function ListingDetails({
         </Card>
       </aside>
     </div>
+
+    {!listing.isOwner ? (
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur safe-bottom lg:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-2">
+          {listing.seller.whatsapp ? (
+            <a
+              href={`https://wa.me/${listing.seller.whatsapp}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-green-500 text-white transition hover:bg-green-600"
+              aria-label="تواصل عبر واتساب"
+            >
+              <MessageCircle className="size-5" />
+            </a>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <OrderAction listing={listing} isAuthenticated={isAuthenticated} />
+          </div>
+        </div>
+      </div>
+    ) : null}
+    </>
   );
 }
 

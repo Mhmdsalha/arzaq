@@ -1,11 +1,11 @@
 import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
+import { Package, Search, ShoppingBag, Wrench } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { ListingCard } from "@/components/store/listing-card";
-import { ListingPagination } from "@/components/store/listing-pagination";
+import { ListingGrid } from "@/components/store/listing-grid";
+import { StoreFilterSheet } from "@/components/store/store-filter-sheet";
 import { StoreFilters, type StoreFilterValues } from "@/components/store/store-filters";
-import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { createPageMetadata } from "@/lib/seo";
 import { auth } from "@/lib/auth";
@@ -30,29 +30,7 @@ export default function StorePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   return (
-    <main className="pb-16 pt-28">
-      <section className="container-responsive">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-primary-dark">متجر أرزاق</p>
-          <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-950 sm:text-4xl">
-                خدمات وبضائع محلية من أهل غزة
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                تصفح خدمات جاهزة ومنتجات محلية، وابدأ الطلب داخل أرزاق مع بقاء الدفع خارج المنصة حسب الاتفاق.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/store/new"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary-dark"
-            >
-              أضف منتجاً أو خدمة
-            </Link>
-          </div>
-        </div>
-      </section>
-
+    <main className="pb-20 pt-24 lg:pb-16 lg:pt-28">
       <Suspense fallback={<StoreContentSkeleton />}>
         <StoreContent searchParams={searchParams} />
       </Suspense>
@@ -68,17 +46,132 @@ async function StoreContent({
   const params = await searchParams;
   const session = await auth();
   const filters = parseStoreFilters(params);
-  const [categories, listings] = await Promise.all([
+  const [categories, listings, serviceListings, productListings] = await Promise.all([
     getCachedListingFilterOptions(),
     session?.user?.id
       ? getListingsWithFilters(filters, session.user.id)
       : getCachedListingsWithFilters(filters),
+    getCachedListingsWithFilters({ ...filters, type: "SERVICE", page: 1, pageSize: 1 }),
+    getCachedListingsWithFilters({ ...filters, type: "PHYSICAL", page: 1, pageSize: 1 }),
   ]);
   const queryParams = toUrlSearchParams(params);
 
   return (
-    <section className="container-responsive py-6 lg:py-8">
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+    <section className="container-responsive space-y-5 lg:space-y-8">
+      <StoreHeader
+        filters={filters}
+        queryParams={queryParams}
+        total={listings.total}
+        serviceTotal={serviceListings.total}
+        productTotal={productListings.total}
+        categories={categories}
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[256px_1fr] lg:gap-6">
+        <aside className="hidden lg:block">
+          <StoreFilters
+            categories={categories}
+            values={toFilterValues(filters)}
+            className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto"
+          />
+        </aside>
+
+        <div className="min-w-0 space-y-5">
+          <div className="hidden items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm lg:flex">
+            <div>
+              <p className="font-bold text-slate-950">{listings.total.toLocaleString("ar")} نتيجة</p>
+              <p className="text-xs text-slate-500">تظهر النتائج الأحدث أولاً ويمكنك تعديل الفلاتر من القائمة الجانبية.</p>
+            </div>
+            <Link href="/dashboard/store/new" className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
+              إضافة عنصر
+            </Link>
+          </div>
+
+          <ListingGrid
+            listings={listings.items}
+            pagination={{
+              page: listings.page,
+              total: listings.total,
+              totalPages: listings.totalPages,
+            }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StoreHeader({
+  filters,
+  queryParams,
+  total,
+  serviceTotal,
+  productTotal,
+  categories,
+}: {
+  filters: ListingFiltersInput;
+  queryParams: URLSearchParams;
+  total: number;
+  serviceTotal: number;
+  productTotal: number;
+  categories: Awaited<ReturnType<typeof getCachedListingFilterOptions>>;
+}) {
+  const filterValues = toFilterValues(filters);
+
+  return (
+    <div className="space-y-4 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm lg:p-8">
+      <div className="flex items-center justify-between gap-3 lg:hidden">
+        <h1 className="font-palestine text-2xl font-bold text-slate-950">متجر أرزاق</h1>
+        <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
+          {total.toLocaleString("ar")} منتج وخدمة
+        </span>
+      </div>
+
+      <div className="hidden items-end justify-between gap-6 lg:flex">
+        <div>
+          <nav className="mb-3 text-xs font-semibold text-slate-400">
+            <Link href="/" className="hover:text-primary-dark">الرئيسية</Link>
+            <span className="px-2">/</span>
+            <span>المتجر</span>
+          </nav>
+          <h1 className="font-palestine text-4xl font-bold text-slate-950">متجر أرزاق</h1>
+          <p className="mt-3 text-sm leading-7 text-slate-600">
+            اكتشف خدمات جاهزة وبضائع محلية من أهل غزة، وابدأ الطلب داخل أرزاق.
+          </p>
+        </div>
+        <div className="flex items-center rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+          <StoreStat icon={ShoppingBag} value={total} label="عنصر" />
+          <Divider />
+          <StoreStat icon={Wrench} value={serviceTotal} label="خدمة" />
+          <Divider />
+          <StoreStat icon={Package} value={productTotal} label="منتج" />
+        </div>
+      </div>
+
+      <form action="/store" className="flex min-h-11 items-center gap-2 rounded-xl bg-slate-100 px-3 lg:min-h-12 lg:bg-white lg:shadow-sm lg:ring-1 lg:ring-slate-200">
+        <Search className="size-4 shrink-0 text-slate-400" />
+        <input
+          name="q"
+          defaultValue={filters.q ?? ""}
+          placeholder="ابحث في المتجر..."
+          className="min-w-0 flex-1 bg-transparent text-right text-base outline-none placeholder:text-slate-400"
+        />
+        <input type="hidden" name="type" value={filters.type ?? "all"} />
+        <input type="hidden" name="category" value={filters.category ?? "all"} />
+        <input type="hidden" name="region" value={filters.region ?? "all"} />
+        <input type="hidden" name="delivery" value={filters.delivery ?? "all"} />
+        <input type="hidden" name="min" value={typeof filters.min === "number" ? String(filters.min) : ""} />
+        <input type="hidden" name="max" value={typeof filters.max === "number" ? String(filters.max) : ""} />
+        <input type="hidden" name="sort" value={filters.sort ?? "newest"} />
+        <button className="hidden rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white transition hover:bg-primary-dark lg:inline-flex">
+          بحث
+        </button>
+        <div className="lg:hidden">
+          <StoreFilterSheet categories={categories} values={filterValues} />
+        </div>
+      </form>
+
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
         <TypeTab href={buildTypeHref(queryParams, undefined)} active={!filters.type}>
           الكل
         </TypeTab>
@@ -88,51 +181,39 @@ async function StoreContent({
         <TypeTab href={buildTypeHref(queryParams, "PHYSICAL")} active={filters.type === "PHYSICAL"}>
           منتجات
         </TypeTab>
-        <span className="ms-auto text-sm text-slate-500">
-          {listings.total} منتج وخدمة متاحة
-        </span>
       </div>
-
-      <div className="grid gap-5 lg:grid-cols-[280px_1fr] lg:gap-6">
-        <StoreFilters categories={categories} values={toFilterValues(filters)} />
-
-        <div className="space-y-5">
-          {listings.items.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {listings.items.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-              <ListingPagination
-                page={listings.page}
-                totalPages={listings.totalPages}
-                searchParams={queryParams}
-              />
-            </>
-          ) : (
-            <EmptyState
-              title="لا توجد منتجات أو خدمات بعد"
-              description="ابدأ بإضافة أول منتج أو خدمة، أو جرّب تعديل الفلاتر الحالية."
-              action={
-                <Link
-                  href="/dashboard/store/new"
-                  className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-white"
-                >
-                  إضافة منتج أو خدمة
-                </Link>
-              }
-            />
-          )}
-        </div>
-      </div>
-    </section>
+    </div>
   );
+}
+
+function StoreStat({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: number;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 px-3">
+      <Icon className="size-4 text-primary" />
+      <div>
+        <p className="font-bold text-primary-dark">{value.toLocaleString("ar")}</p>
+        <p className="text-xs text-slate-500">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  return <span className="h-8 w-px bg-slate-200" />;
 }
 
 function StoreContentSkeleton() {
   return (
-    <section className="container-responsive py-6 lg:py-8">
+    <section className="container-responsive space-y-6">
+      <Skeleton className="h-48 rounded-3xl" />
       <div className="grid gap-5 lg:grid-cols-[280px_1fr] lg:gap-6">
         <Skeleton className="h-[560px] rounded-2xl" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
