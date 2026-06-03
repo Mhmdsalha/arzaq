@@ -179,9 +179,9 @@ function StoreHero({
             متجر أرزاق للخدمات والمنتجات
           </div>
 
-          <h1 className="mt-5 font-palestine text-4xl font-bold leading-snug text-white sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 space-y-2 font-palestine text-4xl font-bold leading-snug text-white sm:text-5xl lg:space-y-3 lg:text-6xl">
             <span className="block">أقرب من أي متجــــــر</span>
-            <span className="block">في العالم</span>
+            <span className="block">في العالـــــــــم</span>
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-8 text-white/85 sm:text-base">
             اطلب خدمة جاهزة، اشتري منتجاً محلياً، أو اعرض ما تقدمه للناس بطريقة منظمة وسهلة داخل أرزاق.
@@ -306,7 +306,7 @@ function StoreHeader({
           name="q"
           defaultValue={filters.q ?? ""}
           placeholder="ابحث في المتجر..."
-          className="min-w-0 flex-1 bg-transparent text-right text-base outline-none placeholder:text-slate-400"
+          className="min-w-0 flex-1 appearance-none border-0 bg-transparent text-right text-base outline-none placeholder:text-slate-400 focus:border-0 focus:outline-none focus:ring-0"
         />
         <input type="hidden" name="type" value={filters.type ?? "all"} />
         <input type="hidden" name="category" value={filters.category ?? "all"} />
