@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { getBuyerOrders } from "@/services/order.service";
 
 export const metadata = {
-  title: "طلباتي من المتجر",
+  title: "مشترياتي",
 };
 
 export default async function DashboardOrdersPage() {
@@ -21,7 +21,7 @@ export default async function DashboardOrdersPage() {
   return (
     <StoreRouteShell
       eyebrow="طلبات المتجر"
-      title="طلباتي كمشترٍ"
+      title="مشترياتي"
       description="تابع الطلبات التي أرسلتها على خدمات ومنتجات المتجر، وحالة كل طلب."
       backHref="/dashboard"
       backLabel="لوحة التحكم"

@@ -83,25 +83,25 @@ export function StoreFilters({
           ]}
         />
 
-        <div className="grid grid-cols-2 gap-3">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
             من سعر
             <input
               name="min"
               type="number"
               min="0"
               defaultValue={values.min}
-              className="h-12 rounded-xl border border-slate-200 px-4 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="h-12 w-full min-w-0 rounded-xl border border-slate-200 px-4 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
             إلى سعر
             <input
               name="max"
               type="number"
               min="0"
               defaultValue={values.max}
-              className="h-12 rounded-xl border border-slate-200 px-4 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="h-12 w-full min-w-0 rounded-xl border border-slate-200 px-4 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </label>
         </div>

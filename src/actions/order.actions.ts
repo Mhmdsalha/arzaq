@@ -56,7 +56,7 @@ export async function createOrderAction(input: CreateOrderInput): Promise<OrderA
     revalidatePath("/store");
     revalidatePath(`/store/${clean.listingId}`);
     revalidatePath("/dashboard/orders");
-    revalidatePath("/dashboard/orders/received");
+    revalidatePath("/dashboard/store");
     logAudit("CREATE_ORDER", { userId: session.user.id, entityType: "Order", entityId: order.id });
 
     return {
@@ -96,7 +96,7 @@ export async function updateOrderStatusAction(
     await updateOrderStatus(parsed.data.orderId, parsed.data.status, session.user.id);
     revalidateTag("store", "max");
     revalidatePath("/dashboard/orders");
-    revalidatePath("/dashboard/orders/received");
+    revalidatePath("/dashboard/store");
     logAudit("UPDATE_ORDER_STATUS", {
       userId: session.user.id,
       entityType: "Order",
@@ -135,7 +135,7 @@ export async function cancelOrderAction(input: CancelOrderInput): Promise<OrderA
     revalidateTag("store", "max");
     revalidatePath("/store");
     revalidatePath("/dashboard/orders");
-    revalidatePath("/dashboard/orders/received");
+    revalidatePath("/dashboard/store");
     logAudit("CANCEL_ORDER", {
       userId: session.user.id,
       entityType: "Order",

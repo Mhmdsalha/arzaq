@@ -2,7 +2,6 @@ import {
   Bookmark,
   BriefcaseBusiness,
   Home,
-  Inbox,
   LayoutDashboard,
   PlusCircle,
   Search,
@@ -72,13 +71,8 @@ export const dashboardNavLinks = [
   },
   {
     href: "/dashboard/orders",
-    label: "طلباتي من المتجر",
+    label: "مشترياتي",
     icon: ShoppingCart,
-  },
-  {
-    href: "/dashboard/orders/received",
-    label: "طلبات المتجر الواردة",
-    icon: Inbox,
   },
   {
     href: "/dashboard/saved",

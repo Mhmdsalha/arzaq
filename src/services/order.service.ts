@@ -155,7 +155,7 @@ export async function createOrder(
         userId: listing.sellerId,
         type: "SYSTEM",
         message: `طلب جديد على: ${listing.title}`,
-        link: "/dashboard/orders/received",
+        link: "/dashboard/store",
       },
     });
 
@@ -294,7 +294,7 @@ export async function cancelOrder(orderId: string, buyerId: string) {
         userId: order.listing.sellerId,
         type: "SYSTEM",
         message: `تم إلغاء الطلب على: ${order.listing.title}`,
-        link: "/dashboard/orders/received",
+        link: "/dashboard/store",
       },
     });
   });
