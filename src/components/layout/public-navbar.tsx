@@ -11,6 +11,7 @@ import {
   Menu,
   Plus,
   Settings,
+  Store,
   User,
   X,
 } from "lucide-react";
@@ -36,6 +37,11 @@ const navLinks = [
     href: "/providers",
     label: "مقدمو الخدمات",
     active: (pathname: string) => pathname.startsWith("/providers"),
+  },
+  {
+    href: "/store",
+    label: "المتجر",
+    active: (pathname: string) => pathname.startsWith("/store"),
   },
   {
     href: "/how-it-works",
@@ -290,6 +296,7 @@ function UserMenu({
       </div>
       <div className="my-2 border-t border-slate-100" />
       <DropdownItem href="/" icon={Home} label="الرئيسية" />
+      <DropdownItem href="/store" icon={Store} label="المتجر" />
       <DropdownItem href="/dashboard" icon={LayoutDashboard} label="لوحة التحكم" />
       <DropdownItem href="/dashboard/profile" icon={User} label="بروفايلي" />
       {isProvider ? (

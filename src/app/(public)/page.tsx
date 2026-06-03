@@ -4,10 +4,12 @@ import { FeaturedProvidersSection } from "@/components/home/featured-providers-s
 import { HeroSection } from "@/components/home/hero-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { LatestJobsSection } from "@/components/home/latest-jobs-section";
+import { LatestStoreSection } from "@/components/home/latest-store-section";
 import { SearchSection } from "@/components/home/search-section";
 import { categories } from "@/mock/categories";
 import { createPageMetadata } from "@/lib/seo";
 import { getJobsWithFilters } from "@/services/job.service";
+import { getListingsWithFilters } from "@/services/listing.service";
 import { getFeaturedProvidersForHome } from "@/services/profile.service";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +22,10 @@ export const metadata = createPageMetadata({
 });
 
 export default async function HomePage() {
-  const [featuredProviders, latestJobs] = await Promise.all([
+  const [featuredProviders, latestJobs, latestListings] = await Promise.all([
     getFeaturedProvidersForHome(),
     getJobsWithFilters({ status: "OPEN", pageSize: 6 }),
+    getListingsWithFilters({ pageSize: 3, sort: "newest" }),
   ]);
 
   return (
@@ -31,6 +34,7 @@ export default async function HomePage() {
       <SearchSection />
       <CategoriesGrid categories={categories} />
       <LatestJobsSection jobs={latestJobs.items} />
+      <LatestStoreSection listings={latestListings.items} />
       <FeaturedProvidersSection
         providers={featuredProviders.providers}
         mode={featuredProviders.mode}

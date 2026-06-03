@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, ChevronDown, Home, LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ChevronDown, Home, LogOut, MessageCircle, ShieldCheck, Store } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -116,6 +116,13 @@ export function UserDropdown({
             >
               <Home className="size-4" />
               الرئيسية
+            </Link>
+            <Link
+              href="/store"
+              className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Store className="size-4" />
+              المتجر
             </Link>
             <Link
               href="/dashboard/profile"

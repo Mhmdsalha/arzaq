@@ -1,6 +1,6 @@
 "use client";
 
-import { BriefcaseBusiness, Home, UserCircle, UsersRound } from "lucide-react";
+import { BriefcaseBusiness, Home, Store, UserCircle, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,6 +24,12 @@ const tabs = [
     label: "الخدمات",
     icon: UsersRound,
     isActive: (pathname: string) => pathname.startsWith("/providers"),
+  },
+  {
+    href: "/store",
+    label: "المتجر",
+    icon: Store,
+    isActive: (pathname: string) => pathname.startsWith("/store"),
   },
 ];
 
@@ -56,7 +62,7 @@ export function MobileBottomNav() {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white shadow-[0_-4px_12px_rgba(15,23,42,0.06)] safe-bottom lg:hidden"
         aria-label="تنقل الجوال"
       >
-        <div className="grid h-16 grid-cols-4">
+        <div className="grid h-16 grid-cols-5">
           {tabs.map((item) => {
             const Icon = item.icon;
             const isActive = item.isActive(pathname);

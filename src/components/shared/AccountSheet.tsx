@@ -12,6 +12,7 @@ import {
   Plus,
   Search,
   Settings,
+  Store,
   User,
   X,
 } from "lucide-react";
@@ -174,6 +175,7 @@ export function AccountSheet({
 
             <div className="mt-5 space-y-1">
               <SheetItem icon={Home} label="الرئيسية" onClick={() => closeAndGo("/")} />
+              <SheetItem icon={Store} label="المتجر" onClick={() => closeAndGo("/store")} />
               <SheetItem
                 icon={LayoutDashboard}
                 label="لوحة التحكم"
