@@ -15,6 +15,7 @@ export type AuditAction =
   | "CREATE_OFFER"
   | "CREATE_LISTING"
   | "UPDATE_LISTING"
+  | "REVIEW_LISTING"
   | "PAUSE_LISTING"
   | "ACTIVATE_LISTING"
   | "DELETE_LISTING"

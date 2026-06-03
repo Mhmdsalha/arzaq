@@ -114,12 +114,19 @@ function ListingRow({ listing }: { listing: ListingListItem }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          <Button asChild variant="secondary" className="h-10">
-            <Link href={`/store/${listing.id}`}>
+          {listing.status === "ACTIVE" ? (
+            <Button asChild variant="secondary" className="h-10">
+              <Link href={`/store/${listing.id}`}>
+                <Eye className="size-4" />
+                عرض
+              </Link>
+            </Button>
+          ) : (
+            <Button type="button" variant="secondary" className="h-10" disabled>
               <Eye className="size-4" />
-              عرض
-            </Link>
-          </Button>
+              غير منشور
+            </Button>
+          )}
           <Button asChild variant="secondary" className="h-10">
             <Link href={`/dashboard/store/${listing.id}/edit`}>
               <Edit className="size-4" />
@@ -131,12 +138,12 @@ function ListingRow({ listing }: { listing: ListingListItem }) {
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <PauseCircle className="size-4" />}
               إيقاف
             </Button>
-          ) : (
+          ) : listing.status === "PAUSED" || listing.status === "SOLD_OUT" ? (
             <Button type="button" variant="secondary" className="h-10" disabled={isPending} onClick={() => runAction("activate")}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <PlayCircle className="size-4" />}
               تفعيل
             </Button>
-          )}
+          ) : null}
           <Button type="button" variant="secondary" className="h-10 text-red-600" disabled={isPending} onClick={() => runAction("delete")}>
             <Trash2 className="size-4" />
             حذف
@@ -163,6 +170,18 @@ function Badge({ className, children }: { className?: string; children: React.Re
 function statusClassName(status: ListingListItem["status"]) {
   if (status === "ACTIVE") {
     return "bg-green-50 text-green-700";
+  }
+
+  if (status === "PENDING_REVIEW") {
+    return "bg-blue-50 text-blue-700";
+  }
+
+  if (status === "NEEDS_EDIT") {
+    return "bg-amber-50 text-amber-700";
+  }
+
+  if (status === "REJECTED") {
+    return "bg-red-50 text-red-700";
   }
 
   if (status === "SOLD_OUT") {

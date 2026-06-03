@@ -9,6 +9,8 @@ export async function getAdminStoreOverview() {
   const [
     totalListings,
     activeListings,
+    pendingReviewListings,
+    needsEditListings,
     pausedListings,
     soldOutListings,
     totalOrders,
@@ -18,6 +20,8 @@ export async function getAdminStoreOverview() {
   ] = await prisma.$transaction([
     prisma.listing.count({ where: { deletedAt: null } }),
     prisma.listing.count({ where: { deletedAt: null, status: "ACTIVE" } }),
+    prisma.listing.count({ where: { deletedAt: null, status: "PENDING_REVIEW" } }),
+    prisma.listing.count({ where: { deletedAt: null, status: "NEEDS_EDIT" } }),
     prisma.listing.count({ where: { deletedAt: null, status: "PAUSED" } }),
     prisma.listing.count({ where: { deletedAt: null, status: "SOLD_OUT" } }),
     prisma.order.count(),
@@ -29,6 +33,8 @@ export async function getAdminStoreOverview() {
   return {
     totalListings,
     activeListings,
+    pendingReviewListings,
+    needsEditListings,
     pausedListings,
     soldOutListings,
     totalOrders,
@@ -215,6 +221,105 @@ export async function setListingStatus(listingId: string, status: "ACTIVE" | "PA
     where: { id: listingId },
     data: { status },
     select: { id: true },
+  });
+}
+
+export async function approveListing(listingId: string) {
+  return prisma.$transaction(async (tx) => {
+    const listing = await tx.listing.findUnique({
+      where: { id: listingId },
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        quantity: true,
+        sellerId: true,
+      },
+    });
+
+    if (!listing) {
+      throw new Error("العنصر غير موجود");
+    }
+
+    const nextStatus = listing.type === "PHYSICAL" && (listing.quantity ?? 0) === 0 ? "SOLD_OUT" : "ACTIVE";
+    const updated = await tx.listing.update({
+      where: { id: listing.id },
+      data: { status: nextStatus },
+      select: { id: true },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: listing.sellerId,
+        type: "SYSTEM",
+        message: `تمت الموافقة على عنصر المتجر: ${listing.title}`,
+        link: `/dashboard/store`,
+      },
+    });
+
+    return updated;
+  });
+}
+
+export async function requestListingEdits(listingId: string, note?: string) {
+  return reviewListingWithSellerNotification({
+    listingId,
+    status: "NEEDS_EDIT",
+    messagePrefix: "تحتاج الإدارة تعديلات على عنصر المتجر",
+    note,
+  });
+}
+
+export async function rejectListing(listingId: string, note?: string) {
+  return reviewListingWithSellerNotification({
+    listingId,
+    status: "REJECTED",
+    messagePrefix: "تم رفض عنصر المتجر",
+    note,
+  });
+}
+
+async function reviewListingWithSellerNotification({
+  listingId,
+  status,
+  messagePrefix,
+  note,
+}: {
+  listingId: string;
+  status: "NEEDS_EDIT" | "REJECTED";
+  messagePrefix: string;
+  note?: string;
+}) {
+  return prisma.$transaction(async (tx) => {
+    const listing = await tx.listing.findUnique({
+      where: { id: listingId },
+      select: {
+        id: true,
+        title: true,
+        sellerId: true,
+      },
+    });
+
+    if (!listing) {
+      throw new Error("العنصر غير موجود");
+    }
+
+    const updated = await tx.listing.update({
+      where: { id: listing.id },
+      data: { status },
+      select: { id: true },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: listing.sellerId,
+        type: "SYSTEM",
+        message: `${messagePrefix}: ${listing.title}${note ? ` - ${note}` : ""}`,
+        link: `/dashboard/store/${listing.id}/edit`,
+      },
+    });
+
+    return updated;
   });
 }
 

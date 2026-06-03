@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import {
   adminDeleteListingFormAction,
+  reviewListingFormAction,
   setListingFeaturedFormAction,
   setListingStatusFormAction,
 } from "@/actions/admin-store.actions";
@@ -10,7 +11,7 @@ import { listingStatusLabels, listingTypeLabels } from "@/constants/store";
 import { getAdminHref } from "@/lib/admin-path";
 import { getAdminStoreListings } from "@/services/admin-store.service";
 
-const listingStatusValues: ListingStatus[] = ["ACTIVE", "PAUSED", "SOLD_OUT"];
+const listingStatusValues: ListingStatus[] = ["PENDING_REVIEW", "NEEDS_EDIT", "REJECTED", "ACTIVE", "PAUSED", "SOLD_OUT"];
 const listingTypeValues: ListingType[] = ["SERVICE", "PHYSICAL"];
 
 export const metadata = {
@@ -104,6 +105,15 @@ export default async function AdminStoreListingsPage({
                 >
                   عرض
                 </Link>
+                {listing.status === "PENDING_REVIEW" || listing.status === "NEEDS_EDIT" ? (
+                  <form action={reviewListingFormAction} className="flex flex-wrap gap-2">
+                    <input type="hidden" name="listingId" value={listing.id} />
+                    <input type="hidden" name="decision" value="APPROVE" />
+                    <button className="min-h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark">
+                      موافقة
+                    </button>
+                  </form>
+                ) : null}
                 <form action={setListingFeaturedFormAction}>
                   <input type="hidden" name="listingId" value={listing.id} />
                   <input type="hidden" name="isFeatured" value={String(!listing.isFeatured)} />
@@ -111,6 +121,7 @@ export default async function AdminStoreListingsPage({
                     {listing.isFeatured ? "إلغاء التمييز" : "تمييز"}
                   </button>
                 </form>
+                {listing.status === "ACTIVE" || listing.status === "PAUSED" ? (
                 <form action={setListingStatusFormAction}>
                   <input type="hidden" name="listingId" value={listing.id} />
                   <input type="hidden" name="status" value={listing.status === "ACTIVE" ? "PAUSED" : "ACTIVE"} />
@@ -118,6 +129,7 @@ export default async function AdminStoreListingsPage({
                     {listing.status === "ACTIVE" ? "إيقاف" : "تفعيل"}
                   </button>
                 </form>
+                ) : null}
                 <form action={adminDeleteListingFormAction}>
                   <input type="hidden" name="listingId" value={listing.id} />
                   <button className="min-h-10 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">
@@ -126,6 +138,28 @@ export default async function AdminStoreListingsPage({
                 </form>
               </div>
             </div>
+            {listing.status === "PENDING_REVIEW" || listing.status === "NEEDS_EDIT" ? (
+              <form action={reviewListingFormAction} className="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                <input type="hidden" name="listingId" value={listing.id} />
+                <label className="grid gap-2 text-sm font-semibold text-slate-200">
+                  ملاحظة للبائع عند الرفض أو طلب التعديل
+                  <textarea
+                    name="reviewNote"
+                    rows={2}
+                    placeholder="مثلاً: أضف صورة أوضح، عدّل السعر، أو وضّح طريقة التسليم..."
+                    className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-primary"
+                  />
+                </label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button name="decision" value="NEEDS_EDIT" className="min-h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">
+                    طلب تعديلات
+                  </button>
+                  <button name="decision" value="REJECT" className="min-h-10 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">
+                    رفض
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </article>
         ))}
       </div>

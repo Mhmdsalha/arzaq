@@ -8,7 +8,10 @@ import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/authGuards";
 import { sanitizeText } from "@/lib/sanitize";
 import {
+  approveListing,
   adminSoftDeleteListing,
+  rejectListing,
+  requestListingEdits,
   setListingFeatured,
   setListingStatus,
   updateListingReportStatus,
@@ -33,6 +36,18 @@ export async function setListingStatusFormAction(formData: FormData): Promise<vo
 
 export async function adminDeleteListingFormAction(formData: FormData): Promise<void> {
   await adminDeleteListingAction(String(formData.get("listingId") ?? ""));
+}
+
+export async function reviewListingFormAction(formData: FormData): Promise<void> {
+  const decision = String(formData.get("decision") ?? "");
+  const listingId = String(formData.get("listingId") ?? "");
+  const note = sanitizeText(String(formData.get("reviewNote") ?? ""));
+
+  if (!["APPROVE", "NEEDS_EDIT", "REJECT"].includes(decision)) {
+    return;
+  }
+
+  await reviewListingAction(listingId, decision as "APPROVE" | "NEEDS_EDIT" | "REJECT", note);
 }
 
 export async function updateListingReportStatusFormAction(formData: FormData): Promise<void> {
@@ -108,6 +123,46 @@ async function adminDeleteListingAction(listingId: string): Promise<ActionResult
     });
 
     return { ok: true, message: "تم حذف العنصر من المتجر" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+    };
+  }
+}
+
+async function reviewListingAction(
+  listingId: string,
+  decision: "APPROVE" | "NEEDS_EDIT" | "REJECT",
+  note?: string,
+): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    const cleanListingId = sanitizeText(listingId);
+    const listing =
+      decision === "APPROVE"
+        ? await approveListing(cleanListingId)
+        : decision === "NEEDS_EDIT"
+          ? await requestListingEdits(cleanListingId, note)
+          : await rejectListing(cleanListingId, note);
+
+    revalidateStoreAdminPaths(listing.id);
+    logAudit("REVIEW_LISTING", {
+      userId: session.user.id,
+      entityType: "Listing",
+      entityId: listing.id,
+      metadata: { decision, note },
+    });
+
+    return {
+      ok: true,
+      message:
+        decision === "APPROVE"
+          ? "تمت الموافقة على العنصر"
+          : decision === "NEEDS_EDIT"
+            ? "تم إرسال طلب تعديل للبائع"
+            : "تم رفض العنصر",
+    };
   } catch (error) {
     return {
       ok: false,

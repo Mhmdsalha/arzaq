@@ -82,6 +82,9 @@ enum ListingType {
 }
 
 enum ListingStatus {
+  PENDING_REVIEW
+  NEEDS_EDIT
+  REJECTED
   ACTIVE
   PAUSED
   SOLD_OUT
@@ -286,7 +289,7 @@ model Listing {
   quantity       Int?
   images         String[]       @default([])
   tags           String[]       @default([])
-  status         ListingStatus  @default(ACTIVE)
+  status         ListingStatus  @default(PENDING_REVIEW)
   viewCount      Int            @default(0)
   shareCount     Int            @default(0)
   avgRating      Float          @default(0)

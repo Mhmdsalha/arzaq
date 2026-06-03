@@ -6,6 +6,9 @@ export const listingTypeLabels: Record<ListingType, string> = {
 };
 
 export const listingStatusLabels: Record<ListingStatus, string> = {
+  PENDING_REVIEW: "قيد المراجعة",
+  NEEDS_EDIT: "يحتاج تعديلات",
+  REJECTED: "مرفوض",
   ACTIVE: "متاح",
   PAUSED: "متوقف مؤقتاً",
   SOLD_OUT: "نفد المخزون",

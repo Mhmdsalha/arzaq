@@ -66,7 +66,7 @@ export async function createListingAction(
 
     return {
       ok: true,
-      message: "تم إضافة العنصر إلى متجرك بنجاح",
+      message: "تم إرسال العنصر للإدارة، وسيظهر في المتجر بعد الموافقة",
       listingId: listing.id,
     };
   } catch (error) {
@@ -111,7 +111,7 @@ export async function updateListingAction(
       entityId: listing.id,
     });
 
-    return { ok: true, message: "تم حفظ التعديلات", listingId: listing.id };
+    return { ok: true, message: "تم حفظ التعديلات وإرسال العنصر للمراجعة", listingId: listing.id };
   } catch (error) {
     return {
       ok: false,

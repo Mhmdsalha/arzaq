@@ -23,6 +23,8 @@ export default async function AdminStorePage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <AdminStat label="كل العناصر" value={overview.totalListings} />
         <AdminStat label="العناصر النشطة" value={overview.activeListings} />
+        <AdminStat label="عناصر قيد المراجعة" value={overview.pendingReviewListings} />
+        <AdminStat label="تحتاج تعديلات" value={overview.needsEditListings} />
         <AdminStat label="طلبات بانتظار التأكيد" value={overview.pendingOrders} />
         <AdminStat label="بلاغات قيد المراجعة" value={overview.pendingReports} />
       </div>
