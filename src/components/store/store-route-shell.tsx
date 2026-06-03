@@ -22,6 +22,7 @@ export function StoreRouteShell({
   variant = "public",
 }: StoreRouteShellProps) {
   const isAdmin = variant === "admin";
+  const isDashboard = variant === "dashboard";
 
   return (
     <section className={cn(isAdmin ? "container-responsive py-10" : "space-y-6")}>
@@ -30,6 +31,8 @@ export function StoreRouteShell({
           "rounded-3xl border p-4 shadow-sm sm:p-6",
           isAdmin
             ? "border-white/10 bg-white/5 text-white"
+            : isDashboard
+              ? "border-transparent bg-transparent p-0 shadow-none sm:border-slate-200 sm:bg-white sm:p-6 sm:shadow-sm"
             : "border-slate-200 bg-white text-slate-950",
         )}
       >

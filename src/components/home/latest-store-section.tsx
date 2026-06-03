@@ -15,7 +15,7 @@ export function LatestStoreSection({
   const hasListings = services.length > 0 || products.length > 0;
 
   return (
-    <section className="section-spacing bg-white">
+    <section className="section-spacing bg-slate-50">
       <div className="container-responsive space-y-6 lg:space-y-8">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>

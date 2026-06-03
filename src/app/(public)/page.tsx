@@ -30,7 +30,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <main>
+    <main className="bg-slate-50">
       <HeroSection />
       <SearchSection />
       <CategoriesGrid categories={categories} />

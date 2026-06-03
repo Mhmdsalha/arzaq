@@ -9,7 +9,7 @@ export async function CTASection() {
   const isAuthenticated = Boolean(session?.user?.id);
 
   return (
-    <section className="bg-white py-14">
+    <section className="bg-slate-50 py-14">
       <div className="container">
         <div className="rounded-[2rem] bg-primary-dark p-8 text-white shadow-sm md:p-10">
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">

@@ -1,5 +1,5 @@
 import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
-import { ArrowLeft, Package, Search, ShoppingBag, Sparkles, Wrench } from "lucide-react";
+import { ArrowLeft, Search, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -65,8 +65,6 @@ async function StoreContent({
         filters={filters}
         queryParams={queryParams}
         total={listings.total}
-        serviceTotal={serviceListings.total}
-        productTotal={productListings.total}
         categories={categories}
       />
 
@@ -182,7 +180,8 @@ function StoreHero({
           </div>
 
           <h1 className="mt-5 font-palestine text-4xl font-bold leading-snug text-white sm:text-5xl lg:text-6xl">
-            كل ما تحتاجه من أهل غزة في مكان واحد
+            <span className="block">أقرب من أي متجــــــر</span>
+            <span className="block">في العالم</span>
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-8 text-white/85 sm:text-base">
             اطلب خدمة جاهزة، اشتري منتجاً محلياً، أو اعرض ما تقدمه للناس بطريقة منظمة وسهلة داخل أرزاق.
@@ -269,15 +268,11 @@ function StoreHeader({
   filters,
   queryParams,
   total,
-  serviceTotal,
-  productTotal,
   categories,
 }: {
   filters: ListingFiltersInput;
   queryParams: URLSearchParams;
   total: number;
-  serviceTotal: number;
-  productTotal: number;
   categories: Awaited<ReturnType<typeof getCachedListingFilterOptions>>;
 }) {
   const filterValues = toFilterValues(filters);
@@ -291,7 +286,7 @@ function StoreHeader({
         </span>
       </div>
 
-      <div className="hidden items-end justify-between gap-6 lg:flex">
+      <div className="hidden lg:block">
         <div>
           <nav className="mb-3 text-xs font-semibold text-slate-400">
             <Link href="/" className="hover:text-primary-dark">الرئيسية</Link>
@@ -303,16 +298,9 @@ function StoreHeader({
             اكتشف خدمات جاهزة وبضائع محلية من أهل غزة، وابدأ الطلب داخل أرزاق.
           </p>
         </div>
-        <div className="flex items-center rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-          <StoreStat icon={ShoppingBag} value={total} label="عنصر" />
-          <Divider />
-          <StoreStat icon={Wrench} value={serviceTotal} label="خدمة" />
-          <Divider />
-          <StoreStat icon={Package} value={productTotal} label="منتج" />
-        </div>
       </div>
 
-      <form action="/store" className="flex min-h-11 items-center gap-2 rounded-xl bg-slate-100 px-3 lg:min-h-12 lg:bg-white lg:shadow-sm lg:ring-1 lg:ring-slate-200">
+      <form action="/store" className="flex min-h-11 items-center gap-2 rounded-2xl bg-slate-50 px-3 transition focus-within:bg-white focus-within:shadow-sm lg:min-h-12">
         <Search className="size-4 shrink-0 text-slate-400" />
         <input
           name="q"
@@ -348,30 +336,6 @@ function StoreHeader({
       </div>
     </div>
   );
-}
-
-function StoreStat({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  value: number;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 px-3">
-      <Icon className="size-4 text-primary" />
-      <div>
-        <p className="font-bold text-primary-dark">{value.toLocaleString("ar")}</p>
-        <p className="text-xs text-slate-500">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-function Divider() {
-  return <span className="h-8 w-px bg-slate-200" />;
 }
 
 function StoreContentSkeleton() {
