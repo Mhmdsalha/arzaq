@@ -1,5 +1,6 @@
 import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
-import { Package, Search, ShoppingBag, Wrench } from "lucide-react";
+import { ArrowLeft, Package, Search, ShoppingBag, Sparkles, Wrench } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -58,6 +59,8 @@ async function StoreContent({
 
   return (
     <section className="container-responsive space-y-5 lg:space-y-8">
+      <StoreHero total={listings.total} serviceTotal={serviceListings.total} productTotal={productListings.total} />
+
       <StoreHeader
         filters={filters}
         queryParams={queryParams}
@@ -98,6 +101,113 @@ async function StoreContent({
         </div>
       </div>
     </section>
+  );
+}
+
+function StoreHero({
+  total,
+  serviceTotal,
+  productTotal,
+}: {
+  total: number;
+  serviceTotal: number;
+  productTotal: number;
+}) {
+  return (
+    <section className="relative isolate overflow-hidden rounded-[2rem] bg-primary text-white shadow-xl shadow-emerald-950/10 lg:rounded-[2.5rem]">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#15803d_0%,#16a34a_54%,#22c55e_100%)]" />
+      <div className="absolute inset-0 opacity-[0.06] [background-image:radial-gradient(rgba(255,255,255,0.9)_1px,transparent_1px)] [background-size:24px_24px]" />
+      <div className="absolute -right-20 -top-24 size-72 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute -bottom-24 left-8 size-72 rounded-full bg-primary-light/20 blur-3xl" />
+
+      <div className="relative z-10 grid gap-8 p-5 sm:p-7 lg:grid-cols-[1fr_0.95fr] lg:items-center lg:p-10">
+        <div className="max-w-2xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm">
+            <Sparkles className="size-4" />
+            متجر أرزاق للخدمات والمنتجات
+          </div>
+
+          <h1 className="mt-5 font-palestine text-4xl font-bold leading-snug text-white sm:text-5xl lg:text-6xl">
+            كل ما تحتاجه من أهل غزة في مكان واحد
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-8 text-white/85 sm:text-base">
+            اطلب خدمة جاهزة، اشتري منتجاً محلياً، أو اعرض ما تقدمه للناس بطريقة منظمة وسهلة داخل أرزاق.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="#store-results"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-bold text-primary-dark transition hover:-translate-y-0.5 hover:bg-emerald-50"
+            >
+              تصفح المتجر
+              <ArrowLeft className="size-4" />
+            </Link>
+            <Link
+              href="/dashboard/store/new"
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-5 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              أضف خدمة أو منتج
+            </Link>
+          </div>
+
+          <div className="mt-7 grid grid-cols-3 overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/15">
+            <HeroStat value={total} label="عنصر متاح" />
+            <HeroStat value={serviceTotal} label="خدمة جاهزة" />
+            <HeroStat value={productTotal} label="منتج محلي" />
+          </div>
+        </div>
+
+        <div className="relative min-h-[280px] lg:min-h-[410px]">
+          <div className="absolute left-0 top-0 w-[68%] overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem]">
+              <Image
+                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80"
+                alt="خدمة رقمية جاهزة داخل متجر أرزاق"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 70vw, 420px"
+                priority
+              />
+            </div>
+            <div className="flex items-center justify-between px-2 py-3">
+              <span className="text-sm font-bold">خدمات جاهزة</span>
+              <span className="rounded-full bg-white/15 px-2 py-1 text-[11px]">تصميم، كتابة، تدريب</span>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 right-0 w-[62%] overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem]">
+              <Image
+                src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80"
+                alt="منتجات محلية في متجر أرزاق"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 64vw, 360px"
+                priority
+              />
+            </div>
+            <div className="flex items-center justify-between px-2 py-3">
+              <span className="text-sm font-bold">منتجات محلية</span>
+              <span className="rounded-full bg-amber-400 px-2 py-1 text-[11px] font-bold text-white">مميز</span>
+            </div>
+          </div>
+
+          <div className="absolute right-4 top-10 hidden rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-xl sm:block">
+            <p className="text-xs text-slate-500">طلب سريع</p>
+            <p className="mt-1 text-sm font-bold text-primary-dark">تواصل واتفق خارج المنصة</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HeroStat({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="border-white/10 px-3 py-3 text-center [&:not(:first-child)]:border-r">
+      <p className="font-cairo text-xl font-extrabold text-white">{value.toLocaleString("ar")}</p>
+      <p className="mt-1 text-[11px] font-medium text-white/75">{label}</p>
+    </div>
   );
 }
 
