@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://*.r2.dev https://images.unsplash.com https://*.supabase.co",
   [
-    "connect-src 'self' https://*.upstash.io https://*.sentry.io",
+    "connect-src 'self' https://*.upstash.io https://*.sentry.io https://*.r2.cloudflarestorage.com",
     isProduction ? "" : "ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*",
   ]
     .filter(Boolean)
