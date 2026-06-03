@@ -115,6 +115,60 @@ function StoreHero({
 }) {
   return (
     <section className="relative isolate overflow-hidden rounded-[2rem] bg-primary text-white shadow-xl shadow-emerald-950/10 lg:rounded-[2.5rem]">
+      <style>
+        {`
+          @keyframes storeHeroFloatPrimary {
+            0%, 100% {
+              transform: translate3d(0, 0, 0) rotate(-1deg);
+            }
+            50% {
+              transform: translate3d(0, -10px, 0) rotate(1deg);
+            }
+          }
+
+          @keyframes storeHeroFloatSecondary {
+            0%, 100% {
+              transform: translate3d(0, 0, 0) rotate(1deg);
+            }
+            50% {
+              transform: translate3d(0, 8px, 0) rotate(-1deg);
+            }
+          }
+
+          @keyframes storeHeroBadgeFloat {
+            0%, 100% {
+              transform: translate3d(0, 0, 0) scale(1);
+            }
+            50% {
+              transform: translate3d(0, -6px, 0) scale(1.03);
+            }
+          }
+
+          .store-hero-float-primary {
+            animation: storeHeroFloatPrimary 7s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          .store-hero-float-secondary {
+            animation: storeHeroFloatSecondary 8s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          .store-hero-badge-float {
+            animation: storeHeroBadgeFloat 6s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .store-hero-float-primary,
+            .store-hero-float-secondary,
+            .store-hero-badge-float {
+              animation: none;
+              transform: none;
+            }
+          }
+        `}
+      </style>
       <div className="absolute inset-0 bg-[linear-gradient(135deg,#15803d_0%,#16a34a_54%,#22c55e_100%)]" />
       <div className="absolute inset-0 opacity-[0.06] [background-image:radial-gradient(rgba(255,255,255,0.9)_1px,transparent_1px)] [background-size:24px_24px]" />
       <div className="absolute -right-20 -top-24 size-72 rounded-full bg-white/10 blur-3xl" />
@@ -158,7 +212,7 @@ function StoreHero({
         </div>
 
         <div className="relative min-h-[280px] lg:min-h-[410px]">
-          <div className="absolute left-0 top-0 w-[68%] overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+          <div className="store-hero-float-primary absolute left-0 top-0 w-[68%] overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
             <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem]">
               <Image
                 src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80"
@@ -175,7 +229,7 @@ function StoreHero({
             </div>
           </div>
 
-          <div className="absolute bottom-0 right-0 w-[62%] overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
+          <div className="store-hero-float-secondary absolute bottom-0 right-0 w-[62%] overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
             <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem]">
               <Image
                 src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80"
@@ -192,7 +246,7 @@ function StoreHero({
             </div>
           </div>
 
-          <div className="absolute right-4 top-10 hidden rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-xl sm:block">
+          <div className="store-hero-badge-float absolute right-4 top-10 hidden rounded-2xl bg-white px-4 py-3 text-slate-900 shadow-xl sm:block">
             <p className="text-xs text-slate-500">طلب سريع</p>
             <p className="mt-1 text-sm font-bold text-primary-dark">تواصل واتفق خارج المنصة</p>
           </div>

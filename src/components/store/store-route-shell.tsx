@@ -27,7 +27,7 @@ export function StoreRouteShell({
     <section className={cn(isAdmin ? "container-responsive py-10" : "space-y-6")}>
       <div
         className={cn(
-          "rounded-3xl border p-6 shadow-sm",
+          "rounded-3xl border p-4 shadow-sm sm:p-6",
           isAdmin
             ? "border-white/10 bg-white/5 text-white"
             : "border-slate-200 bg-white text-slate-950",
@@ -61,8 +61,10 @@ export function StoreRouteShell({
 
         <div
           className={cn(
-            "mt-6 rounded-2xl border border-dashed p-5 text-sm leading-7",
-            isAdmin ? "border-white/10 bg-slate-950/40 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600",
+            "mt-5 text-sm leading-7 sm:mt-6",
+            isAdmin
+              ? "rounded-2xl border border-dashed border-white/10 bg-slate-950/40 p-4 text-slate-300 sm:p-5"
+              : "rounded-2xl border-0 bg-transparent p-0 text-slate-600 sm:border sm:border-dashed sm:border-slate-200 sm:bg-slate-50 sm:p-5",
           )}
         >
           {children ?? (

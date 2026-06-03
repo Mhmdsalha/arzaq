@@ -97,21 +97,21 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
 
   return (
     <form onSubmit={onSubmit}>
-      <Card className="border-slate-200">
-        <CardContent className="space-y-5 p-4 lg:p-6">
-          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="space-y-4 p-3 sm:p-4 lg:space-y-5 lg:p-6">
+          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-3 sm:p-4">
             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-primary-dark">
               <ShoppingBag className="size-4" />
               نوع العنصر
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
               {(["SERVICE", "PHYSICAL"] as ListingType[]).map((value) => (
                 <button
                   key={value}
                   type="button"
                   disabled={mode === "edit"}
                   onClick={() => setType(value)}
-                  className={`min-h-16 rounded-2xl border p-4 text-right transition ${
+                  className={`rounded-2xl border p-3 text-right transition sm:min-h-16 sm:p-4 ${
                     type === value
                       ? "border-primary bg-white shadow-sm ring-2 ring-primary/10"
                       : "border-slate-200 bg-white/70 text-slate-600"
