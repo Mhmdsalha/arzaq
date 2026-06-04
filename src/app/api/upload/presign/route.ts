@@ -6,10 +6,10 @@ import { validateCSRFToken } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { rateLimiters } from "@/lib/rateLimit";
 import {
-  getPresignedUploadUrl,
   getPublicUrl,
   type UploadFolder,
 } from "@/lib/uploadImage";
+import { createUploadProxyToken } from "@/lib/upload-proxy-token";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const ALLOWED_FOLDERS: UploadFolder[] = ["avatars", "portfolio", "listings"];
@@ -81,7 +81,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const key = generateSafeImageKey(body.folder as UploadFolder, session.user.id, body.contentType);
-    const presignedUrl = await getPresignedUploadUrl(key, body.contentType);
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+    const token = createUploadProxyToken({
+      key,
+      userId: session.user.id,
+      contentType: body.contentType,
+      expiresAt,
+    });
+    const presignedUrl = `/api/upload/proxy?key=${encodeURIComponent(key)}&contentType=${encodeURIComponent(
+      body.contentType,
+    )}&expiresAt=${expiresAt}&token=${token}`;
     const publicUrl = getPublicUrl(key);
     logAudit("UPLOAD_FILE", {
       userId: session.user.id,
