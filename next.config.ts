@@ -8,6 +8,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://*.r2.dev https://images.unsplash.com https://*.supabase.co",
+  "worker-src 'self' blob:",
   [
     "connect-src 'self' https://*.upstash.io https://*.sentry.io https://*.r2.cloudflarestorage.com",
     isProduction ? "" : "ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*",

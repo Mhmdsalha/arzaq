@@ -71,43 +71,27 @@ export async function uploadListingImage(file: File) {
   }
 
   const csrfToken = await getCsrfToken();
-  const presignResponse = await fetch("/api/upload/presign", {
+  const formData = new FormData();
+  formData.append("file", compressedFile, normalizedFileName(compressedFile));
+
+  const response = await fetch("/api/upload/listing", {
     method: "POST",
     headers: {
-      "content-type": "application/json",
       "x-csrf-token": csrfToken,
     },
-    body: JSON.stringify({
-      fileName: normalizedFileName(compressedFile),
-      contentType: compressedFile.type,
-      fileSize: compressedFile.size,
-      folder: "listings",
-    }),
+    body: formData,
   });
 
-  const presignData = (await presignResponse.json()) as Partial<{
-    presignedUrl: string;
+  const data = (await response.json()) as Partial<{
     publicUrl: string;
     error: string;
   }>;
 
-  if (!presignResponse.ok || !presignData.presignedUrl || !presignData.publicUrl) {
-    throw new Error(presignData.error ?? "تعذر تجهيز رفع الصورة، حاول مرة أخرى");
+  if (!response.ok || !data.publicUrl) {
+    throw new Error(data.error ?? "تعذر رفع الصورة، حاول مرة أخرى");
   }
 
-  const uploadResponse = await fetch(presignData.presignedUrl, {
-    method: "PUT",
-    headers: {
-      "content-type": compressedFile.type,
-    },
-    body: compressedFile,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error("تعذر رفع الصورة، حاول مرة أخرى");
-  }
-
-  return presignData.publicUrl;
+  return data.publicUrl;
 }
 
 async function getCsrfToken() {
