@@ -18,11 +18,47 @@ export default async function DashboardStorePage() {
     redirect("/auth/login?callbackUrl=/dashboard/store");
   }
 
-  const [stats, listings, receivedOrders] = await Promise.all([
-    getSellerStoreStats(session.user.id),
-    getSellerListings(session.user.id),
-    getReceivedOrders(session.user.id),
-  ]);
+  const shellProps = {
+    eyebrow: "لوحة التحكم",
+    title: "إدارة متجري",
+    description: "أدر خدماتك ومنتجاتك، وتابع الطلبات والمشاهدات وحالة كل عنصر من مكان واحد.",
+    backHref: "/dashboard",
+    backLabel: "لوحة التحكم",
+    variant: "dashboard" as const,
+  };
+
+  let storeData: Awaited<
+    Promise<
+      [
+        Awaited<ReturnType<typeof getSellerStoreStats>>,
+        Awaited<ReturnType<typeof getSellerListings>>,
+        Awaited<ReturnType<typeof getReceivedOrders>>,
+      ]
+    >
+  >;
+
+  try {
+    storeData = await Promise.all([
+      getSellerStoreStats(session.user.id),
+      getSellerListings(session.user.id),
+      getReceivedOrders(session.user.id),
+    ]);
+  } catch (error) {
+    console.error("Failed to load seller store dashboard", error);
+
+    return (
+      <StoreRouteShell {...shellProps}>
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-center">
+          <h2 className="text-xl font-extrabold text-slate-950">تعذر تحميل بيانات المتجر</h2>
+          <p className="mt-2 text-sm leading-7 text-slate-600">
+            تم حفظ العملية غالباً، لكن تعذر تحديث لوحة المتجر الآن. حدّث الصفحة أو حاول بعد لحظات.
+          </p>
+        </div>
+      </StoreRouteShell>
+    );
+  }
+
+  const [stats, listings, receivedOrders] = storeData;
 
   return (
     <StoreRouteShell

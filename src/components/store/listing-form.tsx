@@ -12,7 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { deliveryMethodLabels, listingTypeLabels } from "@/constants/store";
+import {
+  deliveryMethodLabels,
+  listingDeliveryTimeOptions,
+  listingPriceLabelOptions,
+  listingTypeLabels,
+} from "@/constants/store";
 import { regionLabels } from "@/constants/regions";
 import { uploadListingImage } from "@/lib/upload-image";
 import type { CreateListingInput, UpdateListingInput } from "@/schemas/listing.schema";
@@ -32,6 +37,14 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
   const [isUploading, setIsUploading] = useState(false);
 
   const tagsText = useMemo(() => initialData?.tags.join(", ") ?? "", [initialData]);
+  const priceLabelOptions = useMemo(
+    () => withCurrentOption(listingPriceLabelOptions, initialData?.priceLabel),
+    [initialData?.priceLabel],
+  );
+  const deliveryTimeOptions = useMemo(
+    () => withCurrentOption(listingDeliveryTimeOptions, initialData?.deliveryTime),
+    [initialData?.deliveryTime],
+  );
 
   async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -103,6 +116,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-primary-dark">
               <ShoppingBag className="size-4" />
               نوع العنصر
+              <span className="text-red-500" aria-hidden="true">*</span>
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
               {(["SERVICE", "PHYSICAL"] as ListingType[]).map((value) => (
@@ -134,6 +148,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
           <TextField
             name="title"
             label="العنوان"
+            required
             placeholder="مثلاً: تصميم شعار احترافي خلال يومين"
             defaultValue={initialData?.title ?? ""}
           />
@@ -141,6 +156,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
           <TextAreaField
             name="description"
             label="الوصف التفصيلي"
+            required
             placeholder="اشرح ما تقدمه، ما الذي يشمله السعر، وطريقة التسليم..."
             defaultValue={initialData?.description ?? ""}
           />
@@ -149,6 +165,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
             <SelectField
               name="categoryId"
               label="التصنيف"
+              required
               defaultValue={initialData?.categoryId ?? categories[0]?.id ?? ""}
             >
               {categories.map((category) => (
@@ -158,7 +175,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
               ))}
             </SelectField>
 
-            <SelectField name="region" label="المنطقة" defaultValue={initialData?.region ?? "GAZA_CITY"}>
+            <SelectField name="region" label="المنطقة" required defaultValue={initialData?.region ?? "GAZA_CITY"}>
               {Object.entries(regionLabels).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -174,20 +191,28 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
               type="number"
               min="0"
               step="1"
+              required
               defaultValue={initialData?.price ?? 0}
             />
-            <TextField
+            <SelectField
               name="priceLabel"
               label="وصف السعر"
-              placeholder="مثلاً: يبدأ من / حسب الاتفاق / شامل التوصيل"
               defaultValue={initialData?.priceLabel ?? ""}
-            />
+            >
+              <option value="">بدون وصف إضافي</option>
+              {priceLabelOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </SelectField>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <SelectField
               name="deliveryMethod"
               label="طريقة التسليم"
+              required
               defaultValue={initialData?.deliveryMethod ?? "ONLINE"}
             >
               {Object.entries(deliveryMethodLabels).map(([value, label]) => (
@@ -196,12 +221,18 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
                 </option>
               ))}
             </SelectField>
-            <TextField
+            <SelectField
               name="deliveryTime"
               label="مدة التسليم"
-              placeholder="مثلاً: يومان / خلال 24 ساعة"
               defaultValue={initialData?.deliveryTime ?? ""}
-            />
+            >
+              <option value="">يُحدد لاحقاً</option>
+              {deliveryTimeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </SelectField>
           </div>
 
           {type === "PHYSICAL" ? (
@@ -211,6 +242,7 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
               type="number"
               min="0"
               step="1"
+              required
               defaultValue={initialData?.quantity ?? 1}
             />
           ) : null}
@@ -298,6 +330,19 @@ export function ListingForm({ categories, mode, initialData }: ListingFormProps)
   );
 }
 
+function withCurrentOption(
+  options: readonly string[],
+  currentValue?: string | null,
+) {
+  const current = currentValue?.trim();
+
+  if (!current || options.includes(current)) {
+    return options;
+  }
+
+  return [current, ...options];
+}
+
 function buildPayload(formData: FormData, type: ListingType, images: string[]) {
   const tags = String(formData.get("tags") ?? "")
     .split(",")
@@ -327,7 +372,9 @@ function TextField({
 }: React.InputHTMLAttributes<HTMLInputElement> & { name: string; label: string }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
+      <FieldLabel htmlFor={name} required={Boolean(props.required)}>
+        {label}
+      </FieldLabel>
       <Input id={name} name={name} className="h-12 text-base" {...props} />
     </div>
   );
@@ -345,7 +392,9 @@ function SelectField({
 }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
+      <FieldLabel htmlFor={name} required={Boolean(props.required)}>
+        {label}
+      </FieldLabel>
       <select
         id={name}
         name={name}
@@ -365,7 +414,9 @@ function TextAreaField({
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { name: string; label: string }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
+      <FieldLabel htmlFor={name} required={Boolean(props.required)}>
+        {label}
+      </FieldLabel>
       <textarea
         id={name}
         name={name}
@@ -373,5 +424,18 @@ function TextAreaField({
         {...props}
       />
     </div>
+  );
+}
+
+function FieldLabel({
+  children,
+  required,
+  ...props
+}: React.ComponentProps<typeof Label> & { required?: boolean }) {
+  return (
+    <Label {...props}>
+      {children}
+      {required ? <span className="mr-1 text-red-500" aria-hidden="true">*</span> : null}
+    </Label>
   );
 }

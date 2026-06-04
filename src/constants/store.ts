@@ -22,6 +22,24 @@ export const deliveryMethodLabels: Record<DeliveryMethod, string> = {
   WHATSAPP: "واتساب",
 };
 
+export const listingPriceLabelOptions = [
+  "سعر ثابت",
+  "يبدأ من",
+  "حسب الاتفاق",
+  "شامل التوصيل",
+  "غير شامل التوصيل",
+  "قابل للتفاوض",
+] as const;
+
+export const listingDeliveryTimeOptions = [
+  "فوري",
+  "خلال 24 ساعة",
+  "خلال يومين",
+  "3 أيام",
+  "أسبوع",
+  "حسب الاتفاق",
+] as const;
+
 export const storeSortLabels = {
   newest: "الأحدث",
   price_asc: "الأقل سعراً",
