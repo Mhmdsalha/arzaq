@@ -45,19 +45,31 @@ export async function rateLimit(
   }
 
   const redisKey = `arzaq:rate-limit:${hashKey(key)}`;
-  const count = await redis.incr(redisKey);
+  let count: number;
 
-  if (count === 1) {
-    await redis.expire(redisKey, options.windowSeconds);
+  try {
+    count = await redis.incr(redisKey);
+
+    if (count === 1) {
+      await redis.expire(redisKey, options.windowSeconds);
+    }
+
+    const ttl = await redis.ttl(redisKey);
+
+    return {
+      success: count <= options.limit,
+      remaining: Math.max(options.limit - count, 0),
+      resetSeconds: ttl > 0 ? ttl : options.windowSeconds,
+    };
+  } catch (error) {
+    console.error("Rate limiter failed open:", error);
+
+    return {
+      success: true,
+      remaining: options.limit,
+      resetSeconds: options.windowSeconds,
+    };
   }
-
-  const ttl = await redis.ttl(redisKey);
-
-  return {
-    success: count <= options.limit,
-    remaining: Math.max(options.limit - count, 0),
-    resetSeconds: ttl > 0 ? ttl : options.windowSeconds,
-  };
 }
 
 function hashKey(key: string) {

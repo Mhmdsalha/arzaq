@@ -398,34 +398,34 @@ export const getListingForEdit = cache(
 export async function createListing(input: CreateListingInput, sellerId: string) {
   await assertCategoryExists(input.categoryId);
 
-  return prisma.$transaction(async (tx) => {
-    const listing = await tx.listing.create({
-      data: {
-        title: input.title,
-        description: input.description,
-        type: input.type,
-        categoryId: input.categoryId,
-        region: input.region,
-        price: input.price,
-        priceLabel: input.priceLabel || null,
-        deliveryMethod: input.deliveryMethod,
-        deliveryTime: input.deliveryTime || null,
-        quantity: input.type === "PHYSICAL" ? input.quantity ?? 0 : null,
-        images: input.images,
-        tags: input.tags,
-        sellerId,
-        status: "PENDING_REVIEW",
-      },
-      select: {
-        id: true,
-        title: true,
-      },
-    });
-
-    await notifyAdminsAboutListingReview(tx, listing.id, listing.title);
-
-    return { id: listing.id };
+  const listing = await prisma.listing.create({
+    data: {
+      title: input.title,
+      description: input.description,
+      type: input.type,
+      categoryId: input.categoryId,
+      region: input.region,
+      price: input.price,
+      priceLabel: input.priceLabel || null,
+      deliveryMethod: input.deliveryMethod,
+      deliveryTime: input.deliveryTime || null,
+      quantity: input.type === "PHYSICAL" ? input.quantity ?? 0 : null,
+      images: input.images,
+      tags: input.tags,
+      sellerId,
+      status: "PENDING_REVIEW",
+    },
+    select: {
+      id: true,
+      title: true,
+    },
   });
+
+  await notifyAdminsAboutListingReview(listing.id, listing.title).catch((error: unknown) => {
+    console.error("Failed to notify admins about listing review", error);
+  });
+
+  return { id: listing.id };
 }
 
 export async function updateListing(id: string, input: UpdateListingInput, sellerId: string) {
@@ -447,7 +447,7 @@ export async function updateListing(id: string, input: UpdateListingInput, selle
 
   await assertCategoryExists(input.categoryId);
 
-  return prisma.listing.update({
+  const updatedListing = await prisma.listing.update({
     where: {
       id: listing.id,
     },
@@ -469,10 +469,13 @@ export async function updateListing(id: string, input: UpdateListingInput, selle
       id: true,
       title: true,
     },
-  }).then(async (updatedListing) => {
-    await notifyAdminsAboutListingReview(prisma, updatedListing.id, updatedListing.title);
-    return { id: updatedListing.id };
   });
+
+  await notifyAdminsAboutListingReview(updatedListing.id, updatedListing.title).catch((error: unknown) => {
+    console.error("Failed to notify admins about listing review", error);
+  });
+
+  return { id: updatedListing.id };
 }
 
 export async function pauseListing(id: string, sellerId: string) {
@@ -628,12 +631,8 @@ async function updateSellerListingStatus(
   }
 }
 
-async function notifyAdminsAboutListingReview(
-  client: Pick<typeof prisma, "user" | "notification">,
-  listingId: string,
-  listingTitle: string,
-) {
-  const admins = await client.user.findMany({
+async function notifyAdminsAboutListingReview(listingId: string, listingTitle: string) {
+  const admins = await prisma.user.findMany({
     where: {
       role: "ADMIN",
       deletedAt: null,
@@ -648,7 +647,7 @@ async function notifyAdminsAboutListingReview(
     return;
   }
 
-  await client.notification.createMany({
+  await prisma.notification.createMany({
     data: admins.map((admin) => ({
       userId: admin.id,
       type: "SYSTEM",

@@ -70,6 +70,8 @@ export async function createListingAction(
       listingId: listing.id,
     };
   } catch (error) {
+    console.error("createListingAction failed", error);
+
     return {
       ok: false,
       message: error instanceof Error ? error.message : "حدث خطأ، حاول مرة أخرى",
@@ -113,6 +115,8 @@ export async function updateListingAction(
 
     return { ok: true, message: "تم حفظ التعديلات وإرسال العنصر للمراجعة", listingId: listing.id };
   } catch (error) {
+    console.error("updateListingAction failed", error);
+
     return {
       ok: false,
       message: error instanceof Error ? error.message : "حدث خطأ، حاول مرة أخرى",
@@ -258,12 +262,16 @@ function sanitizeListingUpdateInput(input: UpdateListingInput): UpdateListingInp
 }
 
 function revalidateStorePaths(listingId?: string) {
-  revalidateTag("store", "max");
-  revalidatePath("/store");
-  revalidatePath("/dashboard/store");
+  try {
+    revalidateTag("store", "max");
+    revalidatePath("/store");
+    revalidatePath("/dashboard/store");
 
-  if (listingId) {
-    revalidatePath(`/store/${listingId}`);
-    revalidatePath(`/dashboard/store/${listingId}/edit`);
+    if (listingId) {
+      revalidatePath(`/store/${listingId}`);
+      revalidatePath(`/dashboard/store/${listingId}/edit`);
+    }
+  } catch (error) {
+    console.error("Failed to revalidate store paths", error);
   }
 }
