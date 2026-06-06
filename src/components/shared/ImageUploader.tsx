@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
+
 import { Camera, Loader2, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -111,56 +112,9 @@ export function ImageUploader({
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-slate-700">صور العنصر</span>
         <span className="text-xs text-slate-500">
-          {value.length}/{maxImages}
+          {value.length + previews.length}/{maxImages}
         </span>
       </div>
-
-      {value.length > 0 || previews.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-          {value.map((url, index) => (
-            <div key={`${url}-${index}`} className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <Image
-                src={url}
-                alt={`صورة ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 50vw, 160px"
-              />
-              {index === 0 ? (
-                <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
-                  رئيسية
-                </span>
-              ) : null}
-              {!disabled ? (
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  className="absolute left-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm transition hover:bg-red-50 hover:text-red-600"
-                  aria-label="حذف الصورة"
-                >
-                  <X className="size-4" />
-                </button>
-              ) : null}
-            </div>
-          ))}
-
-          {previews.map((preview) => (
-            <div key={preview.id} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <Image
-                src={preview.previewUrl}
-                alt="جاري رفع الصورة"
-                fill
-                className="object-cover opacity-50"
-                sizes="(max-width: 640px) 50vw, 160px"
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25 text-white">
-                <Loader2 className="size-6 animate-spin" />
-                <span className="text-xs">{formatFileSize(preview.size)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
 
       {canAddMore && !disabled ? (
         <button
@@ -195,6 +149,53 @@ export function ImageUploader({
             </p>
           </div>
         </button>
+      ) : null}
+
+      {value.length > 0 || previews.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-slate-500">معاينة الصور قبل النشر</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+            {value.map((url, index) => (
+              <div key={`${url}-${index}`} className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <img
+                  src={url}
+                  alt={`صورة ${index + 1}`}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                {index === 0 ? (
+                  <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
+                    رئيسية
+                  </span>
+                ) : null}
+                {!disabled ? (
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute left-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+                    aria-label="حذف الصورة"
+                  >
+                    <X className="size-4" />
+                  </button>
+                ) : null}
+              </div>
+            ))}
+
+            {previews.map((preview) => (
+              <div key={preview.id} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <img
+                  src={preview.previewUrl}
+                  alt="جاري رفع الصورة"
+                  className="h-full w-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25 text-white">
+                  <Loader2 className="size-6 animate-spin" />
+                  <span className="text-xs">{formatFileSize(preview.size)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       <input
