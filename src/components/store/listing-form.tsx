@@ -1,7 +1,7 @@
 "use client";
 
 import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
-import { Loader2, Save, ShoppingBag } from "lucide-react";
+import { ChevronDown, Loader2, Save, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -300,14 +300,20 @@ function SelectField({
       <FieldLabel htmlFor={name} required={Boolean(props.required)}>
         {label}
       </FieldLabel>
-      <select
-        id={name}
-        name={name}
-        className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        {...props}
-      >
-        {children}
-      </select>
+      <div className="relative">
+        <select
+          id={name}
+          name={name}
+          className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white py-0 pl-11 pr-4 text-right text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          {...props}
+        >
+          {children}
+        </select>
+        <ChevronDown
+          className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+          aria-hidden="true"
+        />
+      </div>
     </div>
   );
 }

@@ -5,13 +5,11 @@ import {
   BriefcaseBusiness,
   ChevronDown,
   FileText,
-  Home,
   LayoutDashboard,
   LogOut,
   Menu,
   Plus,
   Settings,
-  Store,
   User,
   X,
 } from "lucide-react";
@@ -295,8 +293,6 @@ function UserMenu({
         </div>
       </div>
       <div className="my-2 border-t border-slate-100" />
-      <DropdownItem href="/" icon={Home} label="الرئيسية" />
-      <DropdownItem href="/store" icon={Store} label="المتجر" />
       <DropdownItem href="/dashboard" icon={LayoutDashboard} label="لوحة التحكم" />
       <DropdownItem href="/dashboard/profile" icon={User} label="بروفايلي" />
       {isProvider ? (

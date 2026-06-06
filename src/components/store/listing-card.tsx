@@ -70,35 +70,33 @@ export function ListingCard({
         />
       </div>
 
-      <div className={cn("space-y-2.5 p-3", !compact && "lg:p-4")}>
+      <div className={cn("space-y-2 p-3", !compact && "lg:p-3.5")}>
         <Link href={`/store/${listing.id}`} className="block">
           <h2
             className={cn(
               "line-clamp-2 font-bold leading-snug text-slate-800 transition group-hover:text-primary-dark",
-              compact ? "min-h-10 text-sm" : "min-h-10 text-sm lg:min-h-12 lg:text-base",
+              compact ? "text-sm" : "text-sm lg:text-base",
             )}
           >
             {listing.title}
           </h2>
         </Link>
 
-        {!compact ? (
-          <p className="hidden line-clamp-2 text-sm leading-6 text-slate-600 lg:block">
-            {listing.description}
-          </p>
-        ) : null}
-
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] text-slate-500">
-          <MetaItem icon={Banknote} className="font-bold text-primary-dark">
+        <div className="flex items-center justify-between gap-2">
+          <MetaItem icon={Banknote} className="text-xs font-extrabold text-primary-dark">
             {formatPrice(listing.price)}
           </MetaItem>
+          {listing.priceLabel && !compact ? (
+            <span className="line-clamp-1 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-semibold text-slate-500">
+              {listing.priceLabel}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
           <MetaItem icon={MapPin}>{regionLabels[listing.region]}</MetaItem>
           {!compact ? <MetaItem icon={Truck}>{deliveryMethodLabels[listing.deliveryMethod]}</MetaItem> : null}
         </div>
-
-        {listing.priceLabel && !compact ? (
-          <p className="line-clamp-1 text-xs text-slate-500">{listing.priceLabel}</p>
-        ) : null}
 
         <div className="flex items-center gap-2 border-t border-slate-50 pt-2">
           <SellerAvatar listing={listing} compact={compact} />
