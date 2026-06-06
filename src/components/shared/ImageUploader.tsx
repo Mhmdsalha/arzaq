@@ -206,10 +206,10 @@ export function ImageUploader({
         className="sr-only"
         disabled={disabled || isUploading || !canAddMore}
         onChange={(event) => {
-          const files = event.target.files;
-          event.target.value = "";
+          const files = Array.from(event.currentTarget.files ?? []);
+          event.currentTarget.value = "";
 
-          if (files) {
+          if (files.length > 0) {
             void handleFiles(files);
           }
         }}

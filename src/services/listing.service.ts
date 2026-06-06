@@ -2,6 +2,7 @@ import type { DeliveryMethod, ListingType, Prisma, Region } from "@prisma/client
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
+import { getAdminHref } from "@/lib/admin-path";
 import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 import { sanitizeSearchQuery } from "@/lib/sanitize";
 import type { CreateListingInput, UpdateListingInput } from "@/schemas/listing.schema";
@@ -652,7 +653,7 @@ async function notifyAdminsAboutListingReview(listingId: string, listingTitle: s
       userId: admin.id,
       type: "SYSTEM",
       message: `عنصر متجر جديد بانتظار المراجعة: ${listingTitle}`,
-      link: `/admin/store/listings?status=PENDING_REVIEW`,
+      link: getAdminHref(`/store/listings/${listingId}`),
     })),
   });
 }

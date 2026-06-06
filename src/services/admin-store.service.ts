@@ -103,6 +103,72 @@ export async function getAdminStoreListings({
   };
 }
 
+export async function getAdminStoreListingById(listingId: string) {
+  return prisma.listing.findFirst({
+    where: {
+      id: listingId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      type: true,
+      price: true,
+      priceLabel: true,
+      deliveryMethod: true,
+      deliveryTime: true,
+      region: true,
+      quantity: true,
+      images: true,
+      tags: true,
+      status: true,
+      viewCount: true,
+      avgRating: true,
+      totalReviews: true,
+      isFeatured: true,
+      createdAt: true,
+      updatedAt: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      seller: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          isVerified: true,
+          isBanned: true,
+          createdAt: true,
+          profile: {
+            select: {
+              avatarUrl: true,
+              whatsapp: true,
+              showWhatsapp: true,
+              isTrusted: true,
+              avgRating: true,
+              totalReviews: true,
+              region: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          orders: true,
+          reports: true,
+          savedBy: true,
+          reviews: true,
+        },
+      },
+    },
+  });
+}
+
 export async function getAdminStoreOrders({
   q,
   status,

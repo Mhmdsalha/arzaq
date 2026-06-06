@@ -100,7 +100,7 @@ export default async function AdminStoreListingsPage({
 
               <div className="flex flex-wrap gap-2">
                 <Link
-                  href={`/store/${listing.id}`}
+                  href={getAdminHref(`/store/listings/${listing.id}`)}
                   className="inline-flex min-h-10 items-center rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 hover:bg-white/10"
                 >
                   عرض

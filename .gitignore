@@ -35,4 +35,8 @@ prisma/dev.db
 *.tsbuildinfo
 next-env.d.ts
 
+# unrelated local workspaces / visual checks
+oud-store-design/
+lamsa-hero-check.png
+
 .vercel
