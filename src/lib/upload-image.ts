@@ -1,4 +1,6 @@
-import imageCompression from "browser-image-compression";
+"use client";
+
+import { compressImage as compressBrowserImage } from "@/lib/imageCompression";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_ORIGINAL_AVATAR_BYTES = 6 * 1024 * 1024;
@@ -9,7 +11,7 @@ const MIN_AVATAR_DIMENSION = 200;
 const MAX_AVATAR_DIMENSION = 4000;
 
 export async function compressImage(file: File) {
-  return imageCompression(file, {
+  return compressBrowserImage(file, "listing", {
     maxSizeMB: 1,
     maxWidthOrHeight: 1600,
     useWebWorker: true,
@@ -17,7 +19,7 @@ export async function compressImage(file: File) {
 }
 
 export async function compressAvatarImage(file: File) {
-  return imageCompression(file, {
+  return compressBrowserImage(file, "avatar", {
     maxSizeMB: 0.4,
     maxWidthOrHeight: 800,
     useWebWorker: true,
@@ -59,7 +61,7 @@ export async function uploadAvatarImage(file: File) {
 
 export async function uploadListingImage(file: File) {
   await validateListingFile(file);
-  const compressedFile = await imageCompression(file, {
+  const compressedFile = await compressBrowserImage(file, "listing", {
     maxSizeMB: 0.95,
     maxWidthOrHeight: 1600,
     useWebWorker: true,

@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
+    "@types/browser-image-compression": "^1.0.1",
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.2.7",
