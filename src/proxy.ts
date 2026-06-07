@@ -11,8 +11,19 @@ type SessionToken = {
   accountType?: "CLIENT" | "PROVIDER";
 };
 
+const API_RATE_LIMIT = 100;
+const API_RATE_WINDOW_SECONDS = 60;
+
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/api/")) {
+    const rateLimitedResponse = await enforceApiRateLimit(request);
+
+    if (rateLimitedResponse) {
+      return rateLimitedResponse;
+    }
+  }
 
   if (pathname.startsWith("/api/") && isMutatingRequest(request) && !isAllowedApiOrigin(request)) {
     return NextResponse.json({ error: "طلب غير مصرح به" }, { status: 403 });
@@ -172,6 +183,49 @@ function getAdminRedis() {
   }
 
   return new Redis({ url, token });
+}
+
+async function enforceApiRateLimit(request: NextRequest) {
+  const redis = getAdminRedis();
+
+  if (!redis) {
+    return null;
+  }
+
+  const clientIp = getClientIp(request);
+  const redisKey = `arzaq:api-rate:${clientIp}`;
+
+  try {
+    const count = await redis.incr(redisKey);
+
+    if (Number(count) === 1) {
+      await redis.expire(redisKey, API_RATE_WINDOW_SECONDS);
+    }
+
+    const ttl = await redis.ttl(redisKey).catch(() => API_RATE_WINDOW_SECONDS);
+    const resetSeconds = ttl > 0 ? ttl : API_RATE_WINDOW_SECONDS;
+
+    if (Number(count) <= API_RATE_LIMIT) {
+      return null;
+    }
+
+    const resetAt = Math.floor(Date.now() / 1000) + resetSeconds;
+
+    return NextResponse.json(
+      { error: "طلبات كثيرة جداً، حاول لاحقاً" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(resetSeconds),
+          "X-RateLimit-Limit": String(API_RATE_LIMIT),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(resetAt),
+        },
+      },
+    );
+  } catch {
+    return null;
+  }
 }
 
 async function isAdminBlocked(request: NextRequest) {

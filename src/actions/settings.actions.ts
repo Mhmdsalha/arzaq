@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { requireNotBanned } from "@/lib/authGuards";
 import { sendEmailVerificationCode } from "@/lib/email";
+import { rateLimiters } from "@/lib/rateLimit";
 import { sanitizeEmail, sanitizePhone } from "@/lib/sanitize";
 import {
   accountSettingsSchema,
@@ -26,6 +27,12 @@ export async function updateAccountSettingsAction(
 
   if (!session?.user?.id) {
     return { ok: false, message: "يجب تسجيل الدخول أولاً" };
+  }
+
+  const limit = await rateLimiters.settings(session.user.id);
+
+  if (!limit.success) {
+    return { ok: false, message: "تم تجاوز عدد محاولات تعديل الإعدادات، حاول لاحقاً" };
   }
 
   const parsed = accountSettingsSchema.safeParse(input);
@@ -74,6 +81,12 @@ export async function changePasswordAction(input: ChangePasswordInput): Promise<
     return { ok: false, message: "يجب تسجيل الدخول أولاً" };
   }
 
+  const limit = await rateLimiters.settings(session.user.id);
+
+  if (!limit.success) {
+    return { ok: false, message: "تم تجاوز عدد محاولات تعديل الإعدادات، حاول لاحقاً" };
+  }
+
   const parsed = changePasswordSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -111,6 +124,12 @@ export async function switchAccountTypeAction(
 
   if (!session?.user?.id) {
     return { ok: false, message: "يجب تسجيل الدخول أولاً" };
+  }
+
+  const limit = await rateLimiters.settings(session.user.id);
+
+  if (!limit.success) {
+    return { ok: false, message: "تم تجاوز عدد محاولات تعديل الإعدادات، حاول لاحقاً" };
   }
 
   try {

@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import type { ActionResult } from "@/actions/auth.actions";
 import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/authGuards";
+import { rateLimiters } from "@/lib/rateLimit";
 import { sanitizeEmail, sanitizePhone, sanitizeText } from "@/lib/sanitize";
 import {
   approveJobPost,
@@ -22,6 +23,7 @@ import { createAdminSchema, jobRejectionSchema } from "@/schemas/admin.schema";
 export async function setUserBanAction(userId: string, isBanned: boolean): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const user = await setUserBanned(sanitizeText(userId), isBanned);
 
     revalidatePath("/admin/users");
@@ -50,6 +52,7 @@ export async function setUserBanFormAction(formData: FormData): Promise<void> {
 export async function createAdminAccountAction(formData: FormData): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const parsed = createAdminSchema.safeParse({
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
@@ -94,6 +97,7 @@ export async function setUserVerifiedAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const user = await setUserVerified(sanitizeText(userId), isVerified);
 
     revalidatePath("/admin/users");
@@ -125,6 +129,7 @@ export async function setProviderTrustAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const profile = await setProviderTrusted(sanitizeText(userId), isTrusted);
 
     revalidatePath("/admin/users");
@@ -154,6 +159,7 @@ export async function setProviderTrustFormAction(formData: FormData): Promise<vo
 export async function adminDeleteJobAction(jobId: string): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const job = await adminSoftDeleteJob(sanitizeText(jobId));
 
     revalidateTag("jobs", "max");
@@ -184,6 +190,7 @@ export async function adminDeleteJobFormAction(formData: FormData): Promise<void
 export async function approveJobAction(jobId: string): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const job = await approveJobPost(sanitizeText(jobId));
 
     revalidateTag("jobs", "max");
@@ -215,6 +222,7 @@ export async function approveJobFormAction(formData: FormData): Promise<void> {
 export async function requestJobEditAction(formData: FormData): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const parsed = jobRejectionSchema.safeParse({
       jobId: String(formData.get("jobId") ?? ""),
       note: sanitizeText(String(formData.get("note") ?? "")),
@@ -256,6 +264,7 @@ export async function updateReportStatusAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     if (!["PENDING", "REVIEWED", "RESOLVED", "DISMISSED"].includes(status)) {
       return { ok: false, message: "حالة البلاغ غير صحيحة" };
     }
@@ -293,4 +302,12 @@ export async function updateReportStatusFormAction(formData: FormData): Promise<
   const resolvedNote = String(formData.get("resolvedNote") ?? "");
 
   await updateReportStatusAction(reportId, status, resolvedNote);
+}
+
+async function assertAdminActionAllowed(userId: string) {
+  const limit = await rateLimiters.adminAction(userId);
+
+  if (!limit.success) {
+    throw new Error("تم تجاوز عدد عمليات الإدارة، حاول لاحقاً");
+  }
 }

@@ -6,6 +6,7 @@ import type { ActionResult } from "@/actions/auth.actions";
 import { auth } from "@/lib/auth";
 import { requireNotBanned } from "@/lib/authGuards";
 import { extractR2Key } from "@/lib/r2Utils";
+import { rateLimiters } from "@/lib/rateLimit";
 import { sanitizePhone, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
 import { deleteFromR2 } from "@/lib/uploadImage";
 import { profileSchema, type ProfileInput } from "@/schemas/profile.schema";
@@ -16,6 +17,12 @@ export async function updateProfileAction(input: ProfileInput): Promise<ActionRe
 
   if (!session?.user?.id) {
     return { ok: false, message: "يجب تسجيل الدخول أولاً" };
+  }
+
+  const limit = await rateLimiters.updateProfile(session.user.id);
+
+  if (!limit.success) {
+    return { ok: false, message: "تم تجاوز عدد محاولات تحديث البروفايل، حاول لاحقاً" };
   }
 
   const parsed = profileSchema.safeParse(input);

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/actions/auth.actions";
 import { logAudit } from "@/lib/audit";
 import { requireAdmin, requireNotBanned, requireProvider } from "@/lib/authGuards";
+import { rateLimiters } from "@/lib/rateLimit";
 import { sanitizeText } from "@/lib/sanitize";
 import {
   requestProviderVerification,
@@ -18,6 +19,11 @@ export async function requestProviderVerificationAction(
   try {
     const session = await requireProvider();
     await requireNotBanned();
+    const limit = await rateLimiters.providerVerification(session.user.id);
+
+    if (!limit.success) {
+      return { ok: false, message: "تم تجاوز عدد محاولات طلب التوثيق، حاول لاحقاً" };
+    }
 
     const note = sanitizeText(String(formData.get("note") ?? ""));
     const request = await requestProviderVerification(session.user.id, note);
@@ -48,6 +54,12 @@ export async function requestProviderVerificationFormAction(formData: FormData):
 
 export async function reviewProviderVerificationFormAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
+  const limit = await rateLimiters.adminAction(session.user.id);
+
+  if (!limit.success) {
+    throw new Error("تم تجاوز عدد عمليات الإدارة، حاول لاحقاً");
+  }
+
   const requestId = sanitizeText(String(formData.get("requestId") ?? ""));
   const decision = String(formData.get("decision") ?? "") as ProviderVerificationStatus;
   const reviewedNote = sanitizeText(String(formData.get("reviewedNote") ?? ""));

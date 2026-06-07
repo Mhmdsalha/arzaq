@@ -4,7 +4,7 @@ import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { validateCSRFToken } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
-import { rateLimiters } from "@/lib/rateLimit";
+import { rateLimitHeaders, rateLimiters } from "@/lib/rateLimit";
 import { sanitizeFilename, sanitizeInt, sanitizeUrlParam } from "@/lib/sanitize";
 import {
   getPublicUrl,
@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
   const uploadLimit = await rateLimiters.upload(session.user.id);
 
   if (!uploadLimit.success) {
-    return NextResponse.json({ error: "تم تجاوز حد الرفع، حاول لاحقاً" }, { status: 429 });
+    return NextResponse.json(
+      { error: "تم تجاوز حد الرفع، حاول لاحقاً" },
+      { status: 429, headers: rateLimitHeaders(uploadLimit) },
+    );
   }
 
   const user = await prisma.user.findUnique({

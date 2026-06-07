@@ -9,6 +9,7 @@ type RateLimitOptions = {
 
 type RateLimitResult = {
   success: boolean;
+  limit: number;
   remaining: number;
   resetSeconds: number;
 };
@@ -27,6 +28,14 @@ export const rateLimiters = {
     rateLimit(`create-review:${userId}`, { limit: 20, windowSeconds: 60 * 60 }),
   report: (userId: string) =>
     rateLimit(`report:${userId}`, { limit: 6, windowSeconds: 60 * 60 }),
+  updateProfile: (userId: string) =>
+    rateLimit(`update-profile:${userId}`, { limit: 20, windowSeconds: 60 * 60 }),
+  settings: (userId: string) =>
+    rateLimit(`settings:${userId}`, { limit: 10, windowSeconds: 60 * 60 }),
+  providerVerification: (userId: string) =>
+    rateLimit(`provider-verification:${userId}`, { limit: 3, windowSeconds: 24 * 60 * 60 }),
+  adminAction: (userId: string) =>
+    rateLimit(`admin-action:${userId}`, { limit: 120, windowSeconds: 60 * 60 }),
   upload: (userId: string) => rateLimit(`upload:${userId}`, { limit: 40, windowSeconds: 60 * 60 }),
   passwordReset: (key: string) =>
     rateLimit(`password-reset:${key}`, { limit: 5, windowSeconds: 60 * 60 }),
@@ -39,6 +48,7 @@ export async function rateLimit(
   if (!redis) {
     return {
       success: true,
+      limit: options.limit,
       remaining: options.limit,
       resetSeconds: options.windowSeconds,
     };
@@ -58,6 +68,7 @@ export async function rateLimit(
 
     return {
       success: count <= options.limit,
+      limit: options.limit,
       remaining: Math.max(options.limit - count, 0),
       resetSeconds: ttl > 0 ? ttl : options.windowSeconds,
     };
@@ -66,10 +77,22 @@ export async function rateLimit(
 
     return {
       success: true,
+      limit: options.limit,
       remaining: options.limit,
       resetSeconds: options.windowSeconds,
     };
   }
+}
+
+export function rateLimitHeaders(result: RateLimitResult): HeadersInit {
+  const resetAt = Math.floor(Date.now() / 1000) + Math.max(result.resetSeconds, 0);
+
+  return {
+    "Retry-After": String(Math.max(result.resetSeconds, 1)),
+    "X-RateLimit-Limit": String(result.limit),
+    "X-RateLimit-Remaining": String(result.remaining),
+    "X-RateLimit-Reset": String(resetAt),
+  };
 }
 
 function hashKey(key: string) {

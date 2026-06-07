@@ -2,7 +2,8 @@ import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
-import { sanitizeFloat, sanitizeInt, sanitizeSearchQuery, sanitizeUrlParam } from "@/lib/sanitize";
+import { safeEnum, safePagination } from "@/lib/queryHelpers";
+import { sanitizeFloat, sanitizeSearchQuery, sanitizeUrlParam } from "@/lib/sanitize";
 import { getCachedListingsWithFilters, getListingsWithFilters, type ListingFiltersInput } from "@/services/listing.service";
 
 export const revalidate = 60;
@@ -76,10 +77,9 @@ function parsePrice(value: string | null) {
 }
 
 function parsePage(value: string | null) {
-  return sanitizeInt(value ?? "1", 1, 1000);
+  return safePagination(value, 12, { defaultLimit: 12, maxLimit: 12 }).page;
 }
 
 function parseEnum<T extends string>(value: string | null, values: readonly T[]) {
-  const cleanValue = sanitizeUrlParam(value ?? undefined);
-  return cleanValue && values.includes(cleanValue as T) ? (cleanValue as T) : undefined;
+  return safeEnum(value, values);
 }

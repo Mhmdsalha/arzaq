@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import type { ActionResult } from "@/actions/auth.actions";
 import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/authGuards";
+import { rateLimiters } from "@/lib/rateLimit";
 import { sanitizeText } from "@/lib/sanitize";
 import {
   approveListing,
@@ -69,6 +70,7 @@ async function setListingFeaturedAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const listing = await setListingFeatured(sanitizeText(listingId), isFeatured);
     revalidateStoreAdminPaths(listing.id);
     logAudit("UPDATE_LISTING", {
@@ -93,6 +95,7 @@ async function setListingStatusAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const listing = await setListingStatus(sanitizeText(listingId), status);
     revalidateStoreAdminPaths(listing.id);
     logAudit("UPDATE_LISTING", {
@@ -114,6 +117,7 @@ async function setListingStatusAction(
 async function adminDeleteListingAction(listingId: string): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const listing = await adminSoftDeleteListing(sanitizeText(listingId));
     revalidateStoreAdminPaths(listing.id);
     logAudit("DELETE_LISTING", {
@@ -138,6 +142,7 @@ async function reviewListingAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const cleanListingId = sanitizeText(listingId);
     const listing =
       decision === "APPROVE"
@@ -177,6 +182,7 @@ async function updateListingReportStatusAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
     const report = await updateListingReportStatus(sanitizeText(reportId), status);
     revalidatePath("/admin/store/reports");
     revalidatePath(`/store/${report.listingId}`);
@@ -204,5 +210,13 @@ function revalidateStoreAdminPaths(listingId?: string) {
 
   if (listingId) {
     revalidatePath(`/store/${listingId}`);
+  }
+}
+
+async function assertAdminActionAllowed(userId: string) {
+  const limit = await rateLimiters.adminAction(userId);
+
+  if (!limit.success) {
+    throw new Error("تم تجاوز عدد عمليات الإدارة، حاول لاحقاً");
   }
 }
