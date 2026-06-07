@@ -1,6 +1,6 @@
-import DOMPurify from "isomorphic-dompurify";
-
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+const HTML_TAGS = /<[^>]*>/g;
+const ANGLE_BRACKETS = /[<>]/g;
 const SEARCH_DANGEROUS_CHARS = /[<>'"`;\\]/g;
 
 function asString(input: unknown): string {
@@ -11,6 +11,10 @@ function normalizeWhitespace(input: string): string {
   return input.replace(CONTROL_CHARS, "").trim().replace(/\s+/g, " ");
 }
 
+function stripHtml(input: string): string {
+  return input.replace(HTML_TAGS, "").replace(ANGLE_BRACKETS, "");
+}
+
 // Plain text fields: strip all HTML and normalize whitespace.
 export function sanitizeText(input: unknown, maxLength = 10000): string {
   const value = asString(input);
@@ -19,26 +23,12 @@ export function sanitizeText(input: unknown, maxLength = 10000): string {
     return "";
   }
 
-  return normalizeWhitespace(
-    DOMPurify.sanitize(value, {
-      ALLOWED_TAGS: [],
-      ALLOWED_ATTR: [],
-    }),
-  ).slice(0, maxLength);
+  return normalizeWhitespace(stripHtml(value)).slice(0, maxLength);
 }
 
-// Rich text fields: allow only a very small safe formatting subset.
+// Compatibility helper: keep rich text server-safe by stripping HTML entirely.
 export function sanitizeRichText(input: unknown, maxLength = 50000): string {
-  const value = asString(input);
-
-  if (!value) {
-    return "";
-  }
-
-  return DOMPurify.sanitize(value, {
-    ALLOWED_TAGS: ["b", "i", "u", "br", "p", "ul", "ol", "li"],
-    ALLOWED_ATTR: [],
-  }).slice(0, maxLength);
+  return sanitizeText(input, maxLength);
 }
 
 // Backward-compatible alias used by older code paths.
