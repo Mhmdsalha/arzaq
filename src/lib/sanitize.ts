@@ -1,5 +1,4 @@
 import DOMPurify from "isomorphic-dompurify";
-import validator from "validator";
 
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 const SEARCH_DANGEROUS_CHARS = /[<>'"`;\\]/g;
@@ -76,9 +75,14 @@ export function sanitizeSearchQuery(input: unknown): string {
 }
 
 export function sanitizeEmail(input: unknown): string {
-  const value = asString(input).trim().toLowerCase();
+  if (typeof input !== "string") {
+    return "";
+  }
 
-  return validator.isEmail(value) ? validator.normalizeEmail(value) || value : "";
+  const trimmed = input.trim().toLowerCase();
+  const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+  return emailRegex.test(trimmed) ? trimmed : "";
 }
 
 export function sanitizeInt(
