@@ -7,7 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { requireNotBanned } from "@/lib/authGuards";
 import { rateLimiters } from "@/lib/rateLimit";
-import { sanitizeText, sanitizeUrl } from "@/lib/sanitize";
+import { sanitizeStringArray, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
 import {
   createListingSchema,
   listingIdSchema,
@@ -245,7 +245,7 @@ function sanitizeListingInput(input: CreateListingInput): CreateListingInput {
     priceLabel: sanitizeText(input.priceLabel ?? ""),
     deliveryTime: sanitizeText(input.deliveryTime ?? ""),
     images: input.images.map(sanitizeUrl).filter(Boolean),
-    tags: input.tags.map(sanitizeText).filter(Boolean),
+    tags: sanitizeStringArray(input.tags, 10, 50),
   };
 }
 
@@ -257,7 +257,7 @@ function sanitizeListingUpdateInput(input: UpdateListingInput): UpdateListingInp
     priceLabel: sanitizeText(input.priceLabel ?? ""),
     deliveryTime: sanitizeText(input.deliveryTime ?? ""),
     images: input.images.map(sanitizeUrl).filter(Boolean),
-    tags: input.tags.map(sanitizeText).filter(Boolean),
+    tags: sanitizeStringArray(input.tags, 10, 50),
   };
 }
 

@@ -1,8 +1,10 @@
 import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
-const emailProvider = process.env.EMAIL_PROVIDER ?? "smtp";
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+import { env } from "@/lib/env";
+
+const emailProvider = env.EMAIL_PROVIDER;
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 export type EmailSendResult =
   | { sent: true; devOnly: false }
@@ -67,11 +69,11 @@ async function sendWithSmtp({
   html: string;
   text: string;
 }): Promise<EmailSendResult> {
-  const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = (process.env.SMTP_SECURE ?? "true") === "true";
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
+  const host = env.SMTP_HOST || "smtp.gmail.com";
+  const port = env.SMTP_PORT || 465;
+  const secure = env.SMTP_SECURE ?? true;
+  const user = env.SMTP_USER;
+  const pass = env.SMTP_PASSWORD;
 
   if (!user || !pass) {
     return { sent: false, devOnly: false, reason: "missing-smtp-config" };
@@ -89,7 +91,7 @@ async function sendWithSmtp({
 
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM || `"أرزاق" <${user}>`,
+      from: env.EMAIL_FROM || `"أرزاق" <${user}>`,
       replyTo: user,
       to,
       subject,
@@ -124,7 +126,7 @@ async function sendWithResend({
   }
 
   const { error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM || "Arzaq <onboarding@resend.dev>",
+    from: env.EMAIL_FROM || "Arzaq <onboarding@resend.dev>",
     to,
     subject,
     html,

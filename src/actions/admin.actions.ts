@@ -6,7 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import type { ActionResult } from "@/actions/auth.actions";
 import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/authGuards";
-import { sanitizeText } from "@/lib/sanitize";
+import { sanitizeEmail, sanitizePhone, sanitizeText } from "@/lib/sanitize";
 import {
   approveJobPost,
   createAdminUser,
@@ -51,9 +51,9 @@ export async function createAdminAccountAction(formData: FormData): Promise<Acti
   try {
     const session = await requireAdmin();
     const parsed = createAdminSchema.safeParse({
-      name: sanitizeText(String(formData.get("name") ?? "")),
-      email: sanitizeText(String(formData.get("email") ?? "")).toLowerCase(),
-      phone: sanitizeText(String(formData.get("phone") ?? "")),
+      name: String(formData.get("name") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
       password: String(formData.get("password") ?? ""),
     });
 
@@ -63,7 +63,9 @@ export async function createAdminAccountAction(formData: FormData): Promise<Acti
 
     const admin = await createAdminUser({
       ...parsed.data,
-      phone: parsed.data.phone?.trim() || undefined,
+      name: sanitizeText(parsed.data.name),
+      email: sanitizeEmail(parsed.data.email),
+      phone: parsed.data.phone ? sanitizePhone(parsed.data.phone) || undefined : undefined,
     });
 
     revalidatePath("/admin/admins");

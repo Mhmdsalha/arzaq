@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { Redis } from "@upstash/redis";
 
+import { env } from "@/lib/env";
 import { getAuthRedirect } from "@/lib/redirects";
 
 type SessionToken = {
@@ -91,8 +92,8 @@ function isAllowedApiOrigin(request: NextRequest) {
 
   try {
     const originUrl = new URL(origin);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-      ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    const siteUrl = env.NEXT_PUBLIC_SITE_URL
+      ? new URL(env.NEXT_PUBLIC_SITE_URL)
       : null;
     const requestHost = request.headers.get("host");
 
@@ -106,7 +107,7 @@ function isAllowedApiOrigin(request: NextRequest) {
 }
 
 async function getSessionToken(request: NextRequest) {
-  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const secret = env.NEXTAUTH_SECRET;
   const cookieNames = [
     "__Secure-authjs.session-token",
     "authjs.session-token",
@@ -140,14 +141,14 @@ function getClientIp(request: NextRequest) {
 }
 
 function getAllowedAdminIps() {
-  return (process.env.ADMIN_ALLOWED_IPS ?? "")
+  return (env.ADMIN_ALLOWED_IPS ?? "")
     .split(",")
     .map((ip) => ip.trim())
     .filter(Boolean);
 }
 
 function getSecretAdminPrefix() {
-  const secretPath = process.env.ADMIN_SECRET_PATH?.trim();
+  const secretPath = env.ADMIN_SECRET_PATH?.trim();
 
   return secretPath ? `/control-${secretPath}` : null;
 }
@@ -163,8 +164,8 @@ function isAllowedAdminIp(request: NextRequest) {
 }
 
 function getAdminRedis() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = env.UPSTASH_REDIS_REST_URL;
+  const token = env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
     return null;

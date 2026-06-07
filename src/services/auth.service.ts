@@ -3,6 +3,7 @@ import type { AccountType, Prisma, Region, User, UserRole } from "@prisma/client
 import { compare, hash } from "bcryptjs";
 import { cache } from "react";
 
+import { env } from "@/lib/env";
 import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 
 export type AuthUser = Pick<
@@ -399,13 +400,11 @@ function phoneToWhatsApp(phone: string) {
 }
 
 function hashVerificationCode(code: string) {
-  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "arzaq-dev-secret";
-  return createHash("sha256").update(`${code}:${secret}`).digest("hex");
+  return createHash("sha256").update(`${code}:${env.NEXTAUTH_SECRET}`).digest("hex");
 }
 
 function hashPasswordResetCode(userId: string, code: string) {
-  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "arzaq-dev-secret";
-  return createHash("sha256").update(`${userId}:${code}:${secret}`).digest("hex");
+  return createHash("sha256").update(`${userId}:${code}:${env.NEXTAUTH_SECRET}`).digest("hex");
 }
 
 function safeCompare(a: string, b: string) {

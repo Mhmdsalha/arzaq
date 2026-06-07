@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { sanitizeInt, sanitizeSearchQuery, sanitizeUrlParam } from "@/lib/sanitize";
 import { jobFiltersSchema } from "@/schemas/job.schema";
 import { getCachedJobsWithFilters } from "@/services/job.service";
 
@@ -8,12 +9,12 @@ export const revalidate = 60;
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const parsedFilters = jobFiltersSchema.safeParse({
-    q: searchParams.get("q") ?? undefined,
-    category: searchParams.get("category") ?? undefined,
-    region: searchParams.get("region") ?? undefined,
-    workMode: searchParams.get("workMode") ?? undefined,
-    urgent: searchParams.get("urgent") ?? undefined,
-    page: searchParams.get("page") ?? undefined,
+    q: sanitizeSearchQuery(searchParams.get("q") ?? undefined) || undefined,
+    category: sanitizeUrlParam(searchParams.get("category") ?? undefined) || undefined,
+    region: sanitizeUrlParam(searchParams.get("region") ?? undefined) || undefined,
+    workMode: sanitizeUrlParam(searchParams.get("workMode") ?? undefined) || undefined,
+    urgent: sanitizeUrlParam(searchParams.get("urgent") ?? undefined) || undefined,
+    page: sanitizeInt(searchParams.get("page") ?? undefined, 1, 1000),
   });
 
   if (!parsedFilters.success) {

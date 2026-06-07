@@ -7,7 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { requireNotBanned } from "@/lib/authGuards";
 import { sendEmailVerificationCode } from "@/lib/email";
-import { sanitizePhone, sanitizeText } from "@/lib/sanitize";
+import { sanitizeEmail, sanitizePhone } from "@/lib/sanitize";
 import {
   accountSettingsSchema,
   changePasswordSchema,
@@ -41,7 +41,7 @@ export async function updateAccountSettingsAction(
     await requireNotBanned();
     const result = await updateAccountSettings(session.user.id, {
       phone: sanitizePhone(parsed.data.phone),
-      email: parsed.data.email ? sanitizeText(parsed.data.email).toLowerCase() : undefined,
+      email: parsed.data.email ? sanitizeEmail(parsed.data.email) : undefined,
     });
 
     if (result.emailChanged && result.email) {

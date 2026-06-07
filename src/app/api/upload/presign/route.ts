@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { validateCSRFToken } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { rateLimiters } from "@/lib/rateLimit";
+import { sanitizeFilename, sanitizeInt, sanitizeUrlParam } from "@/lib/sanitize";
 import {
   getPublicUrl,
   type UploadFolder,
@@ -55,12 +56,17 @@ export async function POST(req: NextRequest) {
   }
 
   const body = (await req.json()) as PresignRequestBody;
+  const rawFileName = body.fileName;
+  const fileName = sanitizeFilename(rawFileName);
+  const contentType = typeof body.contentType === "string" ? body.contentType : "";
+  const fileSize = sanitizeInt(body.fileSize, 0, MAX_SIZE_BYTES + 1);
+  const folder = sanitizeUrlParam(body.folder) as UploadFolder;
 
-  if (typeof body.fileName !== "string" || body.fileName.trim().length === 0) {
+  if (typeof rawFileName !== "string" || rawFileName.trim().length === 0 || fileName.length === 0) {
     return NextResponse.json({ error: "اسم الملف مطلوب" }, { status: 400 });
   }
 
-  if (typeof body.contentType !== "string" || !ALLOWED_TYPES.includes(body.contentType as never)) {
+  if (!ALLOWED_TYPES.includes(contentType as never)) {
     return NextResponse.json(
       { error: "نوع الملف غير مدعوم، يسمح بـ JPG و PNG و WebP فقط" },
       { status: 400 },
@@ -71,32 +77,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "حجم الملف غير صحيح" }, { status: 400 });
   }
 
-  if (body.fileSize > MAX_SIZE_BYTES) {
+  if (fileSize > MAX_SIZE_BYTES) {
     return NextResponse.json({ error: "حجم الصورة يتجاوز الحد المسموح (2MB)" }, { status: 400 });
   }
 
-  if (typeof body.folder !== "string" || !ALLOWED_FOLDERS.includes(body.folder as UploadFolder)) {
+  if (!ALLOWED_FOLDERS.includes(folder)) {
     return NextResponse.json({ error: "مجلد الرفع غير صحيح" }, { status: 400 });
   }
 
   try {
-    const key = generateSafeImageKey(body.folder as UploadFolder, session.user.id, body.contentType);
+    const key = generateSafeImageKey(folder, session.user.id, contentType);
     const expiresAt = Date.now() + 5 * 60 * 1000;
     const token = createUploadProxyToken({
       key,
       userId: session.user.id,
-      contentType: body.contentType,
+      contentType,
       expiresAt,
     });
     const presignedUrl = `/api/upload/proxy?key=${encodeURIComponent(key)}&contentType=${encodeURIComponent(
-      body.contentType,
+      contentType,
     )}&expiresAt=${expiresAt}&token=${token}`;
     const publicUrl = getPublicUrl(key);
     logAudit("UPLOAD_FILE", {
       userId: session.user.id,
       entityType: "R2Object",
       entityId: key,
-      metadata: { folder: body.folder, contentType: body.contentType, fileSize: body.fileSize },
+      metadata: { folder, contentType, fileSize },
     });
 
     return NextResponse.json({ presignedUrl, publicUrl, key });

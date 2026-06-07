@@ -15,7 +15,7 @@ import {
 import { isDatabaseConnectionError } from "@/lib/prisma";
 import { rateLimiters } from "@/lib/rateLimit";
 import { getPostLoginRedirect } from "@/lib/redirects";
-import { sanitizePhone, sanitizeText } from "@/lib/sanitize";
+import { sanitizeEmail, sanitizePhone, sanitizeStringArray, sanitizeText } from "@/lib/sanitize";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -273,9 +273,9 @@ function sanitizeRegisterInput(input: RegisterInput): RegisterInput {
   return {
     ...input,
     name: sanitizeText(input.name),
-    email: sanitizeText(input.email).toLowerCase(),
+    email: sanitizeEmail(input.email),
     phone: sanitizePhone(input.phone),
-    skills: input.skills.map(sanitizeText),
+    skills: sanitizeStringArray(input.skills, 10, 100),
   };
 }
 

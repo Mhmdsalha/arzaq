@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { env } from "@/lib/env";
 
 function notFoundJson() {
   return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -18,7 +19,7 @@ export async function validateAdminRequest() {
     };
   }
 
-  const allowedIps = (process.env.ADMIN_ALLOWED_IPS ?? "")
+  const allowedIps = (env.ADMIN_ALLOWED_IPS ?? "")
     .split(",")
     .map((ip) => ip.trim())
     .filter(Boolean);

@@ -1,5 +1,7 @@
+import { env } from "@/lib/env";
+
 export function getAdminBasePath() {
-  const secretPath = process.env.ADMIN_SECRET_PATH?.trim();
+  const secretPath = env.ADMIN_SECRET_PATH?.trim();
 
   return secretPath ? `/control-${secretPath}` : "/admin";
 }

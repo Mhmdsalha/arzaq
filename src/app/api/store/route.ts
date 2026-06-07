@@ -2,6 +2,7 @@ import type { DeliveryMethod, ListingType, Region } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { sanitizeFloat, sanitizeInt, sanitizeSearchQuery, sanitizeUrlParam } from "@/lib/sanitize";
 import { getCachedListingsWithFilters, getListingsWithFilters, type ListingFiltersInput } from "@/services/listing.service";
 
 export const revalidate = 60;
@@ -51,12 +52,13 @@ export async function GET(request: NextRequest) {
 }
 
 function getOptional(searchParams: URLSearchParams, key: string) {
-  const value = searchParams.get(key)?.trim();
+  const value = sanitizeSearchQuery(searchParams.get(key) ?? undefined);
   return value || undefined;
 }
 
 function normalizeAll(value: string | null) {
-  return !value || value === "all" ? undefined : value;
+  const cleanValue = sanitizeUrlParam(value ?? undefined);
+  return !cleanValue || cleanValue === "all" ? undefined : cleanValue;
 }
 
 function parsePrice(value: string | null) {
@@ -64,15 +66,20 @@ function parsePrice(value: string | null) {
     return undefined;
   }
 
-  const price = Number(value);
-  return Number.isFinite(price) && price >= 0 ? price : undefined;
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return undefined;
+  }
+
+  return sanitizeFloat(value, 0, 999999);
 }
 
 function parsePage(value: string | null) {
-  const page = Number(value ?? "1");
-  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  return sanitizeInt(value ?? "1", 1, 1000);
 }
 
 function parseEnum<T extends string>(value: string | null, values: readonly T[]) {
-  return value && values.includes(value as T) ? (value as T) : undefined;
+  const cleanValue = sanitizeUrlParam(value ?? undefined);
+  return cleanValue && values.includes(cleanValue as T) ? (cleanValue as T) : undefined;
 }
