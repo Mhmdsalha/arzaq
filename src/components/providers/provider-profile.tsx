@@ -8,6 +8,7 @@ import { StarRating } from "@/components/shared/star-rating";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { regionLabels } from "@/constants/regions";
+import { storePlans } from "@/constants/store-plans";
 import type { ProviderProfile as ProviderProfileType } from "@/types/marketplace";
 
 export function ProviderProfile({ provider }: { provider: ProviderProfileType }) {
@@ -33,6 +34,9 @@ export function ProviderProfile({ provider }: { provider: ProviderProfileType })
                       موثوق
                     </span>
                   ) : null}
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-primary-dark">
+                    باقة {storePlans[provider.storePlan].label}
+                  </span>
                 </div>
                 <p className="text-lg font-medium text-slate-700">{provider.title}</p>
                 <p className="leading-8 text-slate-600">{provider.bio}</p>

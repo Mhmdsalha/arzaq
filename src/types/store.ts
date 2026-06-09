@@ -1,4 +1,4 @@
-import type { DeliveryMethod, ListingStatus, ListingType, Region } from "@prisma/client";
+import type { DeliveryMethod, ListingStatus, ListingType, Region, StorePlan } from "@prisma/client";
 
 import type { JobCategoryOption } from "@/types/job";
 
@@ -78,9 +78,13 @@ export type ListingFormData = {
 export type SellerStoreStats = {
   activeListings: number;
   totalListings: number;
+  billableListings: number;
   receivedOrders: number;
   completedOrders: number;
   totalViews: number;
+  storePlan: StorePlan;
+  planLimit: number;
+  remainingListings: number;
 };
 
 export type PaginatedListings<T> = {

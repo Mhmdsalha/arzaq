@@ -17,17 +17,17 @@ type RateLimitResult = {
 export const rateLimiters = {
   login: (key: string) => rateLimit(`login:${key}`, { limit: 20, windowSeconds: 15 * 60 }),
   register: (key: string) => rateLimit(`register:${key}`, { limit: 5, windowSeconds: 60 * 60 }),
-  createJob: (userId: string) => rateLimit(`create-job:${userId}`, { limit: 10, windowSeconds: 60 * 60 }),
+  createJob: (userId: string) =>
+    rateLimit(`create-job:${userId}`, { limit: 10, windowSeconds: 60 * 60 }),
   createOffer: (userId: string) =>
     rateLimit(`create-offer:${userId}`, { limit: 30, windowSeconds: 60 * 60 }),
   createListing: (userId: string) =>
-    rateLimit(`create-listing:${userId}`, { limit: 12, windowSeconds: 60 * 60 }),
+    rateLimit(`create-listing:${userId}`, { limit: 30, windowSeconds: 60 * 60 }),
   createOrder: (userId: string) =>
     rateLimit(`create-order:${userId}`, { limit: 10, windowSeconds: 60 * 60 }),
   createReview: (userId: string) =>
     rateLimit(`create-review:${userId}`, { limit: 20, windowSeconds: 60 * 60 }),
-  report: (userId: string) =>
-    rateLimit(`report:${userId}`, { limit: 6, windowSeconds: 60 * 60 }),
+  report: (userId: string) => rateLimit(`report:${userId}`, { limit: 6, windowSeconds: 60 * 60 }),
   updateProfile: (userId: string) =>
     rateLimit(`update-profile:${userId}`, { limit: 20, windowSeconds: 60 * 60 }),
   settings: (userId: string) =>
@@ -41,10 +41,7 @@ export const rateLimiters = {
     rateLimit(`password-reset:${key}`, { limit: 5, windowSeconds: 60 * 60 }),
 };
 
-export async function rateLimit(
-  key: string,
-  options: RateLimitOptions,
-): Promise<RateLimitResult> {
+export async function rateLimit(key: string, options: RateLimitOptions): Promise<RateLimitResult> {
   if (!redis) {
     return {
       success: true,

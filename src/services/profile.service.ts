@@ -35,6 +35,7 @@ export async function getProfileByUserId(userId: string): Promise<ProfileEditorD
         email: true,
         phone: true,
         accountType: true,
+        storePlan: true,
         profile: {
           select: {
             title: true,
@@ -103,6 +104,7 @@ export async function getProfileByUserId(userId: string): Promise<ProfileEditorD
       email: user.email,
       phone: user.phone,
       accountType: user.accountType,
+      storePlan: user.storePlan,
       title: profile.title ?? "",
       bio: profile.bio ?? "",
       region: profile.region,
@@ -261,36 +263,38 @@ export const getPublicProviders = cache(async (): Promise<ProviderProfile[]> => 
   }
 });
 
-export const getFeaturedProvidersForHome = cache(async (): Promise<{
-  providers: ProviderProfile[];
-  mode: "trusted" | "featured";
-}> => {
-  if (isDatabaseTemporarilyUnavailable()) {
-    return { providers: [], mode: "featured" };
-  }
-
-  try {
-    const providers = await prisma.user.findMany({
-      where: {
-        accountType: "PROVIDER",
-        isVerified: true,
-        deletedAt: null,
-        isBanned: false,
-      },
-      orderBy: [{ profile: { isTrusted: "desc" } }, { createdAt: "desc" }],
-      take: 4,
-      select: publicProviderCardSelect(),
-    });
-
-    return { providers: providers.map(mapPublicProviderCard), mode: "featured" };
-  } catch (error) {
-    if (isDatabaseConnectionError(error)) {
+export const getFeaturedProvidersForHome = cache(
+  async (): Promise<{
+    providers: ProviderProfile[];
+    mode: "trusted" | "featured";
+  }> => {
+    if (isDatabaseTemporarilyUnavailable()) {
       return { providers: [], mode: "featured" };
     }
 
-    throw error;
-  }
-});
+    try {
+      const providers = await prisma.user.findMany({
+        where: {
+          accountType: "PROVIDER",
+          isVerified: true,
+          deletedAt: null,
+          isBanned: false,
+        },
+        orderBy: [{ profile: { isTrusted: "desc" } }, { createdAt: "desc" }],
+        take: 4,
+        select: publicProviderCardSelect(),
+      });
+
+      return { providers: providers.map(mapPublicProviderCard), mode: "featured" };
+    } catch (error) {
+      if (isDatabaseConnectionError(error)) {
+        return { providers: [], mode: "featured" };
+      }
+
+      throw error;
+    }
+  },
+);
 
 export const getPublicProviderById = cache(
   async (providerId: string): Promise<ProviderProfile | null> => {
@@ -325,6 +329,7 @@ function publicProviderSelect() {
   return {
     id: true,
     name: true,
+    storePlan: true,
     createdAt: true,
     profile: {
       select: {
@@ -393,6 +398,7 @@ function publicProviderCardSelect() {
   return {
     id: true,
     name: true,
+    storePlan: true,
     createdAt: true,
     profile: {
       select: {
@@ -453,6 +459,7 @@ function mapPublicProvider(provider: PublicProviderPayload): ProviderProfile {
     reviewsCount: profile?.totalReviews ?? 0,
     completedJobs: provider.offers.length,
     isTrusted: profile?.isTrusted ?? false,
+    storePlan: provider.storePlan,
     whatsapp: profile?.showWhatsapp ? (profile.whatsapp ?? "") : "",
     portfolioUrls: profile?.portfolioUrls ?? [],
     portfolio:
@@ -488,6 +495,7 @@ function mapPublicProviderCard(provider: PublicProviderCardPayload): ProviderPro
     reviewsCount: profile?.totalReviews ?? 0,
     completedJobs: provider.offers.length,
     isTrusted: profile?.isTrusted ?? false,
+    storePlan: provider.storePlan,
     whatsapp: profile?.showWhatsapp ? (profile.whatsapp ?? "") : "",
     portfolioUrls: profile?.portfolioUrls ?? [],
     portfolio: [],

@@ -4,9 +4,11 @@ import Link from "next/link";
 import {
   setProviderTrustFormAction,
   setUserBanFormAction,
+  setUserStorePlanFormAction,
   setUserVerifiedFormAction,
 } from "@/actions/admin.actions";
 import { regionLabels } from "@/constants/regions";
+import { storePlanOrder, storePlans } from "@/constants/store-plans";
 import { getAdminUsers } from "@/services/admin.service";
 
 const accountTypeLabels: Record<AccountType, string> = {
@@ -75,6 +77,9 @@ export default async function AdminUsersPage({
                         موثق خدمة
                       </span>
                     ) : null}
+                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs text-emerald-200">
+                      باقة {storePlans[user.storePlan].label}
+                    </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-300">
                     {user.email ?? "لا يوجد بريد"} · {user.phone ?? "لا يوجد جوال"} ·{" "}
@@ -103,12 +108,36 @@ export default async function AdminUsersPage({
                   {user.accountType === "PROVIDER" ? (
                     <form action={setProviderTrustFormAction}>
                       <input type="hidden" name="userId" value={user.id} />
-                      <input type="hidden" name="isTrusted" value={String(!user.profile?.isTrusted)} />
+                      <input
+                        type="hidden"
+                        name="isTrusted"
+                        value={String(!user.profile?.isTrusted)}
+                      />
                       <button className="min-h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-dark">
                         {user.profile?.isTrusted ? "إلغاء التوثيق" : "توثيق"}
                       </button>
                     </form>
                   ) : null}
+                  <form
+                    action={setUserStorePlanFormAction}
+                    className="flex min-h-10 overflow-hidden rounded-xl border border-white/10 bg-white/10"
+                  >
+                    <input type="hidden" name="userId" value={user.id} />
+                    <select
+                      name="storePlan"
+                      defaultValue={user.storePlan}
+                      className="min-h-10 bg-transparent px-3 text-sm font-semibold text-white outline-none"
+                    >
+                      {storePlanOrder.map((plan) => (
+                        <option key={plan} value={plan} className="bg-slate-900 text-white">
+                          {storePlans[plan].label}
+                        </option>
+                      ))}
+                    </select>
+                    <button className="min-h-10 bg-primary px-3 text-sm font-semibold text-white hover:bg-primary-dark">
+                      تحديث الباقة
+                    </button>
+                  </form>
                 </div>
               </div>
             </article>
@@ -123,7 +152,10 @@ function Header({ title, backHref }: { title: string; backHref: string }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-bold text-white">{title}</h1>
-      <Link href={backHref} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">
+      <Link
+        href={backHref}
+        className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200"
+      >
         رجوع
       </Link>
     </div>

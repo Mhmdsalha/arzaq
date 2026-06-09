@@ -1,6 +1,6 @@
 "use server";
 
-import type { ReportStatus } from "@prisma/client";
+import type { ReportStatus, StorePlan } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 import type { ActionResult } from "@/actions/auth.actions";
@@ -14,6 +14,7 @@ import {
   adminSoftDeleteJob,
   requestJobEdit,
   setProviderTrusted,
+  setUserStorePlan,
   setUserBanned,
   setUserVerified,
   updateReportReview,
@@ -154,6 +155,48 @@ export async function setProviderTrustFormAction(formData: FormData): Promise<vo
   const isTrusted = String(formData.get("isTrusted") ?? "") === "true";
 
   await setProviderTrustAction(userId, isTrusted);
+}
+
+export async function setUserStorePlanAction(
+  userId: string,
+  storePlan: StorePlan,
+): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
+
+    if (!isStorePlan(storePlan)) {
+      return { ok: false, message: "الباقة غير صحيحة" };
+    }
+
+    const user = await setUserStorePlan(sanitizeText(userId), storePlan);
+
+    revalidatePath("/admin/users");
+    revalidatePath("/dashboard/store");
+    revalidatePath("/providers");
+    logAudit("UPDATE_STORE_PLAN", {
+      userId: session.user.id,
+      entityType: "User",
+      entityId: user.id,
+      metadata: {
+        storePlan: user.storePlan,
+      },
+    });
+
+    return { ok: true, message: "تم تحديث باقة المتجر" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+    };
+  }
+}
+
+export async function setUserStorePlanFormAction(formData: FormData): Promise<void> {
+  const userId = String(formData.get("userId") ?? "");
+  const storePlan = String(formData.get("storePlan") ?? "") as StorePlan;
+
+  await setUserStorePlanAction(userId, storePlan);
 }
 
 export async function adminDeleteJobAction(jobId: string): Promise<ActionResult> {
@@ -310,4 +353,8 @@ async function assertAdminActionAllowed(userId: string) {
   if (!limit.success) {
     throw new Error("تم تجاوز عدد عمليات الإدارة، حاول لاحقاً");
   }
+}
+
+function isStorePlan(value: unknown): value is StorePlan {
+  return value === "GAZA" || value === "MAJDAL" || value === "QUDS";
 }

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { storePlans } from "@/constants/store-plans";
 import { profileSchema, type ProfileInput } from "@/schemas/profile.schema";
 import type { ProfileEditorData } from "@/types/profile";
 
@@ -68,7 +69,12 @@ export function ProfileForm({ data }: { data: ProfileEditorData }) {
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">بروفايلي</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-xl">بروفايلي</CardTitle>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-primary-dark">
+              باقة المتجر: {storePlans[data.profile.storePlan].label}
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <AvatarUploader

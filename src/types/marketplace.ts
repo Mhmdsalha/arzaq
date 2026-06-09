@@ -66,6 +66,7 @@ export type ProviderProfile = {
   reviewsCount: number;
   completedJobs: number;
   isTrusted: boolean;
+  storePlan: "GAZA" | "MAJDAL" | "QUDS";
   whatsapp: string;
   portfolioUrls?: string[];
   portfolio: PortfolioItem[];

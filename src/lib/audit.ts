@@ -42,7 +42,9 @@ export type AuditAction =
   | "ADMIN_DELETE_JOB"
   | "REVIEW_REPORT"
   | "UPLOAD_FILE"
-  | "ACCOUNT_TYPE_SWITCH";
+  | "ACCOUNT_TYPE_SWITCH"
+  | "REQUEST_STORE_PLAN_UPGRADE"
+  | "UPDATE_STORE_PLAN";
 
 export function logAudit(
   action: AuditAction,

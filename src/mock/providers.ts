@@ -15,6 +15,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 18,
     completedJobs: 31,
     isTrusted: true,
+    storePlan: "GAZA",
     whatsapp: "970599100101",
     portfolio: [
       {
@@ -56,6 +57,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 14,
     completedJobs: 24,
     isTrusted: true,
+    storePlan: "GAZA",
     whatsapp: "970599100102",
     portfolio: [
       {
@@ -90,6 +92,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 11,
     completedJobs: 19,
     isTrusted: true,
+    storePlan: "GAZA",
     whatsapp: "970599100103",
     portfolio: [
       {
@@ -124,6 +127,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 9,
     completedJobs: 22,
     isTrusted: false,
+    storePlan: "GAZA",
     whatsapp: "970599100104",
     portfolio: [
       {
@@ -158,6 +162,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 23,
     completedJobs: 38,
     isTrusted: true,
+    storePlan: "GAZA",
     whatsapp: "970599100105",
     portfolio: [
       {
@@ -192,6 +197,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 8,
     completedJobs: 16,
     isTrusted: false,
+    storePlan: "GAZA",
     whatsapp: "970599100106",
     portfolio: [
       {
@@ -226,6 +232,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 13,
     completedJobs: 20,
     isTrusted: true,
+    storePlan: "GAZA",
     whatsapp: "970599100107",
     portfolio: [
       {
@@ -260,6 +267,7 @@ export const providers: ProviderProfile[] = [
     reviewsCount: 7,
     completedJobs: 15,
     isTrusted: false,
+    storePlan: "GAZA",
     whatsapp: "970599100108",
     portfolio: [
       {

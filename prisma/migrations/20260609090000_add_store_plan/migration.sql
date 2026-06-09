@@ -1,0 +1,4 @@
+CREATE TYPE "StorePlan" AS ENUM ('GAZA', 'MAJDAL', 'QUDS');
+
+ALTER TABLE "User"
+ADD COLUMN "storePlan" "StorePlan" NOT NULL DEFAULT 'GAZA';

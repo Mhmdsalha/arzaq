@@ -1,7 +1,8 @@
-import type { DeliveryMethod, ListingType, Prisma, Region } from "@prisma/client";
+import type { DeliveryMethod, ListingType, Prisma, Region, StorePlan } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
+import { getStorePlanLimit } from "@/constants/store-plans";
 import { getAdminHref } from "@/lib/admin-path";
 import { isDatabaseConnectionError, isDatabaseTemporarilyUnavailable, prisma } from "@/lib/prisma";
 import { sanitizeSearchQuery } from "@/lib/sanitize";
@@ -228,11 +229,7 @@ export const getListingById = cache(
 );
 
 export const getSimilarListings = cache(
-  async (
-    categoryId: string,
-    excludeId: string,
-    userId?: string,
-  ): Promise<ListingListItem[]> => {
+  async (categoryId: string, excludeId: string, userId?: string): Promise<ListingListItem[]> => {
     if (!hasDatabaseUrl() || isDatabaseTemporarilyUnavailable()) {
       return [];
     }
@@ -287,61 +284,97 @@ export const getSellerStoreStats = cache(async (sellerId: string): Promise<Selle
     return {
       activeListings: 0,
       totalListings: 0,
+      billableListings: 0,
       receivedOrders: 0,
       completedOrders: 0,
       totalViews: 0,
+      storePlan: "GAZA",
+      planLimit: getStorePlanLimit("GAZA"),
+      remainingListings: getStorePlanLimit("GAZA"),
     };
   }
 
-  const [activeListings, totalListings, receivedOrders, completedOrders, views] =
-    await Promise.all([
-      prisma.listing.count({
-        where: {
+  const [
+    user,
+    activeListings,
+    totalListings,
+    billableListings,
+    receivedOrders,
+    completedOrders,
+    views,
+  ] = await Promise.all([
+    prisma.user.findFirst({
+      where: {
+        id: sellerId,
+        deletedAt: null,
+      },
+      select: {
+        storePlan: true,
+      },
+    }),
+    prisma.listing.count({
+      where: {
+        sellerId,
+        deletedAt: null,
+        status: "ACTIVE",
+      },
+    }),
+    prisma.listing.count({
+      where: {
+        sellerId,
+        deletedAt: null,
+      },
+    }),
+    prisma.listing.count({
+      where: {
+        sellerId,
+        deletedAt: null,
+        status: {
+          not: "REJECTED",
+        },
+      },
+    }),
+    prisma.order.count({
+      where: {
+        listing: {
           sellerId,
           deletedAt: null,
-          status: "ACTIVE",
         },
-      }),
-      prisma.listing.count({
-        where: {
+      },
+    }),
+    prisma.order.count({
+      where: {
+        status: "COMPLETED",
+        listing: {
           sellerId,
           deletedAt: null,
         },
-      }),
-      prisma.order.count({
-        where: {
-          listing: {
-            sellerId,
-            deletedAt: null,
-          },
-        },
-      }),
-      prisma.order.count({
-        where: {
-          status: "COMPLETED",
-          listing: {
-            sellerId,
-            deletedAt: null,
-          },
-        },
-      }),
-      prisma.listing.aggregate({
-        where: {
-          sellerId,
-          deletedAt: null,
-        },
-        _sum: {
-          viewCount: true,
-        },
-      }),
-    ]);
+      },
+    }),
+    prisma.listing.aggregate({
+      where: {
+        sellerId,
+        deletedAt: null,
+      },
+      _sum: {
+        viewCount: true,
+      },
+    }),
+  ]);
+
+  const storePlan = user?.storePlan ?? "GAZA";
+  const planLimit = getStorePlanLimit(storePlan);
 
   return {
     activeListings,
     totalListings,
+    billableListings,
     receivedOrders,
     completedOrders,
     totalViews: views._sum.viewCount ?? 0,
+    storePlan,
+    planLimit,
+    remainingListings: Math.max(planLimit - billableListings, 0),
   };
 });
 
@@ -398,6 +431,7 @@ export const getListingForEdit = cache(
 
 export async function createListing(input: CreateListingInput, sellerId: string) {
   await assertCategoryExists(input.categoryId);
+  await assertSellerCanCreateListing(sellerId);
 
   const listing = await prisma.listing.create({
     data: {
@@ -410,7 +444,7 @@ export async function createListing(input: CreateListingInput, sellerId: string)
       priceLabel: input.priceLabel || null,
       deliveryMethod: input.deliveryMethod,
       deliveryTime: input.deliveryTime || null,
-      quantity: input.type === "PHYSICAL" ? input.quantity ?? 0 : null,
+      quantity: input.type === "PHYSICAL" ? (input.quantity ?? 0) : null,
       images: input.images,
       tags: input.tags,
       sellerId,
@@ -429,6 +463,32 @@ export async function createListing(input: CreateListingInput, sellerId: string)
   return { id: listing.id };
 }
 
+export async function getSellerListingQuota(sellerId: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: sellerId,
+      deletedAt: null,
+    },
+    select: {
+      storePlan: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("الحساب غير موجود");
+  }
+
+  const used = await getBillableListingsCount(sellerId);
+  const limit = getStorePlanLimit(user.storePlan);
+
+  return {
+    storePlan: user.storePlan,
+    used,
+    limit,
+    remaining: Math.max(limit - used, 0),
+  };
+}
+
 export async function updateListing(id: string, input: UpdateListingInput, sellerId: string) {
   const listing = await prisma.listing.findFirst({
     where: {
@@ -439,6 +499,7 @@ export async function updateListing(id: string, input: UpdateListingInput, selle
     select: {
       id: true,
       type: true,
+      status: true,
     },
   });
 
@@ -447,6 +508,10 @@ export async function updateListing(id: string, input: UpdateListingInput, selle
   }
 
   await assertCategoryExists(input.categoryId);
+
+  if (listing.status === "REJECTED") {
+    await assertSellerCanCreateListing(sellerId);
+  }
 
   const updatedListing = await prisma.listing.update({
     where: {
@@ -461,7 +526,7 @@ export async function updateListing(id: string, input: UpdateListingInput, selle
       priceLabel: input.priceLabel || null,
       deliveryMethod: input.deliveryMethod,
       deliveryTime: input.deliveryTime || null,
-      quantity: listing.type === "PHYSICAL" ? input.quantity ?? 0 : null,
+      quantity: listing.type === "PHYSICAL" ? (input.quantity ?? 0) : null,
       images: input.images,
       tags: input.tags,
       status: "PENDING_REVIEW",
@@ -472,9 +537,11 @@ export async function updateListing(id: string, input: UpdateListingInput, selle
     },
   });
 
-  await notifyAdminsAboutListingReview(updatedListing.id, updatedListing.title).catch((error: unknown) => {
-    console.error("Failed to notify admins about listing review", error);
-  });
+  await notifyAdminsAboutListingReview(updatedListing.id, updatedListing.title).catch(
+    (error: unknown) => {
+      console.error("Failed to notify admins about listing review", error);
+    },
+  );
 
   return { id: updatedListing.id };
 }
@@ -673,6 +740,28 @@ async function assertCategoryExists(categoryId: string) {
   }
 }
 
+async function assertSellerCanCreateListing(sellerId: string) {
+  const quota = await getSellerListingQuota(sellerId);
+
+  if (quota.used >= quota.limit) {
+    throw new Error(
+      `وصلت إلى حد باقتك الحالية (${quota.limit} عناصر). اختر باقة أعلى لإضافة المزيد إلى متجرك.`,
+    );
+  }
+}
+
+async function getBillableListingsCount(sellerId: string) {
+  return prisma.listing.count({
+    where: {
+      sellerId,
+      deletedAt: null,
+      status: {
+        not: "REJECTED",
+      },
+    },
+  });
+}
+
 function serializeListingFilters(filters: ListingFiltersInput): string {
   return JSON.stringify({
     q: filters.q ?? "",
@@ -718,7 +807,9 @@ function buildListingsWhere(filters: ListingFiltersInput): Prisma.ListingWhereIn
   };
 }
 
-function buildListingOrderBy(sort: ListingFiltersInput["sort"]): Prisma.ListingOrderByWithRelationInput[] {
+function buildListingOrderBy(
+  sort: ListingFiltersInput["sort"],
+): Prisma.ListingOrderByWithRelationInput[] {
   if (sort === "price_asc") {
     return [{ price: "asc" }, { createdAt: "desc" }];
   }

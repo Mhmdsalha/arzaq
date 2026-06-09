@@ -6,6 +6,7 @@ import { StarRating } from "@/components/shared/star-rating";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { regionLabels } from "@/constants/regions";
+import { storePlans } from "@/constants/store-plans";
 import type { ProviderProfile } from "@/types/marketplace";
 
 export function ProviderCard({ provider }: { provider: ProviderProfile }) {
@@ -28,6 +29,9 @@ export function ProviderCard({ provider }: { provider: ProviderProfile }) {
             {provider.isTrusted ? (
               <BadgeCheck className="size-5 fill-primary text-white" aria-label="موثوق" />
             ) : null}
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-primary-dark">
+              باقة {storePlans[provider.storePlan].label}
+            </span>
           </div>
           <p className="mt-1 line-clamp-1 text-xs text-slate-600 sm:text-sm">{provider.title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">

@@ -15,6 +15,7 @@ import { deliveryMethodLabels, listingStatusLabels, listingTypeLabels } from "@/
 import { regionLabels } from "@/constants/regions";
 import { cn } from "@/lib/utils";
 import type { ListingListItem, SellerStoreStats } from "@/types/store";
+import { StorePlanCard } from "@/components/store/store-plan-card";
 
 type MyListingsListProps = {
   listings: ListingListItem[];
@@ -22,6 +23,8 @@ type MyListingsListProps = {
 };
 
 export function MyListingsList({ listings, stats }: MyListingsListProps) {
+  const canAddListing = stats.remainingListings > 0;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
@@ -32,6 +35,8 @@ export function MyListingsList({ listings, stats }: MyListingsListProps) {
         <StatsCard label="المشاهدات" value={stats.totalViews} />
       </div>
 
+      <StorePlanCard stats={stats} />
+
       <div className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-extrabold text-slate-950">عناصر متجرك</h2>
@@ -39,12 +44,18 @@ export function MyListingsList({ listings, stats }: MyListingsListProps) {
             أضف خدماتك أو منتجاتك، وتابع حالتها والطلبات الواردة عليها.
           </p>
         </div>
-        <Button asChild className="h-11">
-          <Link href="/dashboard/store/new">
-            <Plus className="size-4" />
-            إضافة عنصر
-          </Link>
-        </Button>
+        {canAddListing ? (
+          <Button asChild className="h-11">
+            <Link href="/dashboard/store/new">
+              <Plus className="size-4" />
+              إضافة عنصر
+            </Link>
+          </Button>
+        ) : (
+          <Button type="button" className="h-11" disabled>
+            وصلت إلى حد الباقة
+          </Button>
+        )}
       </div>
 
       {listings.length > 0 ? (
@@ -98,12 +109,18 @@ function ListingRow({ listing }: { listing: ListingListItem }) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold">
-            <Badge className="bg-primary/10 text-primary-dark">{listingTypeLabels[listing.type]}</Badge>
-            <Badge className={statusClassName(listing.status)}>{listingStatusLabels[listing.status]}</Badge>
+            <Badge className="bg-primary/10 text-primary-dark">
+              {listingTypeLabels[listing.type]}
+            </Badge>
+            <Badge className={statusClassName(listing.status)}>
+              {listingStatusLabels[listing.status]}
+            </Badge>
             <Badge className="bg-slate-100 text-slate-600">{listing.category.name}</Badge>
           </div>
           <h3 className="line-clamp-1 text-lg font-extrabold text-slate-950">{listing.title}</h3>
-          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{listing.description}</p>
+          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
+            {listing.description}
+          </p>
           <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-500">
             <span>{regionLabels[listing.region]}</span>
             <span>{deliveryMethodLabels[listing.deliveryMethod]}</span>
@@ -134,17 +151,43 @@ function ListingRow({ listing }: { listing: ListingListItem }) {
             </Link>
           </Button>
           {listing.status === "ACTIVE" ? (
-            <Button type="button" variant="secondary" className="h-10" disabled={isPending} onClick={() => runAction("pause")}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : <PauseCircle className="size-4" />}
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-10"
+              disabled={isPending}
+              onClick={() => runAction("pause")}
+            >
+              {isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <PauseCircle className="size-4" />
+              )}
               إيقاف
             </Button>
           ) : listing.status === "PAUSED" || listing.status === "SOLD_OUT" ? (
-            <Button type="button" variant="secondary" className="h-10" disabled={isPending} onClick={() => runAction("activate")}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : <PlayCircle className="size-4" />}
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-10"
+              disabled={isPending}
+              onClick={() => runAction("activate")}
+            >
+              {isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <PlayCircle className="size-4" />
+              )}
               تفعيل
             </Button>
           ) : null}
-          <Button type="button" variant="secondary" className="h-10 text-red-600" disabled={isPending} onClick={() => runAction("delete")}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="h-10 text-red-600"
+            disabled={isPending}
+            onClick={() => runAction("delete")}
+          >
             <Trash2 className="size-4" />
             حذف
           </Button>

@@ -1,4 +1,12 @@
-import type { AccountType, JobStatus, ReportStatus, ReportTargetType } from "@prisma/client";
+import type {
+  AccountType,
+  JobStatus,
+  ReportStatus,
+  ReportTargetType,
+  StorePlan,
+} from "@prisma/client";
+
+import { getStorePlanConfig } from "@/constants/store-plans";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
@@ -213,6 +221,7 @@ export async function getAdminUsers({
         phone: true,
         role: true,
         accountType: true,
+        storePlan: true,
         isVerified: true,
         isBanned: true,
         createdAt: true,
@@ -413,6 +422,27 @@ export async function setProviderTrusted(userId: string, isTrusted: boolean) {
     where: { userId },
     data: { isTrusted },
     select: { userId: true, isTrusted: true },
+  });
+}
+
+export async function setUserStorePlan(userId: string, storePlan: StorePlan) {
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id: userId },
+      data: { storePlan },
+      select: { id: true, name: true, storePlan: true },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: user.id,
+        type: "SYSTEM",
+        message: `تم تحديث باقة متجرك إلى ${getStorePlanConfig(storePlan).label}`,
+        link: "/dashboard/store",
+      },
+    });
+
+    return user;
   });
 }
 
