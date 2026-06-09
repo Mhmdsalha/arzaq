@@ -96,6 +96,43 @@ export async function uploadListingImage(file: File) {
   return data.publicUrl;
 }
 
+export async function uploadPaymentProofImage(file: File) {
+  await validateListingFile(file);
+  const compressedFile = await compressBrowserImage(file, "listing", {
+    maxSizeMB: 0.95,
+    maxWidthOrHeight: 1600,
+    useWebWorker: true,
+    fileType: file.type === "image/png" ? "image/png" : "image/webp",
+  });
+
+  if (compressedFile.size > MAX_COMPRESSED_LISTING_BYTES) {
+    throw new Error("حجم إشعار الدفع بعد الضغط يجب ألا يتجاوز 1MB");
+  }
+
+  const csrfToken = await getCsrfToken();
+  const formData = new FormData();
+  formData.append("file", compressedFile, normalizedFileName(compressedFile));
+
+  const response = await fetch("/api/upload/payment-proof", {
+    method: "POST",
+    headers: {
+      "x-csrf-token": csrfToken,
+    },
+    body: formData,
+  });
+
+  const data = (await response.json()) as Partial<{
+    publicUrl: string;
+    error: string;
+  }>;
+
+  if (!response.ok || !data.publicUrl) {
+    throw new Error(data.error ?? "تعذر رفع إشعار الدفع، حاول مرة أخرى");
+  }
+
+  return data.publicUrl;
+}
+
 async function getCsrfToken() {
   const response = await fetch("/api/csrf", {
     method: "GET",

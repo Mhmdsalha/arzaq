@@ -44,7 +44,10 @@ export type AuditAction =
   | "UPLOAD_FILE"
   | "ACCOUNT_TYPE_SWITCH"
   | "REQUEST_STORE_PLAN_UPGRADE"
-  | "UPDATE_STORE_PLAN";
+  | "UPDATE_STORE_PLAN"
+  | "CREATE_STORE_PLAN_PAYMENT"
+  | "APPROVE_STORE_PLAN_PAYMENT"
+  | "REJECT_STORE_PLAN_PAYMENT";
 
 export function logAudit(
   action: AuditAction,

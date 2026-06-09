@@ -27,12 +27,14 @@ export default async function AdminStorePage() {
         <AdminStat label="تحتاج تعديلات" value={overview.needsEditListings} />
         <AdminStat label="طلبات بانتظار التأكيد" value={overview.pendingOrders} />
         <AdminStat label="بلاغات قيد المراجعة" value={overview.pendingReports} />
+        <AdminStat label="دفعات باقات قيد المراجعة" value={overview.pendingPlanPayments} />
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <AdminStoreLink href={getAdminHref("/store/listings")} label="كل المنتجات والخدمات" />
         <AdminStoreLink href={getAdminHref("/store/orders")} label="كل الطلبات" />
         <AdminStoreLink href={getAdminHref("/store/reports")} label="بلاغات المتجر" />
+        <AdminStoreLink href={getAdminHref("/store/payments")} label="دفعات الباقات" />
       </div>
     </StoreRouteShell>
   );

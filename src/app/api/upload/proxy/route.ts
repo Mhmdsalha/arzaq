@@ -8,7 +8,7 @@ import { getPublicUrl, uploadToR2 } from "@/lib/uploadImage";
 import { validateUploadProxyToken } from "@/lib/upload-proxy-token";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const ALLOWED_PREFIXES = ["avatars/", "portfolio/", "listings/"] as const;
+const ALLOWED_PREFIXES = ["avatars/", "portfolio/", "listings/", "payment-proofs/"] as const;
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 export async function PUT(req: NextRequest) {
@@ -32,7 +32,10 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "نوع الصورة غير مدعوم" }, { status: 400 });
   }
 
-  if (!Number.isFinite(expiresAt) || !validateUploadProxyToken({ key, userId: session.user.id, contentType, expiresAt, token })) {
+  if (
+    !Number.isFinite(expiresAt) ||
+    !validateUploadProxyToken({ key, userId: session.user.id, contentType, expiresAt, token })
+  ) {
     return NextResponse.json({ error: "رابط الرفع منتهي أو غير صالح" }, { status: 403 });
   }
 

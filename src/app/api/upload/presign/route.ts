@@ -6,14 +6,11 @@ import { validateCSRFToken } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { rateLimitHeaders, rateLimiters } from "@/lib/rateLimit";
 import { sanitizeFilename, sanitizeInt, sanitizeUrlParam } from "@/lib/sanitize";
-import {
-  getPublicUrl,
-  type UploadFolder,
-} from "@/lib/uploadImage";
+import { getPublicUrl, type UploadFolder } from "@/lib/uploadImage";
 import { createUploadProxyToken } from "@/lib/upload-proxy-token";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const ALLOWED_FOLDERS: UploadFolder[] = ["avatars", "portfolio", "listings"];
+const ALLOWED_FOLDERS: UploadFolder[] = ["avatars", "portfolio", "listings", "payment-proofs"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 type PresignRequestBody = {

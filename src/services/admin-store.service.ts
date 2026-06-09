@@ -17,6 +17,7 @@ export async function getAdminStoreOverview() {
     pendingOrders,
     completedOrders,
     pendingReports,
+    pendingPlanPayments,
   ] = await prisma.$transaction([
     prisma.listing.count({ where: { deletedAt: null } }),
     prisma.listing.count({ where: { deletedAt: null, status: "ACTIVE" } }),
@@ -28,6 +29,7 @@ export async function getAdminStoreOverview() {
     prisma.order.count({ where: { status: "PENDING" } }),
     prisma.order.count({ where: { status: "COMPLETED" } }),
     prisma.listingReport.count({ where: { status: "PENDING" } }),
+    prisma.storePlanPaymentRequest.count({ where: { status: "PENDING" } }),
   ]);
 
   return {
@@ -41,6 +43,7 @@ export async function getAdminStoreOverview() {
     pendingOrders,
     completedOrders,
     pendingReports,
+    pendingPlanPayments,
   };
 }
 
@@ -307,7 +310,8 @@ export async function approveListing(listingId: string) {
       throw new Error("العنصر غير موجود");
     }
 
-    const nextStatus = listing.type === "PHYSICAL" && (listing.quantity ?? 0) === 0 ? "SOLD_OUT" : "ACTIVE";
+    const nextStatus =
+      listing.type === "PHYSICAL" && (listing.quantity ?? 0) === 0 ? "SOLD_OUT" : "ACTIVE";
     const updated = await tx.listing.update({
       where: { id: listing.id },
       data: { status: nextStatus },

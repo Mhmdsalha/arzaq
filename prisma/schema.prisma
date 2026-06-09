@@ -113,6 +113,18 @@ enum StorePlan {
   QUDS
 }
 
+enum StorePlanPaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum StorePlanPaymentMethod {
+  BANK_OF_PALESTINE
+  PAYPAL
+  JAWAL_PAY
+}
+
 model User {
   id           String      @id @default(cuid())
   name         String
@@ -144,6 +156,7 @@ model User {
   savedListings        SavedListing[]
   listingReviews       ListingReview[]
   listingReports       ListingReport[]
+  storePlanPayments    StorePlanPaymentRequest[]
 }
 
 model Profile {
@@ -389,6 +402,28 @@ model ListingReport {
   @@index([listingId])
   @@index([reporterId])
   @@index([status])
+}
+
+model StorePlanPaymentRequest {
+  id         String                 @id @default(cuid())
+  targetPlan StorePlan
+  amountIls  Float
+  method     StorePlanPaymentMethod
+  payerName  String?
+  reference  String?
+  proofUrl   String
+  note       String?
+  adminNote  String?
+  status     StorePlanPaymentStatus @default(PENDING)
+  reviewedAt DateTime?
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 model Report {

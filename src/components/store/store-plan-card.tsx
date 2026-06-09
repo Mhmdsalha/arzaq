@@ -1,11 +1,10 @@
 "use client";
 
 import type { StorePlan } from "@prisma/client";
-import { Check, Crown, Loader2, PackagePlus, X } from "lucide-react";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { Check, Crown, PackagePlus, X } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
-import { requestStorePlanUpgradeAction } from "@/actions/store-plan.actions";
 import { Button } from "@/components/ui/button";
 import {
   formatStorePlanPrice,
@@ -89,25 +88,6 @@ function StorePlanDialog({
   currentPlan: StorePlan;
   onClose: () => void;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const [selectedPlan, setSelectedPlan] = useState<StorePlan | null>(null);
-
-  function requestUpgrade(plan: StorePlan) {
-    setSelectedPlan(plan);
-    startTransition(async () => {
-      const result = await requestStorePlanUpgradeAction(plan);
-
-      if (result.ok) {
-        toast.success(result.message);
-        onClose();
-        return;
-      }
-
-      toast.error(result.message);
-      setSelectedPlan(null);
-    });
-  }
-
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:items-center">
       <div
@@ -141,7 +121,6 @@ function StorePlanDialog({
             const config = storePlans[plan];
             const isCurrent = plan === currentPlan;
             const canRequest = getStorePlanLimit(plan) > getStorePlanLimit(currentPlan);
-            const isLoading = isPending && selectedPlan === plan;
 
             return (
               <article
@@ -180,16 +159,15 @@ function StorePlanDialog({
                   <Feature>إظهار ليبل الباقة في البروفايل العام</Feature>
                 </ul>
 
-                <Button
-                  type="button"
-                  className="mt-6 h-11 w-full"
-                  variant={isCurrent ? "secondary" : "default"}
-                  disabled={isCurrent || !canRequest || isPending}
-                  onClick={() => requestUpgrade(plan)}
-                >
-                  {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {isCurrent ? "باقتك الحالية" : canRequest ? "طلب الاشتراك" : "ضمن باقتك الحالية"}
-                </Button>
+                {canRequest ? (
+                  <Button asChild className="mt-6 h-11 w-full">
+                    <Link href={`/dashboard/store/billing?plan=${plan}`}>فتح صفحة الدفع</Link>
+                  </Button>
+                ) : (
+                  <Button type="button" className="mt-6 h-11 w-full" variant="secondary" disabled>
+                    {isCurrent ? "باقتك الحالية" : "ضمن باقتك الحالية"}
+                  </Button>
+                )}
               </article>
             );
           })}
