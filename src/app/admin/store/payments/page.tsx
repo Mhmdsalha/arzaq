@@ -5,6 +5,7 @@ import {
   approveStorePlanPaymentFormAction,
   rejectStorePlanPaymentFormAction,
 } from "@/actions/store-plan.actions";
+import { PaymentProofPreview } from "@/components/store/payment-proof-preview";
 import { paymentMethods } from "@/constants/payment-methods";
 import { storePlans } from "@/constants/store-plans";
 import { getAdminHref } from "@/lib/admin-path";
@@ -27,9 +28,16 @@ export default async function AdminStorePaymentsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const q = getParam(params.q);
+  const requestId = getParam(params.request);
   const status = parseStatus(getParam(params.status));
   const page = Number(getParam(params.page) ?? "1");
-  const data = await getAdminStorePlanPaymentRequests({ status, page });
+  const data = await getAdminStorePlanPaymentRequests({ q, requestId, status, page });
+  const baseParams = new URLSearchParams();
+
+  if (q) baseParams.set("q", q);
+  if (requestId) baseParams.set("request", requestId);
+  if (status) baseParams.set("status", status);
 
   return (
     <section className="container-responsive py-10">
@@ -49,7 +57,29 @@ export default async function AdminStorePaymentsPage({
         </Link>
       </div>
 
-      <form className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-[220px_auto]">
+      {requestId ? (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+          <p className="text-sm font-semibold text-primary-light">
+            يتم عرض طلب الدفع القادم من رابط الإشعار:{" "}
+            <span className="font-mono text-white">{requestId}</span>
+          </p>
+          <Link
+            href={getAdminHref("/store/payments")}
+            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200"
+          >
+            عرض كل الطلبات
+          </Link>
+        </div>
+      ) : null}
+
+      <form className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-[1fr_220px_auto]">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="بحث باسم المستخدم أو البريد أو الجوال أو رقم العملية"
+          className="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-white outline-none"
+        />
+        {requestId ? <input type="hidden" name="request" value={requestId} /> : null}
         <select
           name="status"
           defaultValue={status ?? ""}
@@ -63,9 +93,15 @@ export default async function AdminStorePaymentsPage({
           ))}
         </select>
         <button className="min-h-11 rounded-xl bg-primary px-5 font-semibold text-white">
-          فلترة
+          بحث
         </button>
       </form>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <SummaryCard label="إجمالي النتائج" value={data.total} />
+        <SummaryCard label="الصفحة الحالية" value={`${data.page} / ${data.totalPages}`} />
+        <SummaryCard label="المعروض الآن" value={data.requests.length} />
+      </div>
 
       <div className="mt-6 grid gap-4">
         {data.requests.map((request) => (
@@ -100,14 +136,7 @@ export default async function AdminStorePaymentsPage({
               </div>
 
               <div className="grid gap-2 sm:min-w-72">
-                <a
-                  href={request.proofUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-slate-950"
-                >
-                  عرض إشعار الدفع
-                </a>
+                <PaymentProofPreview proofUrl={request.proofUrl} />
 
                 {request.status === "PENDING" ? (
                   <div className="grid gap-2">
@@ -149,7 +178,23 @@ export default async function AdminStorePaymentsPage({
           </div>
         ) : null}
       </div>
+
+      <Pagination
+        baseHref={getAdminHref("/store/payments")}
+        page={data.page}
+        totalPages={data.totalPages}
+        searchParams={baseParams}
+      />
     </section>
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className="text-xs font-semibold text-slate-400">{label}</p>
+      <p className="mt-2 text-2xl font-extrabold text-white">{value}</p>
+    </div>
   );
 }
 
@@ -167,6 +212,49 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-slate-400">{label}</p>
       <p className="mt-1 font-bold text-white">{value}</p>
     </div>
+  );
+}
+
+function Pagination({
+  baseHref,
+  page,
+  totalPages,
+  searchParams,
+}: {
+  baseHref: string;
+  page: number;
+  totalPages: number;
+  searchParams: URLSearchParams;
+}) {
+  if (totalPages <= 1) return null;
+
+  const previousParams = new URLSearchParams(searchParams);
+  previousParams.set("page", String(page - 1));
+  const nextParams = new URLSearchParams(searchParams);
+  nextParams.set("page", String(page + 1));
+
+  return (
+    <nav className="mt-6 flex flex-wrap items-center justify-center gap-3">
+      {page > 1 ? (
+        <Link
+          href={`${baseHref}?${previousParams.toString()}`}
+          className="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-white"
+        >
+          السابق
+        </Link>
+      ) : null}
+      <span className="rounded-xl bg-white/5 px-4 py-2 text-sm text-slate-300">
+        صفحة {page} من {totalPages}
+      </span>
+      {page < totalPages ? (
+        <Link
+          href={`${baseHref}?${nextParams.toString()}`}
+          className="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-white"
+        >
+          التالي
+        </Link>
+      ) : null}
+    </nav>
   );
 }
 

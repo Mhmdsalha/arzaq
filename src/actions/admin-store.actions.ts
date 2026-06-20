@@ -1,6 +1,6 @@
 "use server";
 
-import type { ReportStatus } from "@prisma/client";
+import type { OrderStatus, ReportStatus } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 import type { ActionResult } from "@/actions/auth.actions";
@@ -10,6 +10,7 @@ import { rateLimiters } from "@/lib/rateLimit";
 import { sanitizeText } from "@/lib/sanitize";
 import {
   approveListing,
+  adminUpdateStoreOrderStatus,
   adminSoftDeleteListing,
   rejectListing,
   requestListingEdits,
@@ -17,6 +18,15 @@ import {
   setListingStatus,
   updateListingReportStatus,
 } from "@/services/admin-store.service";
+
+const orderStatusValues: OrderStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+  "DISPUTED",
+];
 
 export async function setListingFeaturedFormAction(formData: FormData): Promise<void> {
   await setListingFeaturedAction(
@@ -62,6 +72,33 @@ export async function updateListingReportStatusFormAction(formData: FormData): P
     String(formData.get("reportId") ?? ""),
     status as ReportStatus,
   );
+}
+
+export async function adminUpdateStoreOrderStatusFormAction(formData: FormData): Promise<void> {
+  const orderId = sanitizeText(String(formData.get("orderId") ?? ""));
+  const status = String(formData.get("status") ?? "") as OrderStatus;
+
+  if (!orderStatusValues.includes(status)) {
+    return;
+  }
+
+  try {
+    const session = await requireAdmin();
+    await assertAdminActionAllowed(session.user.id);
+    const order = await adminUpdateStoreOrderStatus(orderId, status);
+    revalidatePath("/admin/store/orders");
+    revalidatePath("/admin/store");
+    revalidatePath("/dashboard/store");
+    revalidatePath("/dashboard/orders");
+    logAudit("UPDATE_ORDER_STATUS", {
+      userId: session.user.id,
+      entityType: "Order",
+      entityId: order.id,
+      metadata: { status: order.status, source: "admin" },
+    });
+  } catch (error) {
+    console.error("Failed to update store order status", error);
+  }
 }
 
 async function setListingFeaturedAction(

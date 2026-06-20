@@ -1,12 +1,25 @@
 import bcrypt from "bcryptjs";
 
 import { approveJobPost } from "../src/services/admin.service";
+import { approveListing } from "../src/services/admin-store.service";
 import { createJob, getJobById, getJobsWithFilters } from "../src/services/job.service";
+import { createListing } from "../src/services/listing.service";
 import { acceptOffer, createOffer, getJobOffers } from "../src/services/offer.service";
+import {
+  createOrder,
+  getBuyerOrders,
+  getReceivedOrders,
+  updateOrderStatus,
+} from "../src/services/order.service";
 import { getProviderVerificationSummary } from "../src/services/provider-verification.service";
 import { createReview } from "../src/services/review.service";
 import { getNavigationSummaryFresh, getUserNotifications } from "../src/services/navigation.service";
 import { prisma } from "../src/lib/prisma";
+import {
+  approveStorePlanPaymentRequest,
+  createStorePlanPaymentRequest,
+  getAdminStorePlanPaymentRequests,
+} from "../src/services/store-plan.service";
 import {
   createPasswordResetCode,
   resetPassword,
@@ -214,6 +227,90 @@ async function main() {
     verificationSummary.acceptedOffers >= 1 && verificationSummary.remainingOffers === 4,
     `${verificationSummary.acceptedOffers}/5`,
   );
+
+  const listing = await createListing(
+    {
+      title: `خدمة متجر اختبار E2E ${runId}`,
+      description:
+        "خدمة جاهزة ضمن اختبار المتجر للتأكد من المراجعة والشراء وتحديث حالة الطلب بشكل كامل.",
+      type: "SERVICE",
+      categoryId: category.id,
+      region: "GAZA_CITY",
+      price: 25,
+      priceLabel: "سعر ثابت",
+      deliveryMethod: "ONLINE",
+      deliveryTime: "خلال 24 ساعة",
+      quantity: null,
+      images: [],
+      tags: ["اختبار", "متجر"],
+    },
+    provider.id,
+  );
+  const listingAfterCreate = await prisma.listing.findUnique({
+    where: { id: listing.id },
+    select: { status: true },
+  });
+  record(
+    "إنشاء عنصر متجر قيد المراجعة",
+    listingAfterCreate?.status === "PENDING_REVIEW",
+    listingAfterCreate?.status,
+  );
+
+  await approveListing(listing.id);
+  const listingAfterApproval = await prisma.listing.findUnique({
+    where: { id: listing.id },
+    select: { status: true },
+  });
+  record("موافقة الأدمن على عنصر المتجر", listingAfterApproval?.status === "ACTIVE");
+
+  const storeOrder = await createOrder(
+    {
+      listingId: listing.id,
+      quantity: 1,
+      note: "أحتاج تنفيذ الخدمة ضمن اختبار الطلب الكامل للمتجر.",
+      contactMethod: "PLATFORM",
+      address: "",
+    },
+    client.id,
+  );
+  record("إرسال طلب متجر من العميل", Boolean(storeOrder.id), storeOrder.id);
+
+  const receivedOrders = await getReceivedOrders(provider.id);
+  record(
+    "ظهور الطلب داخل لوحة تحكم المتجر للبائع",
+    receivedOrders.some((item) => item.id === storeOrder.id),
+    `${receivedOrders.length} طلبات واردة`,
+  );
+
+  await updateOrderStatus(storeOrder.id, "CONFIRMED", provider.id);
+  await updateOrderStatus(storeOrder.id, "IN_PROGRESS", provider.id);
+  await updateOrderStatus(storeOrder.id, "COMPLETED", provider.id);
+  const buyerOrders = await getBuyerOrders(client.id);
+  record(
+    "تحديث طلب المتجر حتى الاكتمال",
+    buyerOrders.some((item) => item.id === storeOrder.id && item.status === "COMPLETED"),
+  );
+
+  const planPayment = await createStorePlanPaymentRequest(provider.id, {
+    targetPlan: "MAJDAL",
+    method: "PAYPAL",
+    proofUrl: "https://pub-test.r2.dev/payment-proofs/e2e-proof.png",
+    payerName: "مقدم خدمة اختبار E2E",
+    reference: `E2E-${runId}`,
+    note: "طلب دفع ضمن اختبار E2E.",
+  });
+  const adminPayments = await getAdminStorePlanPaymentRequests({ requestId: planPayment.id });
+  record(
+    "وصول طلب دفع الباقة إلى لوحة الأدمن",
+    adminPayments.requests.some((item) => item.id === planPayment.id && item.status === "PENDING"),
+  );
+
+  await approveStorePlanPaymentRequest(planPayment.id, "تمت الموافقة ضمن اختبار E2E");
+  const providerPlan = await prisma.user.findUnique({
+    where: { id: provider.id },
+    select: { storePlan: true },
+  });
+  record("تفعيل باقة المتجر بعد موافقة الأدمن", providerPlan?.storePlan === "MAJDAL");
 
   const providerNotifications = await getUserNotifications(provider.id, "all");
   record(

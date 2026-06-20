@@ -1,4 +1,9 @@
-import type { StorePlan, StorePlanPaymentMethod, StorePlanPaymentStatus } from "@prisma/client";
+import type {
+  Prisma,
+  StorePlan,
+  StorePlanPaymentMethod,
+  StorePlanPaymentStatus,
+} from "@prisma/client";
 
 import { getAdminHref } from "@/lib/admin-path";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +25,8 @@ export type StorePlanPaymentInput = {
 };
 
 export type StorePlanPaymentFilters = {
+  q?: string;
+  requestId?: string;
   status?: StorePlanPaymentStatus;
   page?: number;
 };
@@ -126,8 +133,22 @@ export async function createStorePlanPaymentRequest(userId: string, input: Store
 
 export async function getAdminStorePlanPaymentRequests(filters: StorePlanPaymentFilters = {}) {
   const currentPage = Math.max(filters.page ?? 1, 1);
-  const where = {
+  const query = filters.q?.trim();
+  const where: Prisma.StorePlanPaymentRequestWhereInput = {
+    ...(filters.requestId ? { id: filters.requestId } : {}),
     ...(filters.status ? { status: filters.status } : {}),
+    ...(query
+      ? {
+          OR: [
+            { id: { contains: query, mode: "insensitive" } },
+            { reference: { contains: query, mode: "insensitive" } },
+            { payerName: { contains: query, mode: "insensitive" } },
+            { user: { name: { contains: query, mode: "insensitive" } } },
+            { user: { email: { contains: query, mode: "insensitive" } } },
+            { user: { phone: { contains: query, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
   };
 
   const [requests, total] = await prisma.$transaction([

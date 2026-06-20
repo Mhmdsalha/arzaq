@@ -231,6 +231,53 @@ export async function getAdminStoreOrders({
   };
 }
 
+export async function adminUpdateStoreOrderStatus(orderId: string, status: OrderStatus) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        buyerId: true,
+        listing: {
+          select: {
+            title: true,
+            sellerId: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new Error("طلب المتجر غير موجود");
+    }
+
+    const updated = await tx.order.update({
+      where: { id: order.id },
+      data: { status },
+      select: { id: true, status: true },
+    });
+
+    await tx.notification.createMany({
+      data: [
+        {
+          userId: order.buyerId,
+          type: "SYSTEM",
+          message: `تم تحديث حالة طلبك على ${order.listing.title} إلى ${getOrderStatusLabel(status)}`,
+          link: "/dashboard/orders",
+        },
+        {
+          userId: order.listing.sellerId,
+          type: "SYSTEM",
+          message: `تم تحديث حالة طلب وارد على ${order.listing.title} إلى ${getOrderStatusLabel(status)}`,
+          link: "/dashboard/store",
+        },
+      ],
+    });
+
+    return updated;
+  });
+}
+
 export async function getAdminStoreReports({
   status,
   page = 1,
@@ -413,4 +460,17 @@ export async function updateListingReportStatus(reportId: string, status: Report
       listingId: true,
     },
   });
+}
+
+function getOrderStatusLabel(status: OrderStatus) {
+  const labels: Record<OrderStatus, string> = {
+    PENDING: "بانتظار التأكيد",
+    CONFIRMED: "مؤكد",
+    IN_PROGRESS: "قيد التنفيذ",
+    COMPLETED: "مكتمل",
+    CANCELLED: "ملغي",
+    DISPUTED: "قيد المراجعة",
+  };
+
+  return labels[status];
 }

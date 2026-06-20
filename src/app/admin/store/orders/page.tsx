@@ -1,6 +1,7 @@
 import type { OrderStatus } from "@prisma/client";
 import Link from "next/link";
 
+import { adminUpdateStoreOrderStatusFormAction } from "@/actions/admin-store.actions";
 import { getAdminHref } from "@/lib/admin-path";
 import { getAdminStoreOrders } from "@/services/admin-store.service";
 
@@ -29,6 +30,10 @@ export default async function AdminStoreOrdersPage({
   const status = parseOrderStatus(getParam(params.status));
   const page = Number(getParam(params.page) ?? "1");
   const data = await getAdminStoreOrders({ q, status, page });
+  const baseParams = new URLSearchParams();
+
+  if (q) baseParams.set("q", q);
+  if (status) baseParams.set("status", status);
 
   return (
     <section className="container-responsive py-10">
@@ -87,30 +92,83 @@ export default async function AdminStoreOrdersPage({
                   الكمية: {order.quantity} · الإجمالي: {formatPrice(order.totalPrice)} · {formatDate(order.createdAt)}
                 </p>
               </div>
-              <Link
-                href={`/store/${order.listing.id}`}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 hover:bg-white/10"
-              >
-                عرض العنصر
-              </Link>
+              <div className="grid gap-2 sm:min-w-64">
+                <Link
+                  href={`/store/${order.listing.id}`}
+                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 hover:bg-white/10"
+                >
+                  عرض العنصر
+                </Link>
+                <form action={adminUpdateStoreOrderStatusFormAction} className="grid grid-cols-[1fr_auto] gap-2">
+                  <input type="hidden" name="orderId" value={order.id} />
+                  <select
+                    name="status"
+                    defaultValue={order.status}
+                    className="h-10 rounded-xl border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none"
+                  >
+                    {orderStatusValues.map((value) => (
+                      <option key={value} value={value}>
+                        {orderStatusLabels[value]}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="min-h-10 rounded-xl bg-primary px-4 text-sm font-bold text-white">
+                    حفظ
+                  </button>
+                </form>
+              </div>
             </div>
           </article>
         ))}
       </div>
 
-      <Pagination baseHref={getAdminHref("/store/orders")} page={data.page} totalPages={data.totalPages} />
+      <Pagination
+        baseHref={getAdminHref("/store/orders")}
+        page={data.page}
+        totalPages={data.totalPages}
+        searchParams={baseParams}
+      />
     </section>
   );
 }
 
-function Pagination({ baseHref, page, totalPages }: { baseHref: string; page: number; totalPages: number }) {
+function Pagination({
+  baseHref,
+  page,
+  totalPages,
+  searchParams,
+}: {
+  baseHref: string;
+  page: number;
+  totalPages: number;
+  searchParams: URLSearchParams;
+}) {
   if (totalPages <= 1) return null;
+
+  const previousParams = new URLSearchParams(searchParams);
+  previousParams.set("page", String(page - 1));
+  const nextParams = new URLSearchParams(searchParams);
+  nextParams.set("page", String(page + 1));
 
   return (
     <div className="mt-6 flex items-center justify-center gap-2">
-      {page > 1 ? <Link className="rounded-xl border border-white/10 px-4 py-2 text-white" href={`${baseHref}?page=${page - 1}`}>السابق</Link> : null}
+      {page > 1 ? (
+        <Link
+          className="rounded-xl border border-white/10 px-4 py-2 text-white"
+          href={`${baseHref}?${previousParams.toString()}`}
+        >
+          السابق
+        </Link>
+      ) : null}
       <span className="text-sm text-slate-300">صفحة {page} من {totalPages}</span>
-      {page < totalPages ? <Link className="rounded-xl border border-white/10 px-4 py-2 text-white" href={`${baseHref}?page=${page + 1}`}>التالي</Link> : null}
+      {page < totalPages ? (
+        <Link
+          className="rounded-xl border border-white/10 px-4 py-2 text-white"
+          href={`${baseHref}?${nextParams.toString()}`}
+        >
+          التالي
+        </Link>
+      ) : null}
     </div>
   );
 }
